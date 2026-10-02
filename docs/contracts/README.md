@@ -14,7 +14,13 @@ A contract carries the **enforcement** of a rule — scope, detector, exceptions
 node scripts/ci/check_contracts.mjs
 ```
 
-Runs `css-regex` and `structure` detectors; `eslint` detectors run in `pnpm lint` (the checker only verifies their selector is wired into `eslint.config.js`). Exit code `1` on any `error` finding.
+Runs `css-regex` and `structure` detectors; `eslint` detectors run in `pnpm lint` (the checker only verifies their selector is wired into `eslint.config.js`). Exit code `1` on any `error` finding, and on any rule that cannot fire (no detector, or `include_globs` matching no files) — whatever its severity.
+
+```bash
+node scripts/ci/check_contracts.selftest.mjs   # pnpm check:contracts:selftest
+```
+
+Proves every active rule still fires: copies [`scripts/ci/contract-fixtures/`](../../scripts/ci/contract-fixtures/) into a temporary component folder, runs the checker and ESLint, and fails if any rule stays silent.
 
 ## Adding a contract
 
@@ -22,7 +28,8 @@ Runs `css-regex` and `structure` detectors; `eslint` detectors run in `pnpm lint
 2. Find the single producer (the file that owns the thing the rule protects). No producer → no contract.
 3. Pick the simplest detector: `eslint` (built-in `no-restricted-syntax` / `no-restricted-imports` / `no-restricted-properties`) for `.ts/.tsx`, `css-regex` for `.module.css`, `structure` for file layout.
 4. Run the checker on the codebase and calibrate before setting `severity: error`.
-5. Add one row to the table above and at most one line to [`AGENTS.md`](../../AGENTS.md).
+5. Add a violation of the new rule to `scripts/ci/contract-fixtures/` and run the self-test; it fails until the rule fires. ESLint messages must contain `#<rule-id>`.
+6. Add one row to the table above and at most one line to [`AGENTS.md`](../../AGENTS.md).
 
 ## Governance — later
 

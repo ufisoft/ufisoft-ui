@@ -1,0 +1,16 @@
+/*
+ * Contract fixture — deliberately violates every css-regex rule in docs/contracts/.
+ * check_contracts.selftest.mjs copies it into src/components/ to prove each rule fires.
+ * Never import it.
+ */
+.fixture {
+  color: #ff0000; /* no-hex-color */
+  padding: 12px; /* no-raw-px */
+  gap: var(--ufi-space-4); /* semantic-tokens-only: primitive */
+  background: var(--ufi-color-primary); /* semantic-tokens-only: undefined token */
+}
+
+:global(body) .fixture {
+  /* no-global-selector */
+  opacity: 0;
+}

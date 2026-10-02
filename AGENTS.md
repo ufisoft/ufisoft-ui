@@ -44,7 +44,7 @@ Enforced by `node scripts/ci/check_contracts.mjs` and `pnpm lint`. Details and e
 
 Decisions and their reasons — not rules, not status. Full policy: [`docs/memory/POLICY.md`](./docs/memory/POLICY.md).
 
-- **Read** at task start: [`CORE.md`](./docs/memory/CORE.md), then the topic's section in [`INDEX.md`](./docs/memory/INDEX.md), then only the entries it points to. Never bulk-read `entries/`.
+- **Read** at task start: [`CORE.md`](./docs/memory/CORE.md), then the topic's section in [`INDEX.md`](./docs/memory/INDEX.md) plus lines whose `paths` match the files you will change, then only the entries those point to. Never bulk-read `entries/`.
 - **Capture** only if it recurs, cannot be derived from code/`git log`/CONTRIBUTING, and is expensive not to know — all three.
 - **Before writing**: dedup against INDEX.md and check same-topic entries for contradictions (supersede, never silently overwrite).
 - **When a task closes**: sweep it once for a decision that passes the test; announce any capture in one line.

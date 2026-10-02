@@ -33,8 +33,14 @@ The script runs every gate even after a failure and exits `1` if any failed. Rep
 | build        | `pnpm build`                              | Vite library build + `tsc -p tsconfig.build.json` declarations. Trap: tests and stories are excluded from the build's type check, so they only fail in `typecheck`.                                                                                                                                                                                                |
 | format:check | `pnpm format:check`                       | Prettier over the whole repo. Trap: also fails on new `.md`/`.mdx`/`.json` files that never went through the pre-commit hook.                                                                                                                                                                                                                                      |
 | contracts    | `pnpm check:contracts`                    | `css-regex` and `structure` rules of `docs/contracts/*.md` (tokens, hex, px, `:global`, public exports). Trap: ESLint-backed rules run in `lint`; here it only checks they are wired into `eslint.config.js`. Exceptions go in the contract's `allow`, never in the script.                                                                                        |
+| detectors    | `pnpm check:contracts:selftest`           | Every contract rule still fires on `scripts/ci/contract-fixtures/` — catches a broken regex, selector or parser that would leave a gate silently green. Trap: it writes a temporary `src/components/zz-contract-fixture/`; if a run is interrupted, delete that folder before the next one.                                                                        |
 | changeset    | `pnpm exec changeset status --since=main` | A committed change with no changeset. Traps: (1) it sees edits to tracked files but **not untracked files** — a new changeset counts only once committed, and a branch of only new files looks clean until committed; run it again after committing; (2) the package root is the repo root, so docs-only commits need one too; (3) it needs a local `main` branch. |
 | a11y         | Storybook _Accessibility_ panel           | **Not a gate** — checked by hand in `pnpm storybook`. Say whether you checked it.                                                                                                                                                                                                                                                                                  |
+
+### When a gate is red
+
+- **Never weaken a rule to get green** — no lowering `severity`, no new `allow`/`exclude_globs` entry, no detector edit to silence a finding. If the rule itself is wrong, change the contract with its reason in a separate change, reviewed through CODEOWNERS.
+- **A finding in a file you touched but not on your line** is a hidden violation: fix it. Do not revert your intended change to make the finding disappear.
 
 ## 2. Changeset discipline
 
@@ -46,13 +52,22 @@ The script runs every gate even after a failure and exits `1` if any failed. Rep
 
 - Stage with an **explicit path list**: `git add <path> <path> …`. Never `git add -A` / `git add .` — list the files and show the user first.
 - Never `--no-verify`: the pre-commit hook (lint-staged) is the only formatter run on commit.
-- Never force-push, never amend a commit that is already pushed.
+- Never `git stash`: in a checkout that another session also uses, it swallows that session's unfinished work.
+- Never force-push, never amend a commit that is already pushed. A non-fast-forward rejection means fetch and rebuild on top, not force.
 - Message: imperative mood, describes the change — [CONTRIBUTING › Commits and hooks](../../CONTRIBUTING.md#commits-and-hooks).
 
 ## 4. Branch flow
 
 - `main` + feature branches. Work on a feature branch; do not commit to `main`.
 - Push only the feature branch, only after the user approves. Anything beyond that (release branches, tags, merging) → ask the user.
+- No issue tracker is used, so there is no claim step before starting work.
+- **More than one agent session (or your editor) working in this checkout at the same time?** Commit from an isolated worktree, or you may commit someone else's half-done work or onto a stale tip:
+
+  ```bash
+  git worktree add ../ufisoft-ui-wt-<topic> -b <feature-branch> origin/main
+  # make, commit and push the change there, then:
+  git worktree remove ../ufisoft-ui-wt-<topic>
+  ```
 
 ## 5. Release
 

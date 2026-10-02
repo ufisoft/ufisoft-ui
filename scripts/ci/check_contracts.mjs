@@ -283,19 +283,55 @@ function checkEslintWiring(rule, params) {
 
 // ---------------------------------------------------------------------------
 const contracts = loadContracts();
+
+// `--list`: one line per active rule — "<rule-id> <detector kinds>". Used by the self-test.
+if (process.argv.includes('--list')) {
+  for (const contract of contracts.filter((c) => c.status === 'active')) {
+    for (const rule of contract.rules ?? []) {
+      const kinds = (rule.detectors ?? []).map((d) => d.kind).join(',') || '-';
+      console.log(`${rule.id} ${kinds}`);
+    }
+  }
+  process.exit(0);
+}
+
 const seen = new Set();
 const counts = { rules: 0, gating: 0, cssRegex: 0, structure: 0, eslint: 0 };
 const findings = [];
 
+// A rule that cannot fire would still look green. These findings are always
+// errors, whatever the rule's own severity: a gate must never empty silently.
+const unenforceable = (contract, rule, detail) => ({
+  file: contract.file,
+  line: 1,
+  detail,
+  rule: rule ?? { id: contract.id, severity: 'error', text: 'Contract must be enforceable.' },
+  contract,
+  config: true,
+});
+
 for (const contract of contracts) {
   if (contract.status !== 'active') continue;
+  if (!Array.isArray(contract.rules) || contract.rules.length === 0) {
+    findings.push(unenforceable(contract, null, 'active contract has no rules'));
+    continue;
+  }
   for (const rule of contract.rules) {
     if (seen.has(rule.id)) throw new Error(`${contract.file}: duplicate rule id "${rule.id}"`);
     seen.add(rule.id);
     counts.rules++;
-    if (rule.severity === 'error') counts.gating++;
     const files = filesFor(rule.applies_to);
-    for (const detector of rule.detectors ?? []) {
+    const detectors = rule.detectors ?? [];
+    if (detectors.length === 0) {
+      findings.push(unenforceable(contract, rule, 'rule has no detector — it enforces nothing'));
+      continue;
+    }
+    if (files.length === 0) {
+      findings.push(unenforceable(contract, rule, 'applies_to.include_globs matches no files'));
+      continue;
+    }
+    if (rule.severity === 'error') counts.gating++;
+    for (const detector of detectors) {
       let found;
       if (detector.kind === 'css-regex') {
         counts.cssRegex++;
@@ -315,11 +351,15 @@ for (const contract of contracts) {
 }
 
 for (const f of findings) {
-  const level = f.rule.severity === 'error' ? '' : ` (${f.rule.severity})`;
+  const level = f.config
+    ? ' (unenforceable)'
+    : f.rule.severity === 'error'
+      ? ''
+      : ` (${f.rule.severity})`;
   console.log(`${f.file}:${f.line}  [${f.rule.id}]${level}  ${f.rule.text}  — ${f.detail}`);
 }
 
-const errors = findings.filter((f) => f.rule.severity === 'error').length;
+const errors = findings.filter((f) => f.config || f.rule.severity === 'error').length;
 console.log(
   `\n${contracts.length} contract(s), ${counts.rules} rule(s) compiled, ${counts.gating} gating (severity error). ` +
     `${counts.cssRegex} css-regex, ${counts.structure} structure, ${counts.eslint} delegated to ESLint. ` +

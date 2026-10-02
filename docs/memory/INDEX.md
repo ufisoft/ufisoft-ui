@@ -2,7 +2,7 @@
 
 # Memory — index
 
-One line per entry: `- [title](entries/<file>.md) — one-line summary`. Grouped by the topics in [topics.yaml](./topics.yaml). Superseded entries are removed from here (the file stays, with `status: superseded`).
+One line per entry: `- [title](entries/<file>.md) — one-line summary (paths: <globs>)`. Grouped by the topics in [topics.yaml](./topics.yaml). Superseded entries are removed from here (the file stays, with `status: superseded`).
 
 ## Tokens & theming
 
