@@ -1,0 +1,69 @@
+.scroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+  border-radius: var(--ufi-radius-md);
+}
+
+.scroll:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+.table {
+  inline-size: 100%;
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  border-spacing: 0;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  padding-block-end: var(--ufi-space-xs);
+  font-weight: var(--ufi-weight-semibold);
+  text-align: start;
+  caption-side: top;
+}
+
+.head,
+.cell {
+  padding: var(--ufi-space-xs) var(--ufi-space-sm);
+  text-align: var(--_align);
+  vertical-align: middle;
+  border-block-end: var(--ufi-border-width) solid var(--ufi-color-border-default);
+}
+
+.head {
+  font-weight: var(--ufi-weight-semibold);
+  color: var(--ufi-color-text-muted);
+  white-space: nowrap;
+}
+
+.header .head {
+  background-color: var(--ufi-color-bg-subtle);
+}
+
+/* Row headers read like data, emphasised. */
+.body .head {
+  color: var(--ufi-color-text-default);
+  white-space: normal;
+}
+
+.body .row:last-child > * {
+  border-block-end-width: 0;
+}
+
+/* Alignment */
+.start {
+  --_align: start;
+}
+
+.center {
+  --_align: center;
+}
+
+.end {
+  --_align: end;
+}

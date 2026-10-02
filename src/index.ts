@@ -119,5 +119,22 @@ export {
 } from './components/breadcrumb';
 export { Pagination, type PaginationProps } from './components/pagination';
 
+// Data display
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+  type TableProps,
+  type TableHeaderProps,
+  type TableBodyProps,
+  type TableRowProps,
+  type TableHeadProps,
+  type TableCellProps,
+  type TableCellAlign,
+} from './components/table';
+
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';

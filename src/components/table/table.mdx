@@ -1,0 +1,67 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as TableStories from './table.stories';
+
+<Meta of={TableStories} />
+
+# Table
+
+A native table for reading and comparing structured data in rows and columns.
+
+<Canvas of={TableStories.Default} />
+
+## When to use
+
+- Data with the same attributes per item that users compare across rows: pages, users, invoices.
+
+## When not to use
+
+- Layout — use `Stack`; tables are for data.
+- A few items with a lot of text each — use `Card`s.
+- A single item's details — use a list of label/value pairs.
+
+## Props
+
+<ArgTypes of={TableStories} />
+
+Build a table from native parts:
+
+- `Table` — the `<table>`. `caption` is required: it is the table's visible title and names both the table and its scroll area.
+- `TableHeader`, `TableBody` — `<thead>` and `<tbody>`.
+- `TableRow` — `<tr>`.
+- `TableHead` — a header cell `<th>`. `scope` defaults to `col`; use `scope="row"` for the first cell of a body row that names the row.
+- `TableCell` — a data cell `<td>`. `align="end"` for numbers so digits line up.
+
+Each part passes `className`, `ref` and native props (e.g. `colSpan`) to its element. Sorting, selection and sticky headers are not built in yet.
+
+## States
+
+<Canvas of={TableStories.Wide} />
+<Canvas of={TableStories.Empty} />
+
+A table wider than its container scrolls horizontally. The scroll area is focusable and named by the caption, so keyboard users can scroll it with the arrow keys. For an empty table, keep the header and show one row that says there is no data.
+
+## Examples
+
+<Canvas of={TableStories.WithRowActions} />
+<Canvas of={TableStories.WithPagination} />
+
+## Accessibility
+
+- The caption names the table; screen readers announce it with the number of rows and columns.
+- Column headers (`scope="col"`) and row headers (`scope="row"`) are announced as users move between cells.
+- The scroll area is a `region` named by the caption with `tabIndex={0}`: keyboard users can reach and scroll a wide table even when it has no links or buttons.
+- Name row actions with the row: “Actions for Pricing”, not just “Actions”.
+
+## Do / Don't
+
+| Do                                            | Don't                                           |
+| --------------------------------------------- | ----------------------------------------------- |
+| Give every table a caption.                   | Use a table for page layout.                    |
+| Mark the cell that names a row `scope="row"`. | Make a whole row clickable without a real link. |
+| Align numbers to the end.                     | Mix formats in one column (“1,204” and “1.2k”). |
+
+## Related components
+
+- `Pagination` — paging through long tables.
+- `Badge` — status in a cell.
+- `DropdownMenu`, `IconButton` — row actions.
