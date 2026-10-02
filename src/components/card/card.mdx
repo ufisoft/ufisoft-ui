@@ -1,0 +1,70 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as CardStories from './card.stories';
+
+<Meta of={CardStories} />
+
+# Card
+
+A surface that groups related content, such as a summary, a list entry or an offer.
+
+<Canvas of={CardStories.Default} />
+
+## When to use
+
+- Grouping content that belongs together and can be scanned as a unit: a dashboard metric, a page in a list, a plan.
+
+## When not to use
+
+- Just adding space or alignment — use `Stack`.
+- Status or feedback messages — use `Alert`.
+- Wrapping a whole page section that has no siblings to compare with — a heading and spacing are enough.
+
+## Props
+
+<ArgTypes of={CardStories} />
+
+Card is only the surface. Build its content from `Stack`, `Heading`, `Text` and `Button`; there are no separate header or footer parts.
+
+With `asChild`, Card renders its single child element instead of a `<div>` and merges its styles into it. Use it for semantics: `<article>` for a self-contained item, `<li>` in a list, `<section aria-labelledby>` for a named region.
+
+`padding="none"` is for edge-to-edge media. Card does not clip its content (that would cut off focus rings), so round the media's corners yourself and pad the text inside.
+
+## Variants
+
+<Canvas of={CardStories.Variants} />
+
+`outlined` is the default for cards on a page. Use `elevated` sparingly, for a card that should stand out — or on a background where a border is not enough.
+
+## States
+
+<Canvas of={CardStories.Padding} />
+<Canvas of={CardStories.LongContent} />
+
+Long words and URLs wrap instead of overflowing the card.
+
+## Examples
+
+<Canvas of={CardStories.WithActions} />
+<Canvas of={CardStories.List} />
+
+To make a whole card lead somewhere, put a link in its heading — not a link or button around the whole card, which makes screen readers read all of its content as one link name.
+
+## Accessibility
+
+- A Card is a plain `<div>` with no role. Give it meaning with `asChild` (`article`, `li`, `section`) where the structure matters.
+- Use a real `Heading` inside each card of a list, so screen-reader users can jump between cards.
+- In Windows High Contrast (forced colors) mode, an elevated card gets a visible border instead of its shadow.
+
+## Do / Don't
+
+| Do                                             | Don't                                      |
+| ---------------------------------------------- | ------------------------------------------ |
+| Use `asChild` with `<li>` for cards in a list. | Nest cards inside cards.                   |
+| Put a link in the card's heading.              | Wrap the whole card in a link or button.   |
+| Keep one primary action per card.              | Mix `outlined` and `elevated` in one list. |
+
+## Related components
+
+- `Stack` — layout inside and between cards.
+- `Heading`, `Text` — card content.
+- `Alert` — status messages.

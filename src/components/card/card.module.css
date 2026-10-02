@@ -1,0 +1,48 @@
+.card {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  padding: var(--_padding);
+  /* No overflow: hidden — it would clip the focus ring of controls near the edge. */
+  color: var(--ufi-color-text-default);
+  overflow-wrap: break-word;
+  background-color: var(--ufi-color-bg-surface);
+  border: var(--ufi-border-width) solid var(--_border);
+  border-radius: var(--ufi-radius-lg);
+  box-shadow: var(--_shadow);
+}
+
+/* Variants */
+.outlined {
+  --_border: var(--ufi-color-border-default);
+  --_shadow: none;
+}
+
+/* The border stays (transparent) so both variants have the same size and forced colors still draw an edge. */
+.elevated {
+  --_border: transparent;
+  --_shadow: var(--ufi-shadow-md);
+}
+
+/* Padding */
+.padding-none {
+  --_padding: 0;
+}
+
+.padding-sm {
+  --_padding: var(--ufi-space-sm);
+}
+
+.padding-md {
+  --_padding: var(--ufi-space-md);
+}
+
+.padding-lg {
+  --_padding: var(--ufi-space-lg);
+}
+
+/* Forced colors drop shadows: give the elevated card a visible edge. */
+@media (forced-colors: active) {
+  .elevated {
+    --_border: CanvasText;
+  }
+}
