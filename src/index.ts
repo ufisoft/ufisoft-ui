@@ -89,5 +89,18 @@ export {
   type DropdownMenuItemTone,
 } from './components/dropdown-menu';
 
+// Navigation
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsPanel,
+  type TabsProps,
+  type TabsListProps,
+  type TabsTriggerProps,
+  type TabsPanelProps,
+  type TabsOrientation,
+} from './components/tabs';
+
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';

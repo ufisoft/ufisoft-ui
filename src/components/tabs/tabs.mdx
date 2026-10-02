@@ -1,0 +1,68 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as TabsStories from './tabs.stories';
+
+<Meta of={TabsStories} />
+
+# Tabs
+
+Switches between panels of related content in the same place, showing one panel at a time.
+
+<Canvas of={TabsStories.Default} />
+
+## When to use
+
+- Related views of one object that the user moves between: a page's content, SEO and history; settings sections.
+
+## When not to use
+
+- Navigating between pages or routes — use links; tabs do not change the URL.
+- Steps that must be completed in order — use a stepper or separate pages.
+- Comparing content side by side — show it together; tabs hide all but one panel.
+- Choosing a value for a form — use `Radio` or `Select`.
+
+## Props
+
+<ArgTypes of={TabsStories} />
+
+Build tabs from four parts:
+
+- `Tabs` — holds the selection: `value` + `onValueChange` (controlled) or `defaultValue` (uncontrolled), and the `orientation`.
+- `TabsList` — the row of tabs. Give it an `aria-label` when the page has more than one tab list.
+- `TabsTrigger` — one tab. Its `value` connects it to the `TabsPanel` with the same value. `disabled` keeps it visible but unselectable.
+- `TabsPanel` — the content of one tab, rendered only while its tab is selected.
+
+Each part passes `className`, `ref` and native props to its element. ARIA wiring and keyboard navigation come from [Radix Tabs](https://www.radix-ui.com/primitives/docs/components/tabs).
+
+## Variants
+
+<Canvas of={TabsStories.Vertical} />
+
+## States
+
+<Canvas of={TabsStories.DisabledTab} />
+<Canvas of={TabsStories.ManyTabs} />
+
+When the tabs do not fit, the tab list scrolls instead of wrapping.
+
+## Examples
+
+<Canvas of={TabsStories.Controlled} />
+
+## Accessibility
+
+- `role="tablist"`, `tab` and `tabpanel` are wired with `aria-selected`, `aria-controls` and `aria-labelledby`; each panel is named by its tab.
+- Tab moves focus into the tab list (to the selected tab) and then into the panel. Arrow keys move between tabs — Left/Right when horizontal, Up/Down when vertical — and select them; Home and End jump to the first and last tab. Disabled tabs are skipped.
+- A panel is focusable, so keyboard users can reach content that has no focusable elements.
+
+## Do / Don't
+
+| Do                                                | Don't                                            |
+| ------------------------------------------------- | ------------------------------------------------ |
+| Use short, parallel labels: “General”, “Members”. | Use tabs as page navigation.                     |
+| Keep the most-used panel first and selected.      | Nest tabs inside tabs.                           |
+| Keep panels independent of each other.            | Require data from one panel to complete another. |
+
+## Related components
+
+- `Radio` — choosing a value instead of a view.
+- `Stack` — laying out panel content.

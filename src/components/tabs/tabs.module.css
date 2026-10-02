@@ -1,0 +1,117 @@
+.tabs {
+  display: flex;
+  flex-direction: var(--_direction);
+  gap: var(--_gap);
+  min-inline-size: 0;
+}
+
+.horizontal {
+  --_direction: column;
+  --_gap: var(--ufi-space-md);
+}
+
+.vertical {
+  --_direction: row;
+  --_gap: var(--ufi-space-lg);
+}
+
+.list {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: var(--_list-direction);
+  /*
+   * The divider is an inset shadow, not a border: it paints inside the list, so the
+   * selected tab's indicator can cover it without overflowing (no stray scrollbar).
+   */
+  box-shadow: inset var(--_divider-x) var(--_divider-y) 0 var(--ufi-color-border-default);
+}
+
+/* Many tabs scroll instead of wrapping; the selected tab stays a focusable stop inside. */
+.horizontal .list {
+  --_list-direction: row;
+  --_divider-x: 0;
+  --_divider-y: calc(var(--ufi-border-width) * -1);
+
+  overflow-x: auto;
+}
+
+.vertical .list {
+  --_list-direction: column;
+  --_divider-x: calc(var(--ufi-border-width) * -1);
+  --_divider-y: 0;
+
+  overflow-y: auto;
+}
+
+/* box-shadow offsets are physical: mirror the vertical divider for right-to-left. */
+.vertical .list:dir(rtl) {
+  --_divider-x: var(--ufi-border-width);
+}
+
+.trigger {
+  --_indicator: calc(var(--ufi-border-width) * 2);
+
+  flex-shrink: 0;
+  padding: var(--ufi-space-xs) var(--ufi-space-sm);
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  font-weight: var(--ufi-weight-medium);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-muted);
+  text-align: start;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: 0 solid transparent;
+  transition:
+    color var(--ufi-duration-fast) var(--ufi-easing-default),
+    border-color var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+/* The indicator covers the list divider so the selected tab reads as attached. */
+.horizontal .trigger {
+  border-block-end-width: var(--_indicator);
+}
+
+.vertical .trigger {
+  border-inline-end-width: var(--_indicator);
+}
+
+.trigger:hover:not(:disabled) {
+  color: var(--ufi-color-text-default);
+}
+
+.trigger[data-state='active'] {
+  color: var(--ufi-color-text-default);
+  border-color: var(--ufi-color-control-checked-bg);
+}
+
+.trigger:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: calc(var(--ufi-focus-ring-width) * -1);
+  border-radius: var(--ufi-radius-sm);
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+  opacity: var(--ufi-opacity-disabled);
+}
+
+.panel {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+/* Radix makes the panel focusable so keyboard users can reach content without focusable elements. */
+.panel:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+  border-radius: var(--ufi-radius-sm);
+}
+
+/* Forced colors: mark the selected tab with the system highlight colour. */
+@media (forced-colors: active) {
+  .trigger[data-state='active'] {
+    border-color: Highlight;
+  }
+}
