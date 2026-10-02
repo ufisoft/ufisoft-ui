@@ -1,0 +1,35 @@
+# CODEOWNERS blocks NOTHING on its own — by default it only suggests
+# reviewers. To make it blocking, enable in branch protection:
+#   ☑ Require a pull request before merging
+#   ☑ Require review from Code Owners
+# This repo has no CI yet; also add the gate job as a required status check
+# once CI exists.
+#
+# Protected vs. deliberately unprotected paths and the reasons:
+# docs/contracts/README.md › Governance — later.
+
+# Instruction files
+/AGENTS.md                  @kadirula
+/CLAUDE.md                  @kadirula
+/.claude/commands/          @kadirula
+
+# Written rules
+/CONTRIBUTING.md            @kadirula
+/CONTRIBUTING.tr.md         @kadirula
+
+# Enforcement
+/docs/contracts/            @kadirula
+/scripts/ci/                @kadirula
+/eslint.config.js           @kadirula
+/team-skills/               @kadirula
+
+# Memory policy (entries are deliberately unowned)
+/docs/memory/POLICY.md      @kadirula
+/docs/memory/topics.yaml    @kadirula
+
+# Design tokens and public API
+/src/tokens/                @kadirula
+/src/index.ts               @kadirula
+
+# This file
+/.github/CODEOWNERS         @kadirula

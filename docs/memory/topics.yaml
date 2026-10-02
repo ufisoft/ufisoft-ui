@@ -1,0 +1,30 @@
+# Memory topics. Every entry in entries/ has exactly one `topic` from this list.
+# Add a topic only when an entry fits none of these; keep the list at 5–8.
+topics:
+  - id: tokens-theming
+    title: Tokens & theming
+    covers: [src/tokens/, semantic vs primitive layer, future themes]
+    contract: docs/contracts/component-styling.md
+  - id: styling
+    title: Styling & CSS Modules
+    covers: ['src/components/**/*.module.css', src/styles/, cascade layers, class naming]
+    contract: docs/contracts/component-styling.md
+  - id: component-api
+    title: Component API
+    covers: [props, ref, asChild, FormField wiring, use client, src/index.ts]
+    contract: docs/contracts/public-api.md
+  - id: accessibility
+    title: Accessibility
+    covers: [jsx-a11y, Storybook a11y addon, keyboard and focus, ARIA]
+  - id: testing
+    title: Testing
+    covers: [Vitest, Testing Library, jsdom, src/test/setup.ts]
+  - id: docs-storybook
+    title: Docs & Storybook
+    covers: [.storybook/, '*.mdx', '*.stories.tsx', src/docs/]
+  - id: build-packaging
+    title: Build & packaging
+    covers: [vite.config.ts, tsconfig.build.json, dist/, package.json exports]
+  - id: release-versioning
+    title: Release & versioning
+    covers: [.changeset/, GitHub Packages, semver]

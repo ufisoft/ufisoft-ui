@@ -6,15 +6,15 @@
 }
 
 .sm {
-  --_size: var(--ufi-space-4);
+  --_size: var(--ufi-space-md);
 }
 
 .md {
-  --_size: var(--ufi-space-6);
+  --_size: var(--ufi-space-lg);
 }
 
 .lg {
-  --_size: var(--ufi-space-8);
+  --_size: var(--ufi-space-xl);
 }
 
 .circle {
