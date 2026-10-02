@@ -1,0 +1,63 @@
+.badge {
+  display: inline-flex;
+  gap: var(--ufi-space-2xs);
+  align-items: center;
+  max-inline-size: 100%;
+  padding: var(--_padding-block) var(--_padding-inline);
+  overflow: hidden;
+  font-family: var(--ufi-font-body);
+  font-size: var(--_font-size);
+  font-weight: var(--ufi-weight-medium);
+  line-height: var(--ufi-leading-tight);
+  color: var(--_fg);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  background-color: var(--_bg);
+  border: var(--ufi-border-width) solid var(--_border);
+  border-radius: var(--ufi-radius-full);
+}
+
+/* Tones — the same status colours as Alert */
+.neutral {
+  --_bg: var(--ufi-color-bg-muted);
+  --_border: var(--ufi-color-border-default);
+  --_fg: var(--ufi-color-text-muted);
+}
+
+.info {
+  --_bg: var(--ufi-color-info-bg);
+  --_border: var(--ufi-color-info-border);
+  --_fg: var(--ufi-color-info-fg);
+}
+
+.success {
+  --_bg: var(--ufi-color-success-bg);
+  --_border: var(--ufi-color-success-border);
+  --_fg: var(--ufi-color-success-fg);
+}
+
+.warning {
+  --_bg: var(--ufi-color-warning-bg);
+  --_border: var(--ufi-color-warning-border);
+  --_fg: var(--ufi-color-warning-fg);
+}
+
+.danger {
+  --_bg: var(--ufi-color-danger-bg);
+  --_border: var(--ufi-color-danger-border);
+  --_fg: var(--ufi-color-danger-fg);
+}
+
+/* Sizes */
+.sm {
+  --_padding-block: 0;
+  --_padding-inline: var(--ufi-space-xs);
+  --_font-size: var(--ufi-text-xs);
+}
+
+.md {
+  --_padding-block: var(--ufi-space-2xs);
+  --_padding-inline: var(--ufi-space-xs);
+  --_font-size: var(--ufi-text-xs);
+}

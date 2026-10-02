@@ -1,0 +1,67 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as BadgeStories from './badge.stories';
+
+<Meta of={BadgeStories} />
+
+# Badge
+
+A short, non-interactive label for a status or category, such as “Draft” or “Published”.
+
+<Canvas of={BadgeStories.Default} />
+
+## When to use
+
+- Showing the state of an item at a glance: page status, plan, role, a count.
+
+## When not to use
+
+- A message the user needs to read or act on — use `Alert`.
+- Something clickable or removable — use `Button`; a badge is not interactive.
+- Long text — a badge holds one or two words.
+
+## Props
+
+<ArgTypes of={BadgeStories} />
+
+`tone` sets the colour by meaning and uses the same status colours as `Alert`: `neutral` (default), `info`, `success`, `warning`, `danger`. All native `<span>` props are passed through, including `ref`.
+
+## Variants
+
+<Canvas of={BadgeStories.Tones} />
+
+## Sizes
+
+<Canvas of={BadgeStories.Sizes} />
+
+## States
+
+<Canvas of={BadgeStories.LongText} />
+
+A badge stays on one line; text that does not fit is cut off with an ellipsis. Keep badge text short so this does not happen.
+
+## Examples
+
+<Canvas of={BadgeStories.InContext} />
+<Canvas of={BadgeStories.DescribingAControl} />
+
+To attach a badge to a control, give the badge an `id` and point the control's `aria-describedby` at it, so the badge is announced with the control.
+
+## Accessibility
+
+- A badge is plain text in a `<span>` and is read in the page's reading order.
+- Colour is never the only signal: the text must say the status (“Failed”, not a red dot).
+- Write counts with their meaning — “3 unread”, not “3”. Do not use `aria-label` on a badge: it is not allowed on an element without a role and most screen readers ignore it.
+- If a badge changes while the user is on the page and the change matters, announce it with a live region; a badge does not announce itself.
+
+## Do / Don't
+
+| Do                                      | Don't                                     |
+| --------------------------------------- | ----------------------------------------- |
+| Use one or two words.                   | Put sentences in a badge.                 |
+| Pick the tone by meaning, not by looks. | Use `danger` to make something stand out. |
+| Write “3 unread” instead of “3”.        | Rely on colour alone to show status.      |
+
+## Related components
+
+- `Alert` — status messages the user should read.
+- `Card` — badges often label cards.
