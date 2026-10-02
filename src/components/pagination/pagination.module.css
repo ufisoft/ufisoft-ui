@@ -1,0 +1,33 @@
+.pagination {
+  min-inline-size: 0;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-2xs);
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* Square page controls so one- and two-digit pages line up. */
+.page > * {
+  min-inline-size: var(--ufi-control-height-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.ellipsis {
+  min-inline-size: var(--ufi-control-height-sm);
+  font-size: var(--ufi-text-sm);
+  color: var(--ufi-color-text-subtle);
+  text-align: center;
+}
+
+/* The disabled Previous/Next in link mode (plain text) looks like a disabled button. */
+.list span[aria-disabled='true'] {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: var(--ufi-opacity-disabled);
+}

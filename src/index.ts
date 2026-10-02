@@ -117,6 +117,7 @@ export {
   type BreadcrumbProps,
   type BreadcrumbItemProps,
 } from './components/breadcrumb';
+export { Pagination, type PaginationProps } from './components/pagination';
 
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';

@@ -1,0 +1,69 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as PaginationStories from './pagination.stories';
+
+<Meta of={PaginationStories} />
+
+# Pagination
+
+Moves between the pages of a long list or table.
+
+<Canvas of={PaginationStories.Default} />
+
+## When to use
+
+- Lists and tables split into pages, where users may want to jump to a specific page or come back to it later.
+
+## When not to use
+
+- Feeds read from top to bottom — load more on demand instead.
+- Fewer than two pages — Pagination renders nothing then, so it is safe to leave in place.
+- Steps of a process — use a stepper.
+
+## Props
+
+<ArgTypes of={PaginationStories} />
+
+Pagination is controlled: pass the current `page` (starting at 1) and `pageCount`, and update `page` in `onPageChange`.
+
+- Without `getHref` it renders buttons — for state kept in the component.
+- With `getHref` it renders links (`<a href>`) — for pages kept in the URL, so they can be bookmarked, shared and opened in a new tab. `onPageChange` is still called on click.
+
+The first and last page are always shown, with the current page and one neighbour on each side; gaps become “…”. Above 7 pages the number of items stays the same, so the controls do not move while paging.
+
+Labels are English by default; translate them with `aria-label`, `previousLabel`, `nextLabel` and `getPageLabel`. Built from `Button`, so it matches the other controls.
+
+## States
+
+<Canvas of={PaginationStories.MiddlePage} />
+<Canvas of={PaginationStories.LastPage} />
+<Canvas of={PaginationStories.FewPages} />
+<Canvas of={PaginationStories.Narrow} />
+
+On the first and last page, Previous and Next are disabled. In a narrow space the controls wrap onto another line.
+
+## Examples
+
+<Canvas of={PaginationStories.Links} />
+<Canvas of={PaginationStories.Translated} />
+<Canvas of={PaginationStories.WithSummary} />
+
+## Accessibility
+
+- A `navigation` landmark named “Pagination” with a list of controls.
+- Each page control is named “Page 3” (via `getPageLabel`), not just “3”, and the current one has `aria-current="page"`.
+- The “…” gaps are hidden from screen readers; the page names already say which pages exist.
+- In link mode, a disabled Previous/Next is plain text, so it is neither focusable nor announced as a link.
+- After a page change, move focus or announce the new results if the list is far from the controls — Pagination does not do this for you.
+
+## Do / Don't
+
+| Do                                                   | Don't                                           |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| Use `getHref` when the page is part of the URL.      | Use buttons for pages users will want to share. |
+| Show the range (“1–25 of 482”) next to the controls. | Hide the total number of pages.                 |
+| Keep the controls in the same place on every page.   | Move Pagination to the top on some pages only.  |
+
+## Related components
+
+- `Button` — the controls are Buttons.
+- `Text` — a results summary next to the controls.
