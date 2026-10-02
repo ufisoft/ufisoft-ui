@@ -38,6 +38,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check:contracts": "node scripts/ci/check_contracts.mjs",
+    "check:contracts:selftest": "node scripts/ci/check_contracts.selftest.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",

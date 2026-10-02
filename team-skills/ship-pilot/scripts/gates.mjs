@@ -14,6 +14,7 @@ const gates = [
   { name: 'build', command: 'pnpm build' },
   { name: 'format:check', command: 'pnpm format:check' },
   { name: 'contracts', command: 'pnpm check:contracts' },
+  { name: 'detectors', command: 'pnpm check:contracts:selftest' },
   { name: 'changeset', command: 'pnpm exec changeset status --since=main' },
 ];
 
