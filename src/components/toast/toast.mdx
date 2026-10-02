@@ -1,0 +1,80 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ToastStories from './toast.stories';
+
+<Meta of={ToastStories} />
+
+# Toast
+
+A short, temporary message about something that just happened, such as “Page saved”.
+
+<Canvas of={ToastStories.Default} />
+
+## When to use
+
+- Confirming the result of an action the user just took: saved, copied, published, deleted (with Undo).
+- A background event worth noticing but not acting on immediately.
+
+## When not to use
+
+- Errors the user must fix — show them next to the cause with `FormMessage` or `Alert`; toasts disappear.
+- Anything the user must read or decide — use `Modal` or `Alert`.
+- Long or important content — a toast closes by itself after a few seconds.
+
+## Props
+
+<ArgTypes of={ToastStories} />
+
+Place `ToastProvider` once near the root of the app, then show toasts from any component inside it:
+
+```tsx
+const { toast } = useToast();
+toast({ tone: 'success', title: 'Page published' });
+```
+
+`toast(options)` returns an id; `dismiss(id)` closes that toast early. Options:
+
+- `title` (required) and `description`.
+- `tone` — `neutral` (default), `info`, `success`, `warning` or `danger`, with the same colours as `Alert`.
+- `duration` — milliseconds before it closes; defaults to the provider's `duration` (5000).
+- `action` — one button such as Undo: `{ label, onClick, altText }`. `altText` tells screen-reader users another way to do it, since the toast may close before they reach it.
+
+Translate the provider's `label`, `toastLabel` and `closeLabel`. Timing, pausing, swipe-to-dismiss and the hotkey come from [Radix Toast](https://www.radix-ui.com/primitives/docs/components/toast).
+
+## Variants
+
+<Canvas of={ToastStories.AllTones} />
+
+## States
+
+<Canvas of={ToastStories.LongContent} />
+
+## Examples
+
+<Canvas of={ToastStories.UndoAction} />
+<Canvas of={ToastStories.FromModal} />
+<Canvas of={ToastStories.Translated} />
+
+**With a Modal, close it first, then show the toast.** While a modal `<dialog>` is open, the browser makes everything outside it inert — toasts included. A toast shown then is drawn above the modal (the toast region is a popover in the top layer), but it cannot be clicked or focused, and screen readers may not announce it. Toasts that are still on screen become usable once the modal closes.
+
+## Accessibility
+
+- Toasts are announced by a live region: politely for most tones, immediately for `danger`.
+- The timer pauses while the pointer is over a toast, while a toast has focus and while the window is in the background.
+- F8 moves focus to the toast region; Tab moves between toasts and their buttons; Escape closes the focused toast.
+- Each toast has a close button; it can also be swiped away on touch screens.
+- Keep a way to do the action elsewhere: an Undo in a toast is a shortcut, not the only path.
+- Do not show toasts while a `Modal` is open: they are inert there (see Examples).
+
+## Do / Don't
+
+| Do                                  | Don't                                       |
+| ----------------------------------- | ------------------------------------------- |
+| Keep the title to a few words.      | Put a form or several buttons in a toast.   |
+| Offer Undo for destructive actions. | Use a toast for errors the user has to fix. |
+| Use `danger` only for failures.     | Show a toast for every background event.    |
+
+## Related components
+
+- `Alert` — persistent messages in the page.
+- `Modal` — decisions the user must make.
+- `FormMessage` — errors next to the field.

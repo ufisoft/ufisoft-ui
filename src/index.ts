@@ -68,6 +68,13 @@ export { Switch, type SwitchProps } from './components/switch';
 export { Alert, type AlertProps, type AlertTone } from './components/alert';
 export { Spinner, type SpinnerProps, type SpinnerSize } from './components/spinner';
 export { Badge, type BadgeProps, type BadgeTone, type BadgeSize } from './components/badge';
+export {
+  ToastProvider,
+  useToast,
+  type ToastProviderProps,
+  type ToastOptions,
+  type ToastTone,
+} from './components/toast';
 
 // Overlay
 export { Modal, type ModalProps, type ModalSize } from './components/modal';

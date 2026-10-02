@@ -15,6 +15,22 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
   };
 }
 
+// jsdom has no pointer capture; Radix swipe handling (Toast) calls it on pointer events.
+if (typeof Element.prototype.hasPointerCapture !== 'function') {
+  Element.prototype.hasPointerCapture = () => false;
+  Element.prototype.setPointerCapture = () => {};
+  Element.prototype.releasePointerCapture = () => {};
+}
+
+// jsdom hides [popover] elements but cannot open them (no showPopover). Show them as normal
+// content so their children can be queried. Real top-layer behaviour (Toast) is verified in Storybook.
+if (typeof HTMLElement.prototype.showPopover !== 'function') {
+  const style = document.createElement('style');
+  // !important: jsdom's cascade lets its more specific built-in `:not(:popover-open)` rule win.
+  style.textContent = '[popover] { display: block !important; }';
+  document.head.append(style);
+}
+
 // jsdom does not implement <dialog> methods. Minimal shim: open state and the `close` event.
 // Real browser behaviour (top layer, focus, Escape) is verified in Storybook.
 if (!('open' in HTMLDialogElement.prototype)) {

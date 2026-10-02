@@ -1,0 +1,103 @@
+/*
+ * The viewport is a manual popover (top layer). Reset the browser's popover
+ * defaults (centred box with a border and padding) and pin it to the corner.
+ */
+.viewport {
+  position: fixed;
+  inset: auto var(--ufi-space-md) var(--ufi-space-md) auto;
+  z-index: var(--ufi-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-xs);
+  /* Intrinsic geometry: a readable toast width, never wider than the screen. */
+  inline-size: min(24rem, calc(100vw - 2 * var(--ufi-space-md)));
+  max-block-size: calc(100vh - 2 * var(--ufi-space-md));
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  color: inherit;
+  list-style: none;
+  background: none;
+  border: 0;
+  outline: none;
+}
+
+/* When it is not a popover (no support) or has no toasts, it must not block clicks. */
+.viewport:empty {
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  gap: var(--ufi-space-sm);
+  align-items: flex-start;
+  padding: var(--ufi-space-sm) var(--ufi-space-sm) var(--ufi-space-sm) var(--ufi-space-md);
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--_fg);
+  background-color: var(--_bg);
+  border: var(--ufi-border-width) solid var(--_border);
+  border-inline-start-width: var(--ufi-space-2xs);
+  border-radius: var(--ufi-radius-md);
+  box-shadow: var(--ufi-shadow-overlay);
+}
+
+/* Swipe-to-dismiss: Radix sets the offset while dragging. */
+.toast[data-swipe='move'] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+}
+
+.toast[data-swipe='end'] {
+  transform: translateX(var(--radix-toast-swipe-end-x));
+}
+
+.toast:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--ufi-space-2xs);
+  min-inline-size: 0;
+  padding-block: var(--ufi-space-2xs);
+  overflow-wrap: break-word;
+}
+
+.title {
+  font-weight: var(--ufi-weight-semibold);
+}
+
+/* Tones — the same status colours as Alert */
+.neutral {
+  --_bg: var(--ufi-color-bg-surface);
+  --_border: var(--ufi-color-border-default);
+  --_fg: var(--ufi-color-text-default);
+}
+
+.info {
+  --_bg: var(--ufi-color-info-bg);
+  --_border: var(--ufi-color-info-border);
+  --_fg: var(--ufi-color-info-fg);
+}
+
+.success {
+  --_bg: var(--ufi-color-success-bg);
+  --_border: var(--ufi-color-success-border);
+  --_fg: var(--ufi-color-success-fg);
+}
+
+.warning {
+  --_bg: var(--ufi-color-warning-bg);
+  --_border: var(--ufi-color-warning-border);
+  --_fg: var(--ufi-color-warning-fg);
+}
+
+.danger {
+  --_bg: var(--ufi-color-danger-bg);
+  --_border: var(--ufi-color-danger-border);
+  --_fg: var(--ufi-color-danger-fg);
+}
