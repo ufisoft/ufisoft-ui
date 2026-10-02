@@ -1,0 +1,62 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as SwitchStories from './switch.stories';
+
+<Meta of={SwitchStories} />
+
+# Switch
+
+Turns a single setting on or off, with immediate effect. A native checkbox with `role="switch"`.
+
+<Canvas of={SwitchStories.Default} />
+
+## When to use
+
+- Settings that apply as soon as they are toggled: notifications, dark mode, autosave.
+
+## When not to use
+
+- A choice that is only applied when a form is submitted, or agreeing to terms — use `Checkbox`.
+- Choosing one of several options — use `Radio` or `Select`.
+
+## Props
+
+<ArgTypes of={SwitchStories} />
+
+`children` is the label; the whole label is clickable. `className` applies to the wrapping label; all other props go to the native `<input type="checkbox">`, including `ref`. Use `checked` + `onChange` (read `event.target.checked`) or `defaultChecked`, as with any checkbox.
+
+Inside a `FormField`, the description and `disabled` come from the field.
+
+## States
+
+<Canvas of={SwitchStories.States} />
+
+## Examples
+
+<Canvas of={SwitchStories.Controlled} />
+<Canvas of={SwitchStories.SettingsList} />
+
+When toggling starts a slow request, keep the switch in its new position and show progress or an error next to it, rather than disabling it.
+
+## Edge cases
+
+<Canvas of={SwitchStories.LongLabel} />
+
+## Accessibility
+
+- Announced as a switch, “on” or “off”. Space toggles it; the label is its accessible name.
+- The native input is styled directly instead of hidden behind a fake track, so focus, form submission and validation stay native.
+- The label names the setting, not its state: “Autosave”, not “Autosave is on”.
+- In Windows High Contrast (forced colors) mode the system checkbox is shown.
+
+## Do / Don't
+
+| Do                                         | Don't                                               |
+| ------------------------------------------ | --------------------------------------------------- |
+| Apply the change immediately.              | Wait for a Save button to apply a switch.           |
+| Name the setting: “Email notifications”.   | Put the state in the label: “Notifications are on”. |
+| Phrase it positively: “Show line numbers”. | Use negatives: “Hide line numbers”.                 |
+
+## Related components
+
+- `Checkbox` — choices applied on submit.
+- `FormField` — description for a switch.

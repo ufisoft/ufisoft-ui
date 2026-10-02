@@ -1,0 +1,85 @@
+.root {
+  display: inline-flex;
+  gap: var(--ufi-space-xs);
+  align-items: flex-start;
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  cursor: pointer;
+}
+
+.root:has(.input:disabled) {
+  cursor: not-allowed;
+  opacity: var(--ufi-opacity-disabled);
+}
+
+/*
+ * The native input is styled directly (appearance: none) as the track; the
+ * thumb is its ::before. Semantics, focus and form behaviour stay native.
+ */
+.input {
+  --_track-width: var(--ufi-space-xl);
+  --_track-height: calc(var(--ufi-space-md) + var(--ufi-space-2xs));
+  --_inset: calc(var(--ufi-border-width) * 2);
+  --_thumb: calc(var(--_track-height) - var(--_inset) * 2);
+  --_travel: calc(var(--_track-width) - var(--_track-height));
+
+  position: relative;
+  flex-shrink: 0;
+  inline-size: var(--_track-width);
+  block-size: var(--_track-height);
+  /* Optically centre the track on the first line of the label. */
+  margin: calc((1lh - var(--_track-height)) / 2) 0 0;
+  cursor: inherit;
+  appearance: none;
+  background-color: var(--ufi-color-border-strong);
+  border-radius: var(--ufi-radius-full);
+  transition: background-color var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.input::before {
+  position: absolute;
+  inset-block-start: var(--_inset);
+  inset-inline-start: var(--_inset);
+  inline-size: var(--_thumb);
+  block-size: var(--_thumb);
+  content: '';
+  background-color: var(--ufi-color-control-bg);
+  border-radius: var(--ufi-radius-full);
+  box-shadow: var(--ufi-shadow-sm);
+  transition: transform var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.input:checked {
+  background-color: var(--ufi-color-control-checked-bg);
+}
+
+.input:checked::before {
+  background-color: var(--ufi-color-control-checked-fg);
+  transform: translateX(var(--_travel));
+}
+
+.input:checked:dir(rtl)::before {
+  transform: translateX(calc(var(--_travel) * -1));
+}
+
+.input:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+.input[aria-invalid='true']:not(:focus-visible) {
+  outline: var(--ufi-border-width) solid var(--ufi-color-border-danger);
+  outline-offset: var(--ufi-border-width);
+}
+
+/* Forced colors: background colours are overridden, fall back to the system checkbox. */
+@media (forced-colors: active) {
+  .input {
+    appearance: auto;
+  }
+
+  .input::before {
+    display: none;
+  }
+}

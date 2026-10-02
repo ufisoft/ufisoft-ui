@@ -60,6 +60,7 @@ export {
   type RadioGroupProps,
   type RadioGroupOrientation,
 } from './components/radio';
+export { Switch, type SwitchProps } from './components/switch';
 
 // Feedback
 export { Alert, type AlertProps, type AlertTone } from './components/alert';
