@@ -32,3 +32,10 @@ pnpm-debug.log*
 !.vscode/settings.json
 .DS_Store
 Thumbs.db
+
+# Agent tools: personal files ignored, shared ones allowlisted
+.claude/*
+!.claude/commands/
+# Personal permission/settings files (`*.local` above does not match these)
+.claude/settings.local.json
+CLAUDE.local.md

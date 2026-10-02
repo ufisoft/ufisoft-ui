@@ -22,10 +22,10 @@
   display: grid;
   flex-shrink: 0;
   place-content: center;
-  inline-size: var(--ufi-space-4);
-  block-size: var(--ufi-space-4);
+  inline-size: var(--ufi-space-md);
+  block-size: var(--ufi-space-md);
   /* Optically centre the box on the first line of the label. */
-  margin-block-start: calc((1lh - var(--ufi-space-4)) / 2);
+  margin-block-start: calc((1lh - var(--ufi-space-md)) / 2);
   cursor: inherit;
   appearance: none;
   background-color: var(--ufi-color-control-bg);
