@@ -1,0 +1,22 @@
+.popover {
+  z-index: var(--ufi-z-dropdown);
+  box-sizing: border-box;
+  /* Intrinsic geometry; never wider than the room Radix measured next to the trigger. */
+  max-inline-size: min(22rem, var(--radix-popover-content-available-width));
+  padding: var(--ufi-space-md);
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-normal);
+  color: var(--ufi-color-text-default);
+  overflow-wrap: break-word;
+  background-color: var(--ufi-color-bg-surface);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-default);
+  border-radius: var(--ufi-radius-md);
+  box-shadow: var(--ufi-shadow-overlay);
+}
+
+/* Focus lands on the popover itself when it has no focusable content. */
+.popover:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}

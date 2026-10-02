@@ -69,6 +69,12 @@ export { Spinner, type SpinnerProps, type SpinnerSize } from './components/spinn
 // Overlay
 export { Modal, type ModalProps, type ModalSize } from './components/modal';
 export { Tooltip, type TooltipProps, type TooltipSide } from './components/tooltip';
+export {
+  Popover,
+  type PopoverProps,
+  type PopoverSide,
+  type PopoverAlign,
+} from './components/popover';
 
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';

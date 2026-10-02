@@ -1,0 +1,67 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as PopoverStories from './popover.stories';
+
+<Meta of={PopoverStories} />
+
+# Popover
+
+Interactive content anchored to a trigger, such as filters or quick settings. It is non-modal: the rest of the page stays usable.
+
+<Canvas of={PopoverStories.Default} />
+
+## When to use
+
+- Small, optional tasks next to the control that starts them: filters, sharing options, a quick edit.
+- Supplementary content the user may interact with: links, buttons, form controls.
+
+## When not to use
+
+- A short, non-interactive hint — use `Tooltip`.
+- A task that must be finished or cancelled before continuing, or a lot of content — use `Modal`.
+- A list of actions or options — use a menu or `Select`.
+
+## Props
+
+<ArgTypes of={PopoverStories} />
+
+`children` is the trigger: one button-like element that accepts `ref` and spreads its props, such as `Button`. `content` is the popover body. `className` and the remaining props go to the popover element, including `ref` and `aria-label`.
+
+The popover opens on click, flips to the opposite `side` when there is no room, and closes on Escape or an outside click. To close it from its own content (e.g. an Apply button), control it with `open` + `onOpenChange`.
+
+Positioning, focus and dismissal come from [Radix Popover](https://www.radix-ui.com/primitives/docs/components/popover). The popover is rendered next to its trigger, not in a portal, so it also works inside a `Modal`.
+
+## Variants
+
+<Canvas of={PopoverStories.Placement} />
+
+## States
+
+<Canvas of={PopoverStories.Open} />
+<Canvas of={PopoverStories.LongContent} />
+
+## Examples
+
+<Canvas of={PopoverStories.ClosedFromContent} />
+<Canvas of={PopoverStories.InModal} />
+
+## Accessibility
+
+- The popover has `role="dialog"` and needs a name: pass `aria-label`, or `aria-labelledby` pointing at a heading inside it.
+- The trigger gets `aria-expanded` and `aria-controls`.
+- Opening moves focus to the first focusable element inside; closing returns focus to the trigger.
+- Escape closes the popover. Inside a `Modal`, the first Escape closes only the popover.
+- It is non-modal: focus is not trapped, and Tab can leave the popover.
+
+## Do / Don't
+
+| Do                                        | Don't                                              |
+| ----------------------------------------- | -------------------------------------------------- |
+| Keep it small and related to its trigger. | Put a whole form or page section in a popover.     |
+| Name it with `aria-label`.                | Leave the dialog role unnamed.                     |
+| Close it after the user applies a change. | Open a popover on hover — use `Tooltip` for hints. |
+
+## Related components
+
+- `Tooltip` — non-interactive hints.
+- `Modal` — blocking tasks.
+- `FormField` — form controls inside a popover.
