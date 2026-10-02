@@ -50,6 +50,7 @@ export {
   type FormFieldControlProps,
 } from './components/form-field';
 export { Input, type InputProps, type InputSize } from './components/input';
+export { Textarea, type TextareaProps, type TextareaSize } from './components/textarea';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 
 // Feedback
