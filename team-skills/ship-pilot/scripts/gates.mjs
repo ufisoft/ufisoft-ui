@@ -15,7 +15,8 @@ const gates = [
   { name: 'format:check', command: 'pnpm format:check' },
   { name: 'contracts', command: 'pnpm check:contracts' },
   { name: 'detectors', command: 'pnpm check:contracts:selftest' },
-  { name: 'changeset', command: 'pnpm exec changeset status --since=main' },
+  // origin/main, not main: on main itself `--since=main` compares main with itself and sees nothing.
+  { name: 'changeset', command: 'pnpm exec changeset status --since=origin/main' },
 ];
 
 const results = [];

@@ -19,6 +19,6 @@ How to work in this repo. What the rules are and where they live: see `AGENTS.md
    → Don't reformat or "tidy" unrelated files; the pre-commit hook formats staged files only.
 
 5. **Goal-driven.** Done means [CONTRIBUTING › Definition of Done](./CONTRIBUTING.md#definition-of-done), proven by running it.
-   → `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check`, `pnpm changeset status --since=main`.
+   → `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm format:check`, `pnpm changeset status --since=origin/main`.
    → Accessibility: the Storybook _Accessibility_ panel (`pnpm storybook`) is checked by hand — say so if you could not check it.
    → Report what you ran and what failed; never present unrun work as done.

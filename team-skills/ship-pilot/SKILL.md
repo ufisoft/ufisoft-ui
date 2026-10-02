@@ -2,7 +2,7 @@
 name: ship-pilot
 description: >-
   Gets a change in @ufisoft/ui ready to leave the machine: runs every gate, checks the
-  changeset, then commits (and pushes a feature branch) with explicit paths. Use when the
+  changeset, then commits (and pushes) with explicit paths. Use when the
   user says "ship it", "is this ready to push?", "run the gates", "commit this", "open it
   for review" or runs /ship-pilot. NOT used for publishing or versioning a release
   (`pnpm release`, `pnpm changeset version`), and not for writing the change itself.
@@ -10,7 +10,7 @@ triggers:
   slash: /ship-pilot
 modes:
   check: Run the gates and report. Changes nothing.
-  ship: check, then commit with explicit paths and push the feature branch — each step only after the user approves it.
+  ship: check, then commit with explicit paths and push `main` — each step only after the user approves it.
 ---
 
 # ship-pilot
@@ -25,17 +25,17 @@ node team-skills/ship-pilot/scripts/gates.mjs
 
 The script runs every gate even after a failure and exits `1` if any failed. Report each failure with its output; do not "fix" a gate by weakening it.
 
-| Gate         | Command                                   | What it catches / the trap                                                                                                                                                                                                                                                                                                                                         |
-| ------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| lint         | `pnpm lint`                               | ESLint incl. jsx-a11y and react-hooks over `.ts/.tsx/.js/.mjs`. Trap: it never reads `*.module.css`.                                                                                                                                                                                                                                                               |
-| typecheck    | `pnpm typecheck`                          | `tsc --noEmit` over `src`, `.storybook`, `vite.config.ts`, `eslint.config.js`. Trap: `.mjs` scripts (`scripts/`, `team-skills/`) are outside `tsconfig.json` `include`.                                                                                                                                                                                            |
-| test         | `pnpm test`                               | Vitest + Testing Library in jsdom. Trap: `<dialog>` is a shim in `src/test/setup.ts` — real Modal behaviour (focus, Escape, top layer) is not covered.                                                                                                                                                                                                             |
-| build        | `pnpm build`                              | Vite library build + `tsc -p tsconfig.build.json` declarations. Trap: tests and stories are excluded from the build's type check, so they only fail in `typecheck`.                                                                                                                                                                                                |
-| format:check | `pnpm format:check`                       | Prettier over the whole repo. Trap: also fails on new `.md`/`.mdx`/`.json` files that never went through the pre-commit hook.                                                                                                                                                                                                                                      |
-| contracts    | `pnpm check:contracts`                    | `css-regex` and `structure` rules of `docs/contracts/*.md` (tokens, hex, px, `:global`, public exports). Trap: ESLint-backed rules run in `lint`; here it only checks they are wired into `eslint.config.js`. Exceptions go in the contract's `allow`, never in the script.                                                                                        |
-| detectors    | `pnpm check:contracts:selftest`           | Every contract rule still fires on `scripts/ci/contract-fixtures/` — catches a broken regex, selector or parser that would leave a gate silently green. Trap: it writes a temporary `src/components/zz-contract-fixture/`; if a run is interrupted, delete that folder before the next one.                                                                        |
-| changeset    | `pnpm exec changeset status --since=main` | A committed change with no changeset. Traps: (1) it sees edits to tracked files but **not untracked files** — a new changeset counts only once committed, and a branch of only new files looks clean until committed; run it again after committing; (2) the package root is the repo root, so docs-only commits need one too; (3) it needs a local `main` branch. |
-| a11y         | Storybook _Accessibility_ panel           | **Not a gate** — checked by hand in `pnpm storybook`. Say whether you checked it.                                                                                                                                                                                                                                                                                  |
+| Gate         | Command                                          | What it catches / the trap                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------ | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| lint         | `pnpm lint`                                      | ESLint incl. jsx-a11y and react-hooks over `.ts/.tsx/.js/.mjs`. Trap: it never reads `*.module.css`.                                                                                                                                                                                                                                                                                                                                |
+| typecheck    | `pnpm typecheck`                                 | `tsc --noEmit` over `src`, `.storybook`, `vite.config.ts`, `eslint.config.js`. Trap: `.mjs` scripts (`scripts/`, `team-skills/`) are outside `tsconfig.json` `include`.                                                                                                                                                                                                                                                             |
+| test         | `pnpm test`                                      | Vitest + Testing Library in jsdom. Trap: `<dialog>` is a shim in `src/test/setup.ts` — real Modal behaviour (focus, Escape, top layer) is not covered.                                                                                                                                                                                                                                                                              |
+| build        | `pnpm build`                                     | Vite library build + `tsc -p tsconfig.build.json` declarations. Trap: tests and stories are excluded from the build's type check, so they only fail in `typecheck`.                                                                                                                                                                                                                                                                 |
+| format:check | `pnpm format:check`                              | Prettier over the whole repo. Trap: also fails on new `.md`/`.mdx`/`.json` files that never went through the pre-commit hook.                                                                                                                                                                                                                                                                                                       |
+| contracts    | `pnpm check:contracts`                           | `css-regex` and `structure` rules of `docs/contracts/*.md` (tokens, hex, px, `:global`, public exports). Trap: ESLint-backed rules run in `lint`; here it only checks they are wired into `eslint.config.js`. Exceptions go in the contract's `allow`, never in the script.                                                                                                                                                         |
+| detectors    | `pnpm check:contracts:selftest`                  | Every contract rule still fires on `scripts/ci/contract-fixtures/` — catches a broken regex, selector or parser that would leave a gate silently green. Trap: it writes a temporary `src/components/zz-contract-fixture/`; if a run is interrupted, delete that folder before the next one.                                                                                                                                         |
+| changeset    | `pnpm exec changeset status --since=origin/main` | A committed change with no changeset. Traps: (1) it sees edits to tracked files but **not untracked files** — a new changeset counts only once committed, and a branch of only new files looks clean until committed; run it again after committing; (2) the package root is the repo root, so docs-only commits need one too; (3) it compares with `origin/main` — `git fetch` first, or a stale remote ref hides or adds commits. |
+| a11y         | Storybook _Accessibility_ panel                  | **Not a gate** — checked by hand in `pnpm storybook`. Say whether you checked it.                                                                                                                                                                                                                                                                                                                                                   |
 
 ### When a gate is red
 
@@ -58,15 +58,19 @@ The script runs every gate even after a failure and exits `1` if any failed. Rep
 
 ## 4. Branch flow
 
-- `main` + feature branches. Work on a feature branch; do not commit to `main`.
-- Push only the feature branch, only after the user approves. Anything beyond that (release branches, tags, merging) → ask the user.
+**Current phase: trunk-based.** While the library is in early development, commit directly to `main` — no feature branches, no pull requests. The team switches back to feature branches + PRs once the library matures; this section changes then.
+
+- Before committing: `git fetch` and make sure `main` is not behind `origin/main` (`git status -sb`). If it is, `git pull --ff-only` first.
+- Push `main` only after the user approves. A non-fast-forward rejection means `git pull --rebase` (your unpushed commits only) and run the gates again — never force.
+- Anything beyond that (release branches, tags) → ask the user.
 - No issue tracker is used, so there is no claim step before starting work.
-- **More than one agent session (or your editor) working in this checkout at the same time?** Commit from an isolated worktree, or you may commit someone else's half-done work or onto a stale tip:
+- **More than one agent session (or your editor) working in this checkout at the same time?** Work in an isolated worktree on a short-lived branch, or you may commit someone else's half-done work or onto a stale tip. Bring it to `main` with a fast-forward:
 
   ```bash
-  git worktree add ../ufisoft-ui-wt-<topic> -b <feature-branch> origin/main
-  # make, commit and push the change there, then:
-  git worktree remove ../ufisoft-ui-wt-<topic>
+  git worktree add ../ufisoft-ui-wt-<topic> -b wt/<topic> origin/main
+  # make and commit the change there, then from the main checkout:
+  git merge --ff-only wt/<topic>
+  git worktree remove ../ufisoft-ui-wt-<topic> && git branch -d wt/<topic>
   ```
 
 ## 5. Release
