@@ -1,0 +1,69 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as RadioStories from './radio.stories';
+
+<Meta of={RadioStories} />
+
+# Radio
+
+Selects exactly one option from a small set where every option stays visible. `RadioGroup` holds the choice; each `Radio` is a native `<input type="radio">`.
+
+<Canvas of={RadioStories.Default} />
+
+## When to use
+
+- 2–5 mutually exclusive options the user should compare at a glance: plan, shipping method, visibility.
+
+## When not to use
+
+- Many options, or space is tight — use `Select`.
+- Any number of options may be chosen — use `Checkbox`.
+- A single on/off choice — use `Checkbox` or `Switch` (planned).
+
+## Props
+
+<ArgTypes of={RadioStories} />
+
+`RadioGroup` takes the value: `value` + `onValueChange` (controlled) or `defaultValue` (uncontrolled), and passes `name`, `disabled` and `required` to every `Radio`. `invalid` sets `aria-invalid` on the group (ARIA does not support it on a single radio) and outlines every radio in the danger color. Set `name` when the form is submitted natively; otherwise one is generated.
+
+`Radio` takes a `value` and its label as `children`. `className` applies to the wrapping label; all other props go to the native input, including `ref`.
+
+Inside a `FormField`, the group is named by the `FormLabel` and gets the field's description, message, `required`, `disabled` and `invalid`.
+
+## Variants
+
+<Canvas of={RadioStories.Horizontal} />
+
+Use `horizontal` only for two or three short options; longer lists are easier to scan vertically.
+
+## States
+
+<Canvas of={RadioStories.States} />
+<Canvas of={RadioStories.Invalid} />
+<Canvas of={RadioStories.Disabled} />
+
+## Examples
+
+<Canvas of={RadioStories.Controlled} />
+<Canvas of={RadioStories.InFormField} />
+<Canvas of={RadioStories.LongLabel} />
+
+## Accessibility
+
+- Native radios: Tab moves into and out of the group, arrow keys move the selection, Space selects the focused radio.
+- The group has `role="radiogroup"` and needs a name: a `FormField` + `FormLabel`, or `aria-label` / `aria-labelledby`.
+- `required` is set on the radios, so the browser blocks submitting the form until one is chosen.
+- In Windows High Contrast (forced colors) mode the system radio is shown.
+
+## Do / Don't
+
+| Do                                                     | Don't                                                 |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| Preselect a sensible default when one exists.          | Use a single radio — it cannot be unselected.         |
+| Keep labels short and parallel.                        | Use radios for options that trigger actions directly. |
+| Order options logically (by frequency, size or price). | Put more than about five options in a group.          |
+
+## Related components
+
+- `Select` — the same choice in less space.
+- `Checkbox` — independent options.
+- `FormField` — label, description and validation for the group.

@@ -46,6 +46,7 @@ export function FormField({
   const value = useMemo(
     () => ({
       controlId: controlId ?? `${baseId}-control`,
+      labelId: `${baseId}-label`,
       descriptionId: `${baseId}-description`,
       messageId: `${baseId}-message`,
       hasDescription: descriptionCount > 0,
@@ -86,7 +87,9 @@ export type FormLabelProps = Omit<LabelProps, 'htmlFor'>;
 
 export function FormLabel(props: FormLabelProps) {
   const field = useFormFieldContext();
-  return <Label htmlFor={field?.controlId} required={field?.required} {...props} />;
+  return (
+    <Label id={field?.labelId} htmlFor={field?.controlId} required={field?.required} {...props} />
+  );
 }
 
 export type FormDescriptionProps = ComponentProps<'p'>;

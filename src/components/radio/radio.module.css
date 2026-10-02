@@ -1,0 +1,94 @@
+/* Group */
+.group {
+  display: flex;
+  flex-direction: var(--_direction);
+  flex-wrap: wrap;
+  gap: var(--_gap);
+}
+
+.vertical {
+  --_direction: column;
+  --_gap: var(--ufi-space-xs);
+}
+
+.horizontal {
+  --_direction: row;
+  --_gap: var(--ufi-space-xs) var(--ufi-space-md);
+}
+
+/* Radio */
+.root {
+  display: inline-flex;
+  gap: var(--ufi-space-xs);
+  align-items: flex-start;
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  cursor: pointer;
+}
+
+.root:has(.input:disabled) {
+  cursor: not-allowed;
+  opacity: var(--ufi-opacity-disabled);
+}
+
+/*
+ * The native input is styled directly (appearance: none) instead of being
+ * hidden behind a fake circle: semantics, focus, arrow keys and form behaviour stay native.
+ */
+.input {
+  display: grid;
+  flex-shrink: 0;
+  place-content: center;
+  inline-size: var(--ufi-space-md);
+  block-size: var(--ufi-space-md);
+  /* Optically centre the circle on the first line of the label. */
+  margin: calc((1lh - var(--ufi-space-md)) / 2) 0 0;
+  cursor: inherit;
+  appearance: none;
+  background-color: var(--ufi-color-control-bg);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-strong);
+  border-radius: var(--ufi-radius-full);
+  transition:
+    background-color var(--ufi-duration-fast) var(--ufi-easing-default),
+    border-color var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.input::before {
+  inline-size: 0.375em;
+  block-size: 0.375em;
+  content: '';
+  background-color: var(--ufi-color-control-checked-fg);
+  border-radius: var(--ufi-radius-full);
+  transform: scale(0);
+}
+
+.input:checked {
+  background-color: var(--ufi-color-control-checked-bg);
+  border-color: var(--ufi-color-control-checked-bg);
+}
+
+.input:checked::before {
+  transform: scale(1);
+}
+
+.input:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+/* Invalid is announced on the group: aria-invalid is not supported on role=radio. */
+.group[aria-invalid='true'] .input {
+  border-color: var(--ufi-color-border-danger);
+}
+
+/* Forced colors: background colours are overridden, fall back to the system radio. */
+@media (forced-colors: active) {
+  .input {
+    appearance: auto;
+  }
+
+  .input::before {
+    display: none;
+  }
+}

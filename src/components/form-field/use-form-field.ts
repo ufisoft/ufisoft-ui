@@ -4,6 +4,8 @@ import { createContext, useContext, type AriaAttributes } from 'react';
 
 export interface FormFieldContextValue {
   controlId: string;
+  /** Id of the FormLabel, for controls a `<label for>` cannot name (e.g. RadioGroup). */
+  labelId: string;
   descriptionId: string;
   messageId: string;
   hasDescription: boolean;
