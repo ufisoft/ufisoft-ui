@@ -1,0 +1,64 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as BreadcrumbStories from './breadcrumb.stories';
+
+<Meta of={BreadcrumbStories} />
+
+# Breadcrumb
+
+Shows where the current page sits in the site hierarchy and links to its ancestors.
+
+<Canvas of={BreadcrumbStories.Default} />
+
+## When to use
+
+- Pages nested two or more levels deep: a page inside a section, a setting inside a settings area.
+
+## When not to use
+
+- Top-level pages — there is nothing to go back to.
+- Showing steps of a process — use a stepper; breadcrumbs show location, not progress.
+- Switching between sibling views — use `Tabs`.
+
+## Props
+
+<ArgTypes of={BreadcrumbStories} />
+
+- `Breadcrumb` — a `<nav>` landmark with an ordered list inside. Its `aria-label` defaults to “Breadcrumb”; translate it, and make it unique if the page has more than one.
+- `BreadcrumbItem` — one level. Give ancestors an `href`; mark the last item `current`, which renders plain text with `aria-current="page"`. With `asChild`, the single child (e.g. a router `Link`) is rendered as the link.
+
+`className` of `BreadcrumbItem` goes to its `<li>`; `ref` and all other props go to the link.
+
+## Variants
+
+<Canvas of={BreadcrumbStories.TwoLevels} />
+
+## States
+
+<Canvas of={BreadcrumbStories.DeepAndLong} />
+
+A long trail wraps onto more lines instead of overflowing.
+
+## Examples
+
+<Canvas of={BreadcrumbStories.RouterLinks} />
+<Canvas of={BreadcrumbStories.PageHeader} />
+
+## Accessibility
+
+- A `navigation` landmark named “Breadcrumb”, with an ordered list, so screen readers announce the number of levels.
+- The current page is marked with `aria-current="page"` and is not a link.
+- Separators are drawn by CSS and have empty alternative text, so they are not read out.
+- Keep the current page's breadcrumb text the same as the page heading.
+
+## Do / Don't
+
+| Do                                               | Don't                                      |
+| ------------------------------------------------ | ------------------------------------------ |
+| Start from the top level of the site or section. | Show the trail on top-level pages.         |
+| Use the page titles as labels.                   | Link the current page to itself.           |
+| Place it above the page heading.                 | Use it as the only navigation on the page. |
+
+## Related components
+
+- `Heading` — the page title below the breadcrumb.
+- `Tabs` — switching between sibling views.

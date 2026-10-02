@@ -111,6 +111,12 @@ export {
   type AccordionItemProps,
   type AccordionType,
 } from './components/accordion';
+export {
+  Breadcrumb,
+  BreadcrumbItem,
+  type BreadcrumbProps,
+  type BreadcrumbItemProps,
+} from './components/breadcrumb';
 
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';

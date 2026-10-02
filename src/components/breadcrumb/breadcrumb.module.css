@@ -1,0 +1,57 @@
+.breadcrumb {
+  min-inline-size: 0;
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-2xs) var(--ufi-space-xs);
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.item {
+  display: inline-flex;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Decorative separator; the empty alternative text keeps screen readers from reading it. */
+.item + .item::before {
+  color: var(--ufi-color-text-subtle);
+  content: '/';
+  content: '/' / '';
+}
+
+.link {
+  color: var(--ufi-color-text-muted);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.2em;
+  border-radius: var(--ufi-radius-sm);
+  transition:
+    color var(--ufi-duration-fast) var(--ufi-easing-default),
+    text-decoration-color var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.link:hover {
+  color: var(--ufi-color-text-link);
+  text-decoration-color: currentcolor;
+}
+
+.link:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+.current {
+  font-weight: var(--ufi-weight-medium);
+  color: var(--ufi-color-text-default);
+}
