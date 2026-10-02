@@ -1,0 +1,67 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as TooltipStories from './tooltip.stories';
+
+<Meta of={TooltipStories} />
+
+# Tooltip
+
+A short hint for the element it wraps, shown on hover and keyboard focus.
+
+<Canvas of={TooltipStories.Default} />
+
+## When to use
+
+- Naming or explaining an icon-only control: “Delete page”.
+- A brief, non-essential hint about what an action does.
+
+## When not to use
+
+- Information the user needs to complete a task — show it as text, e.g. a `FormDescription`.
+- Interactive content (links, buttons) — use a popover (planned); a tooltip cannot be entered.
+- Validation errors — use `FormMessage` or `Alert`.
+
+## Props
+
+<ArgTypes of={TooltipStories} />
+
+`children` is the trigger: a single focusable element that accepts `ref` and spreads its props, such as `Button` or `IconButton`. `content` is the hint. `className` and the remaining props go to the tooltip element, including `ref`.
+
+The tooltip opens after a short delay, flips to the opposite `side` when there is no room, and closes on Escape, blur or pointer leave. Use `open` + `onOpenChange` to control it.
+
+Positioning, delay and dismissal come from [Radix Tooltip](https://www.radix-ui.com/primitives/docs/components/tooltip). The tooltip is rendered next to its trigger, not in a portal, so it also works inside a `Modal`.
+
+## Variants
+
+<Canvas of={TooltipStories.Sides} />
+
+## States
+
+<Canvas of={TooltipStories.Open} />
+<Canvas of={TooltipStories.LongContent} />
+
+## Examples
+
+<Canvas of={TooltipStories.OnIconButton} />
+<Canvas of={TooltipStories.InModal} />
+
+## Accessibility
+
+- The hint is linked to the trigger with `aria-describedby`; screen readers read it after the trigger's name.
+- It opens on keyboard focus as well as hover, and Escape closes it.
+- A tooltip is not an accessible name. An `IconButton` still needs its own `aria-label`; the tooltip may repeat it for sighted users.
+- Touch devices have no hover: never hide essential information in a tooltip.
+- Disabled buttons receive no pointer or focus events, so their tooltip never shows. Explain why an action is unavailable in visible text instead.
+
+## Do / Don't
+
+| Do                                 | Don't                                                    |
+| ---------------------------------- | -------------------------------------------------------- |
+| Keep it to a few words.            | Write paragraphs or put links in a tooltip.              |
+| Add tooltips to icon-only buttons. | Repeat a visible button label in a tooltip.              |
+| Wrap focusable elements.           | Wrap plain text or disabled buttons — they cannot focus. |
+
+## Related components
+
+- `IconButton` — the most common trigger.
+- `FormField` — `FormDescription` for hints the user must see.
+- `Modal` — tooltips work inside it.

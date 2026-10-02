@@ -1,0 +1,21 @@
+.tooltip {
+  z-index: var(--ufi-z-tooltip);
+  /* Intrinsic geometry: keeps hints short and readable. */
+  max-inline-size: 20rem;
+  padding: var(--ufi-space-2xs) var(--ufi-space-xs);
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-xs);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-inverse);
+  overflow-wrap: break-word;
+  background-color: var(--ufi-color-bg-inverse);
+  border-radius: var(--ufi-radius-sm);
+  box-shadow: var(--ufi-shadow-md);
+}
+
+/* Forced colors drop the background: keep the hint outlined. */
+@media (forced-colors: active) {
+  .tooltip {
+    border: var(--ufi-border-width) solid CanvasText;
+  }
+}

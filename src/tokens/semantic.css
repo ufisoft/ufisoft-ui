@@ -11,6 +11,7 @@
   --ufi-color-bg-surface: var(--ufi-gray-0);
   --ufi-color-bg-subtle: var(--ufi-gray-50);
   --ufi-color-bg-muted: var(--ufi-gray-100);
+  --ufi-color-bg-inverse: var(--ufi-gray-900);
   --ufi-color-bg-backdrop: rgb(15 23 42 / 0.5);
 
   /* Text */

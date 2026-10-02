@@ -6,6 +6,15 @@ afterEach(() => {
   cleanup();
 });
 
+// jsdom has no ResizeObserver; Radix positioning (Tooltip) needs one. Layout is verified in Storybook.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // jsdom does not implement <dialog> methods. Minimal shim: open state and the `close` event.
 // Real browser behaviour (top layer, focus, Escape) is verified in Storybook.
 if (!('open' in HTMLDialogElement.prototype)) {
