@@ -1,0 +1,63 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as AvatarStories from './avatar.stories';
+
+<Meta of={AvatarStories} />
+
+# Avatar
+
+A picture or initials that represent a person or an entity, such as the author of a page.
+
+<Canvas of={AvatarStories.Default} />
+
+## When to use
+
+- Showing who did something or who something belongs to: authors, assignees, the signed-in user.
+
+## When not to use
+
+- Logos or product images — use a plain `<img>`.
+- Status — use `Badge`; an avatar shows identity, not state.
+
+## Props
+
+<ArgTypes of={AvatarStories} />
+
+`name` is required: it is the accessible name and the source of the initials. `src` is optional; without it, or when the image fails to load, the initials are shown. A new `src` is tried again after a failure. `className`, `ref` and native props go to the root `<span>`.
+
+When the name is already visible next to the avatar, pass `alt=""` so screen readers do not read it twice.
+
+## Sizes
+
+<Canvas of={AvatarStories.Sizes} />
+
+## States
+
+<Canvas of={AvatarStories.Initials} />
+<Canvas of={AvatarStories.BrokenImage} />
+<Canvas of={AvatarStories.TurkishInitials} />
+
+Initials are the first letters of the first and last word. They are upper-cased with CSS, which follows the page's `lang`: in a Turkish page “ilker” becomes “İ”, not “I”.
+
+## Examples
+
+<Canvas of={AvatarStories.WithName} />
+
+## Accessibility
+
+- With an image, the avatar is an `<img>` whose `alt` is the name.
+- With initials, the avatar has `role="img"` and the name as its label, so screen readers say “Ada Lovelace”, not “A L”.
+- With `alt=""` it is decorative and hidden from assistive technology.
+- Avatars are not interactive. To link to a profile, wrap the avatar and the name together in one link.
+
+## Do / Don't
+
+| Do                                             | Don't                                          |
+| ---------------------------------------------- | ---------------------------------------------- |
+| Pass the full name, even when showing a photo. | Pass initials as `name`.                       |
+| Use `alt=""` next to a visible name.           | Expect people to recognise others by initials. |
+| Use one size per list.                         | Use an avatar as a button on its own.          |
+
+## Related components
+
+- `Badge` — status next to an avatar.
+- `Text` — the name beside an avatar.

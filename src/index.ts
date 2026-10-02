@@ -32,6 +32,7 @@ export {
   type StackJustify,
 } from './components/stack';
 export { Card, type CardProps, type CardVariant, type CardPadding } from './components/card';
+export { Avatar, type AvatarProps, type AvatarSize } from './components/avatar';
 
 // Actions
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from './components/button';

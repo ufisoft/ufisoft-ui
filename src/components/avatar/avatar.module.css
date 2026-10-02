@@ -1,0 +1,53 @@
+.avatar {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--_size);
+  block-size: var(--_size);
+  overflow: hidden;
+  font-family: var(--ufi-font-body);
+  font-size: var(--_font-size);
+  font-weight: var(--ufi-weight-medium);
+  line-height: var(--ufi-leading-tight);
+  color: var(--ufi-color-text-muted);
+  vertical-align: middle;
+  user-select: none;
+  background-color: var(--ufi-color-bg-muted);
+  border-radius: var(--ufi-radius-full);
+  /* A hairline keeps light photos from blending into a light page. */
+  box-shadow: inset 0 0 0 var(--ufi-border-width) var(--ufi-color-border-default);
+}
+
+.image {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.initials {
+  text-transform: uppercase;
+}
+
+/* Sizes */
+.sm {
+  --_size: var(--ufi-space-lg);
+  --_font-size: var(--ufi-text-xs);
+}
+
+.md {
+  --_size: var(--ufi-space-xl);
+  --_font-size: var(--ufi-text-sm);
+}
+
+.lg {
+  --_size: var(--ufi-space-2xl);
+  --_font-size: var(--ufi-text-lg);
+}
+
+/* Forced colors: keep the circle visible around the initials. */
+@media (forced-colors: active) {
+  .avatar {
+    border: var(--ufi-border-width) solid CanvasText;
+  }
+}
