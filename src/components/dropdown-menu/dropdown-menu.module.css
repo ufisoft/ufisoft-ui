@@ -1,0 +1,73 @@
+.content {
+  z-index: var(--ufi-z-dropdown);
+  box-sizing: border-box;
+  /* Intrinsic geometry: at least as wide as the trigger, never wider than the room measured by Radix. */
+  min-inline-size: max(10rem, var(--radix-dropdown-menu-trigger-width));
+  max-inline-size: min(20rem, var(--radix-dropdown-menu-content-available-width));
+  max-block-size: var(--radix-dropdown-menu-content-available-height);
+  padding: var(--ufi-space-2xs);
+  overflow-y: auto;
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  background-color: var(--ufi-color-bg-surface);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-default);
+  border-radius: var(--ufi-radius-md);
+  box-shadow: var(--ufi-shadow-overlay);
+}
+
+.item {
+  --_color: var(--ufi-color-text-default);
+
+  display: flex;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+  padding: var(--ufi-space-xs) var(--ufi-space-sm);
+  color: var(--_color);
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  border-radius: var(--ufi-radius-sm);
+  outline: none;
+}
+
+/* Radix moves real focus to the highlighted item, by keyboard or pointer. */
+.item[data-highlighted] {
+  background-color: var(--ufi-color-bg-muted);
+}
+
+.item:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: calc(var(--ufi-focus-ring-width) * -1);
+}
+
+.item[data-disabled] {
+  cursor: not-allowed;
+  opacity: var(--ufi-opacity-disabled);
+}
+
+.danger {
+  --_color: var(--ufi-color-text-danger);
+}
+
+.separator {
+  block-size: var(--ufi-border-width);
+  margin: var(--ufi-space-2xs) calc(var(--ufi-space-2xs) * -1);
+  background-color: var(--ufi-color-border-default);
+}
+
+.label {
+  padding: var(--ufi-space-2xs) var(--ufi-space-sm);
+  font-size: var(--ufi-text-xs);
+  font-weight: var(--ufi-weight-semibold);
+  color: var(--ufi-color-text-muted);
+}
+
+/* Forced colors: the highlight background is overridden, mark it with the system colours. */
+@media (forced-colors: active) {
+  .item[data-highlighted] {
+    color: HighlightText;
+    background-color: Highlight;
+  }
+}

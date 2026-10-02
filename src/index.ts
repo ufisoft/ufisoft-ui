@@ -75,6 +75,19 @@ export {
   type PopoverSide,
   type PopoverAlign,
 } from './components/popover';
+export {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  type DropdownMenuProps,
+  type DropdownMenuItemProps,
+  type DropdownMenuSeparatorProps,
+  type DropdownMenuLabelProps,
+  type DropdownMenuSide,
+  type DropdownMenuAlign,
+  type DropdownMenuItemTone,
+} from './components/dropdown-menu';
 
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';

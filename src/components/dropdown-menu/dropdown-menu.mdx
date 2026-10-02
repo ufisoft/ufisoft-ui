@@ -1,0 +1,74 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as DropdownMenuStories from './dropdown-menu.stories';
+
+<Meta of={DropdownMenuStories} />
+
+# DropdownMenu
+
+A list of actions opened from a trigger, such as the actions for a page or a table row.
+
+<Canvas of={DropdownMenuStories.Default} />
+
+## When to use
+
+- Several actions that would crowd the interface as separate buttons: edit, duplicate, move, delete.
+- Account or overflow (“more”) menus.
+
+## When not to use
+
+- Choosing a value for a form field — use `Select` or `Radio`; a menu performs actions, it does not hold a value.
+- One or two actions — show them as `Button`s.
+- Interactive content such as form controls — use `Popover`.
+
+## Props
+
+<ArgTypes of={DropdownMenuStories} />
+
+`children` is the trigger: one button-like element that accepts `ref` and spreads its props, such as `Button` or `IconButton`. `content` holds the menu:
+
+- `DropdownMenuItem` — an action. `onSelect` runs on click, Enter or Space, and the menu then closes. `tone="danger"` for destructive actions, `disabled` to keep an unavailable action visible. With `asChild` it renders your element, e.g. a router link.
+- `DropdownMenuSeparator` — divides groups of items.
+- `DropdownMenuLabel` — a non-interactive heading for the items that follow.
+
+`className` and the remaining props of `DropdownMenu` go to the menu element, including `ref`. Roving focus, typeahead, positioning and dismissal come from [Radix DropdownMenu](https://www.radix-ui.com/primitives/docs/components/dropdown-menu). The menu is rendered next to its trigger, not in a portal, so it also works inside a `Modal`. It is non-modal: the page does not scroll-lock and stays visible to assistive technology.
+
+Checkbox items, radio items and submenus are not supported yet.
+
+## Variants
+
+<Canvas of={DropdownMenuStories.ItemStates} />
+
+## States
+
+<Canvas of={DropdownMenuStories.Open} />
+<Canvas of={DropdownMenuStories.LongContent} />
+
+A long menu scrolls within the space available on screen.
+
+## Examples
+
+<Canvas of={DropdownMenuStories.OnIconButton} />
+<Canvas of={DropdownMenuStories.LinkItems} />
+<Canvas of={DropdownMenuStories.InModal} />
+
+## Accessibility
+
+- The trigger gets `aria-haspopup="menu"` and `aria-expanded`; Enter, Space or ArrowDown open the menu with focus on the first item.
+- Inside the menu, arrow keys move between items (disabled items are skipped), Home and End jump, and typing a letter moves to the matching item.
+- Escape closes the menu and returns focus to the trigger. Inside a `Modal`, the first Escape closes only the menu.
+- An `IconButton` trigger needs its own `aria-label`.
+- Put the destructive action last and separate it; confirm irreversible actions in a `Modal`.
+
+## Do / Don't
+
+| Do                                                 | Don't                                              |
+| -------------------------------------------------- | -------------------------------------------------- |
+| Start item labels with a verb: “Duplicate”.        | Use a menu to pick a form value.                   |
+| Keep unavailable actions visible but `disabled`.   | Hide actions the user expects to find.             |
+| Group related items and separate destructive ones. | Nest long menus; split them or use a page instead. |
+
+## Related components
+
+- `Popover` — interactive content anchored to a trigger.
+- `Select` — choosing a value.
+- `IconButton` — a compact “more” trigger.
