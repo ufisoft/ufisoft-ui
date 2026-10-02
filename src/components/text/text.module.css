@@ -1,0 +1,59 @@
+.text {
+  font-family: var(--ufi-font-body);
+  line-height: var(--ufi-leading-normal);
+}
+
+/* Sizes */
+.xs {
+  font-size: var(--ufi-text-xs);
+}
+
+.sm {
+  font-size: var(--ufi-text-sm);
+}
+
+.md {
+  font-size: var(--ufi-text-md);
+}
+
+.lg {
+  font-size: var(--ufi-text-lg);
+}
+
+/* Weights */
+.regular {
+  font-weight: var(--ufi-weight-regular);
+}
+
+.medium {
+  font-weight: var(--ufi-weight-medium);
+}
+
+.semibold {
+  font-weight: var(--ufi-weight-semibold);
+}
+
+.bold {
+  font-weight: var(--ufi-weight-bold);
+}
+
+/* Tones */
+.tone-default {
+  color: var(--ufi-color-text-default);
+}
+
+.tone-muted {
+  color: var(--ufi-color-text-muted);
+}
+
+.tone-subtle {
+  color: var(--ufi-color-text-subtle);
+}
+
+.tone-danger {
+  color: var(--ufi-color-text-danger);
+}
+
+.tone-success {
+  color: var(--ufi-color-text-success);
+}

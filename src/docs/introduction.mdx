@@ -1,0 +1,53 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# UfiSoft UI
+
+`@ufisoft/ui` is the shared React component library for UfiSoft products: CMS, Frontend and future applications.
+
+It provides **generic, reusable UI primitives** — no business or domain logic. Components such as `ProductCard` or `OrderStatus` belong to the applications, built from these primitives.
+
+## Getting started
+
+The package is private and published to GitHub Packages; it is installable by members of the `ufisoft` GitHub organization. See the repository README for the one-time `.npmrc` setup.
+
+```bash
+pnpm add @ufisoft/ui
+```
+
+Import the stylesheet once at the root of your application, then use components:
+
+```tsx
+import '@ufisoft/ui/styles.css';
+import { Button, FormField, FormLabel, Input } from '@ufisoft/ui';
+
+export function Example() {
+  return (
+    <FormField required>
+      <FormLabel>Email</FormLabel>
+      <Input type="email" />
+    </FormField>
+  );
+}
+```
+
+Requires React 19.
+
+## Principles
+
+- **Native first.** Components render the native element and accept its props. Behaviour comes from the platform wherever possible (e.g. `Modal` is a `<dialog>`).
+- **Accessible by default.** Keyboard support, focus visibility and ARIA wiring are built in, not optional.
+- **Tokens, not values.** All styling uses design tokens (`--ufi-*` CSS variables).
+- **Composable, not configurable.** Small APIs that compose (`FormField` + `Input`) instead of one component with many flags.
+- **No lock-in.** No dependency on a form library, router or icon set.
+
+## Customising
+
+- Every component accepts `className`, merged with its own classes.
+- Theme by overriding **semantic** tokens (e.g. `--ufi-color-action-primary-bg`) — see [Tokens](?path=/docs/tokens--docs).
+- Never target internal class names (`ufi-button-x1y2z`); they are generated and change between versions.
+
+## Documentation structure
+
+Every component page answers: what it does, when to use it and when not, props, variants, states, accessibility, examples, do / don't, and related components.

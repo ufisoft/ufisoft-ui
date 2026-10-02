@@ -1,0 +1,19 @@
+/*
+ * Builds on Button's local properties: a square of the current size's height.
+ * This module is imported after Button's, so equal specificity resolves in its favour.
+ */
+.iconButton {
+  inline-size: var(--_height);
+  padding-inline: 0;
+}
+
+.icon {
+  display: inline-flex;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+}
+
+.icon > svg {
+  inline-size: 100%;
+  block-size: 100%;
+}

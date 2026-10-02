@@ -1,0 +1,45 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as LabelStories from './label.stories';
+
+<Meta of={LabelStories} />
+
+# Label
+
+A styled native `<label>` that names a form control.
+
+<Canvas of={LabelStories.Default} />
+
+## When to use
+
+- Labelling a control **outside** a `FormField`, connected with `htmlFor`.
+
+## When not to use
+
+- Inside a `FormField` — use `FormLabel`, which connects itself to the control.
+- As a generic caption or heading — use `Text` / `Heading`.
+
+## Props
+
+<ArgTypes of={LabelStories} />
+
+## States
+
+<Canvas of={LabelStories.Required} />
+
+`required` only shows a marker. Set `required` on the control itself so assistive technology announces it (`FormField` does both for you).
+
+## Accessibility
+
+- The label's text becomes the control's accessible name; clicking the label focuses or toggles the control.
+- The required marker is `aria-hidden`, so the name stays “Email” instead of “Email star”.
+
+## Do / Don't
+
+| Do                                       | Don't                                                 |
+| ---------------------------------------- | ----------------------------------------------------- |
+| Always connect the label with `htmlFor`. | Use placeholder text instead of a label.              |
+| Keep labels short and specific.          | Rely on the `*` marker alone to communicate required. |
+
+## Related components
+
+- `FormLabel` — label inside a `FormField`.

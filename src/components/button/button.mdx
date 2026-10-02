@@ -1,0 +1,89 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ButtonStories from './button.stories';
+
+<Meta of={ButtonStories} />
+
+# Button
+
+Triggers an action in the current context: submitting a form, opening a modal, saving data.
+
+<Canvas of={ButtonStories.Default} />
+
+## When to use
+
+- The user performs an action (save, delete, confirm, open).
+- Submitting or resetting a form.
+
+## When not to use
+
+- **Navigation to another page** — use a link. If it must look like a button, use `asChild` with an `<a>` or router link.
+- **Icon-only actions** — use `IconButton`, which enforces an accessible name.
+
+## Props
+
+<ArgTypes of={ButtonStories} />
+
+All native `<button>` attributes are supported. `type` defaults to `"button"` so a Button inside a form never submits by accident; pass `type="submit"` explicitly.
+
+## Variants
+
+<Canvas of={ButtonStories.Variants} />
+
+| Variant     | Use for                                                            |
+| ----------- | ------------------------------------------------------------------ |
+| `primary`   | The main action of a view. At most one per area.                   |
+| `secondary` | Alternative actions next to a primary one (e.g. Cancel).           |
+| `ghost`     | Low-emphasis actions in dense UIs: toolbars, table rows.           |
+| `danger`    | Destructive actions (delete, revoke). Usually behind confirmation. |
+
+## Sizes
+
+<Canvas of={ButtonStories.Sizes} />
+
+Sizes share heights with `Input`, so buttons and inputs align in a row.
+
+## States
+
+<Canvas of={ButtonStories.Disabled} />
+<Canvas of={ButtonStories.Loading} />
+
+- **Disabled** uses the native `disabled` attribute: not focusable, not clickable.
+- **Loading** shows a spinner, sets `aria-busy`, and blocks activation — but **stays focusable**, so keyboard users don't lose their place after submitting.
+
+## Composition: `asChild`
+
+<Canvas of={ButtonStories.AsLink} />
+
+`asChild` renders the single child element with Button's styles and props merged in. Use it for router links:
+
+```tsx
+import NextLink from 'next/link';
+
+<Button asChild variant="secondary">
+  <NextLink href="/settings">Settings</NextLink>
+</Button>;
+```
+
+`loading` is ignored with `asChild`.
+
+## Accessibility
+
+- Renders a native `<button>`: Enter and Space activate it, no extra ARIA needed.
+- The visible label is the accessible name. Write labels as verbs: “Save changes”, not “OK”.
+- Focus is shown with a visible ring on keyboard focus (`:focus-visible`).
+- While loading, the label stays in the accessibility tree (visually hidden), so the name doesn't change.
+
+## Do / Don't
+
+| Do                                                  | Don't                                                    |
+| --------------------------------------------------- | -------------------------------------------------------- |
+| Use one `primary` button per section.               | Put several primary buttons side by side.                |
+| Use specific verbs: “Delete project”.               | Use vague labels: “OK”, “Click here”.                    |
+| Use `loading` while an async action is in progress. | Disable the button during submission (focus gets lost).  |
+| Use `asChild` + a link for navigation.              | Use `onClick={() => navigate(...)}` for page navigation. |
+
+## Related components
+
+- `IconButton` — icon-only actions.
+- `Spinner` — standalone loading indicator.
+- `Modal` — typical place for confirmation buttons.

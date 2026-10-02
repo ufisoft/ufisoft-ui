@@ -1,0 +1,84 @@
+.root {
+  display: inline-flex;
+  gap: var(--ufi-space-xs);
+  align-items: flex-start;
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  cursor: pointer;
+}
+
+.root:has(.input:disabled) {
+  cursor: not-allowed;
+  opacity: var(--ufi-opacity-disabled);
+}
+
+/*
+ * The native input is styled directly (appearance: none) instead of being
+ * hidden behind a fake box: semantics, focus and form behaviour stay native.
+ */
+.input {
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  place-content: center;
+  inline-size: var(--ufi-space-4);
+  block-size: var(--ufi-space-4);
+  /* Optically centre the box on the first line of the label. */
+  margin-block-start: calc((1lh - var(--ufi-space-4)) / 2);
+  cursor: inherit;
+  appearance: none;
+  background-color: var(--ufi-color-control-bg);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-strong);
+  border-radius: var(--ufi-radius-sm);
+  transition:
+    background-color var(--ufi-duration-fast) var(--ufi-easing-default),
+    border-color var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.input::before {
+  inline-size: 0.75em;
+  block-size: 0.75em;
+  content: '';
+  background-color: var(--ufi-color-control-checked-fg);
+  transform: scale(0);
+  mask: var(--_mark) center / contain no-repeat;
+}
+
+.input:checked,
+.input:indeterminate {
+  background-color: var(--ufi-color-control-checked-bg);
+  border-color: var(--ufi-color-control-checked-bg);
+}
+
+.input:checked::before {
+  --_mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3 3 7-7' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+  transform: scale(1);
+}
+
+.input:indeterminate::before {
+  --_mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8h10' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+
+  transform: scale(1);
+}
+
+.input:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--ufi-color-border-danger);
+}
+
+/* Forced colors: masks render invisible, fall back to the system checkbox. */
+@media (forced-colors: active) {
+  .input {
+    appearance: auto;
+  }
+
+  .input::before {
+    display: none;
+  }
+}

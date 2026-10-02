@@ -1,0 +1,12 @@
+.label {
+  display: inline-flex;
+  gap: var(--ufi-space-2xs);
+  font-size: var(--ufi-text-sm);
+  font-weight: var(--ufi-weight-medium);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+}
+
+.required {
+  color: var(--ufi-color-text-danger);
+}

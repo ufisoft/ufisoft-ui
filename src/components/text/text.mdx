@@ -1,0 +1,54 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as TextStories from './text.stories';
+
+<Meta of={TextStories} />
+
+# Text
+
+Body copy styled from the typography tokens.
+
+<Canvas of={TextStories.Default} />
+
+## When to use
+
+- Paragraphs, helper text, inline emphasis, meta information.
+
+## When not to use
+
+- Section titles — use `Heading`.
+- Form labels — use `Label` / `FormLabel`.
+- Form helper or error text inside a `FormField` — use `FormDescription` / `FormMessage`, which are wired to the control.
+
+## Props
+
+<ArgTypes of={TextStories} />
+
+`as` is limited to text elements (`p`, `span`, `div`, `strong`, `em`, `small`) on purpose: it keeps the component a text primitive, not a generic box.
+
+## Sizes, weights and tones
+
+<Canvas of={TextStories.Sizes} />
+<Canvas of={TextStories.Weights} />
+<Canvas of={TextStories.Tones} />
+
+## Edge cases
+
+<Canvas of={TextStories.LongContent} />
+
+Long unbroken strings wrap instead of overflowing.
+
+## Accessibility
+
+- Choose the element for meaning: `strong` for importance, `em` for stress. `weight="bold"` on a `span` is only visual.
+- Don't rely on `tone` alone to convey meaning (e.g. errors); colour is not perceived by everyone.
+
+## Do / Don't
+
+| Do                                          | Don't                                                 |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `<Text as="strong">` for important content. | `<Text weight="bold">` when the content is important. |
+| `tone="muted"` for secondary information.   | `tone="danger"` as the only signal of an error.       |
+
+## Related components
+
+- `Heading`, `Label`, `FormDescription`.

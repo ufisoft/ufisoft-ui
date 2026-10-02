@@ -1,0 +1,133 @@
+import { ColorItem, ColorPalette, Meta, Typeset } from '@storybook/addon-docs/blocks';
+
+<Meta title="Tokens" />
+
+# Design tokens
+
+Tokens are CSS custom properties prefixed with `--ufi-`, defined in two layers:
+
+```text
+Primitive tokens   src/tokens/primitives.css   raw values       --ufi-blue-600, --ufi-space-4
+      ↓
+Semantic tokens    src/tokens/semantic.css     roles            --ufi-color-action-primary-bg, --ufi-space-md
+      ↓
+Components         *.module.css                use semantic tokens only
+```
+
+- **Primitives** have numeric suffixes and no meaning. Only semantic tokens reference them.
+- **Semantic** tokens describe a role. Components use only these, so a theme (e.g. dark mode) overrides one layer.
+- In application CSS, use semantic tokens too:
+
+```css
+.toolbar {
+  padding: var(--ufi-space-sm) var(--ufi-space-md);
+  border-block-end: var(--ufi-border-width) solid var(--ufi-color-border-subtle);
+}
+```
+
+## Colors
+
+<ColorPalette>
+  <ColorItem
+    title="Background"
+    subtitle="--ufi-color-bg-*"
+    colors={{
+      canvas: 'var(--ufi-color-bg-canvas)',
+      surface: 'var(--ufi-color-bg-surface)',
+      subtle: 'var(--ufi-color-bg-subtle)',
+      muted: 'var(--ufi-color-bg-muted)',
+    }}
+  />
+  <ColorItem
+    title="Text"
+    subtitle="--ufi-color-text-*"
+    colors={{
+      default: 'var(--ufi-color-text-default)',
+      muted: 'var(--ufi-color-text-muted)',
+      subtle: 'var(--ufi-color-text-subtle)',
+      link: 'var(--ufi-color-text-link)',
+      danger: 'var(--ufi-color-text-danger)',
+      success: 'var(--ufi-color-text-success)',
+    }}
+  />
+  <ColorItem
+    title="Border"
+    subtitle="--ufi-color-border-*"
+    colors={{
+      default: 'var(--ufi-color-border-default)',
+      subtle: 'var(--ufi-color-border-subtle)',
+      strong: 'var(--ufi-color-border-strong)',
+      focus: 'var(--ufi-color-border-focus)',
+      danger: 'var(--ufi-color-border-danger)',
+    }}
+  />
+  <ColorItem
+    title="Action"
+    subtitle="--ufi-color-action-*-bg"
+    colors={{
+      primary: 'var(--ufi-color-action-primary-bg)',
+      secondary: 'var(--ufi-color-action-secondary-bg)',
+      danger: 'var(--ufi-color-action-danger-bg)',
+    }}
+  />
+  <ColorItem
+    title="Status"
+    subtitle="--ufi-color-{info|success|warning|danger}-fg"
+    colors={{
+      info: 'var(--ufi-color-info-fg)',
+      success: 'var(--ufi-color-success-fg)',
+      warning: 'var(--ufi-color-warning-fg)',
+      danger: 'var(--ufi-color-danger-fg)',
+    }}
+  />
+</ColorPalette>
+
+## Typography
+
+<Typeset
+  fontSizes={[
+    'var(--ufi-text-xs)',
+    'var(--ufi-text-sm)',
+    'var(--ufi-text-md)',
+    'var(--ufi-text-lg)',
+    'var(--ufi-text-xl)',
+    'var(--ufi-text-2xl)',
+    'var(--ufi-text-3xl)',
+  ]}
+  fontWeight="var(--ufi-weight-regular)"
+  sampleText="The quick brown fox jumps over the lazy dog"
+  fontFamily="var(--ufi-font-body)"
+/>
+
+| Token                  | Values                                     |
+| ---------------------- | ------------------------------------------ |
+| `--ufi-text-{size}`    | `xs` `sm` `md` `lg` `xl` `2xl` `3xl` `4xl` |
+| `--ufi-weight-{name}`  | `regular` `medium` `semibold` `bold`       |
+| `--ufi-leading-{name}` | `tight` `snug` `normal`                    |
+| `--ufi-font-{role}`    | `body` `heading` `code`                    |
+
+## Spacing
+
+4px grid. `--ufi-space-{size}`: `none` 0 · `2xs` 4px · `xs` 8px · `sm` 12px · `md` 16px · `lg` 24px · `xl` 32px · `2xl` 48px.
+
+Control heights (shared by `Button` and `Input`): `--ufi-control-height-{sm|md|lg}` = 32 / 40 / 48px.
+
+## Radii, shadows, z-index, motion
+
+| Category | Tokens                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------ |
+| Radius   | `--ufi-radius-{none\|sm\|md\|lg\|full}`                                                    |
+| Shadow   | `--ufi-shadow-{sm\|md\|overlay}`                                                           |
+| Z-index  | `--ufi-z-{base\|dropdown\|sticky\|overlay\|modal\|toast\|tooltip}` (non-top-layer content) |
+| Duration | `--ufi-duration-{fast\|normal\|slow}` = 100 / 200 / 300ms                                  |
+| Easing   | `--ufi-easing-default`                                                                     |
+| Focus    | `--ufi-focus-ring-{width\|offset\|color}`                                                  |
+
+## Breakpoints
+
+CSS variables cannot be used inside `@media`. Use the JS export, or the literal values in CSS:
+
+```ts
+import { breakpoints } from '@ufisoft/ui';
+// { sm: '640px', md: '768px', lg: '1024px', xl: '1280px' }
+```

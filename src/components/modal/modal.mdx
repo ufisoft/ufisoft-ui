@@ -1,0 +1,77 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ModalStories from './modal.stories';
+
+<Meta of={ModalStories} />
+
+# Modal
+
+A dialog that appears above the page and blocks interaction with it until closed.
+
+<Canvas of={ModalStories.Default} />
+
+## When to use
+
+- Confirming destructive or irreversible actions.
+- Short, focused tasks that should not lose the page context (rename, invite).
+
+## When not to use
+
+- Long or multi-step flows — use a page.
+- Non-blocking information — use `Alert` or a toast (planned).
+- Content the user needs to compare with the page behind — modals hide it.
+
+## Props
+
+<ArgTypes of={ModalStories} />
+
+The modal is **controlled**: you own `open` and update it in `onOpenChange`. It is called with `false` on Escape, backdrop click, the close button, and native closes such as `<form method="dialog">`.
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<Button onClick={() => setOpen(true)}>Invite</Button>
+<Modal open={open} onOpenChange={setOpen} title="Invite teammates" footer={…}>
+  …
+</Modal>
+```
+
+## Examples
+
+<Canvas of={ModalStories.Confirmation} />
+<Canvas of={ModalStories.WithForm} />
+
+## Sizes
+
+<Canvas of={ModalStories.Sizes} />
+
+## Edge cases
+
+<Canvas of={ModalStories.LongContent} />
+
+The body scrolls; header and footer stay visible. The page behind does not scroll while the modal is open.
+
+## Accessibility
+
+Built on the native `<dialog>` element with `showModal()`, which provides:
+
+- **Top layer** — no z-index or portal needed.
+- **Focus containment** — Tab stays inside; the page behind is inert.
+- **Escape** to close, and **focus restoration** to the trigger on close.
+
+In addition:
+
+- `title` is the accessible name (`aria-labelledby`); `description` the accessible description.
+- Initial focus goes to the first focusable element. Add `autoFocus` to a specific field when needed.
+
+## Do / Don't
+
+| Do                                                   | Don't                                           |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| Use a clear title: “Delete project?”.                | Use generic titles: “Warning”, “Are you sure?”. |
+| Name actions after their result: “Delete”, “Cancel”. | Use “Yes” / “No”.                               |
+| Keep one modal open at a time.                       | Open a modal from inside another modal.         |
+
+## Related components
+
+- `Button`, `IconButton` — actions and the close button.
+- `Alert` — non-blocking messages.

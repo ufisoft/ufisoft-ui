@@ -1,0 +1,147 @@
+/*
+ * Semantic tokens — values with a role. Components use ONLY these.
+ *
+ * Theming: a future theme (e.g. dark) overrides this layer only, e.g.
+ *   [data-theme='dark'] { --ufi-color-bg-canvas: var(--ufi-gray-900); ... }
+ * Primitives and components stay untouched.
+ */
+:root {
+  /* Background */
+  --ufi-color-bg-canvas: var(--ufi-gray-0);
+  --ufi-color-bg-surface: var(--ufi-gray-0);
+  --ufi-color-bg-subtle: var(--ufi-gray-50);
+  --ufi-color-bg-muted: var(--ufi-gray-100);
+  --ufi-color-bg-backdrop: rgb(15 23 42 / 0.5);
+
+  /* Text */
+  --ufi-color-text-default: var(--ufi-gray-900);
+  --ufi-color-text-muted: var(--ufi-gray-600);
+  --ufi-color-text-subtle: var(--ufi-gray-500);
+  --ufi-color-text-inverse: var(--ufi-gray-0);
+  --ufi-color-text-link: var(--ufi-blue-700);
+  --ufi-color-text-danger: var(--ufi-red-700);
+  --ufi-color-text-success: var(--ufi-green-800);
+
+  /* Border */
+  --ufi-color-border-default: var(--ufi-gray-300);
+  --ufi-color-border-subtle: var(--ufi-gray-200);
+  --ufi-color-border-strong: var(--ufi-gray-500);
+  --ufi-color-border-focus: var(--ufi-blue-600);
+  --ufi-color-border-danger: var(--ufi-red-600);
+
+  /* Actions */
+  --ufi-color-action-primary-bg: var(--ufi-blue-600);
+  --ufi-color-action-primary-bg-hover: var(--ufi-blue-700);
+  --ufi-color-action-primary-bg-active: var(--ufi-blue-800);
+  --ufi-color-action-primary-fg: var(--ufi-gray-0);
+
+  --ufi-color-action-secondary-bg: var(--ufi-gray-0);
+  --ufi-color-action-secondary-bg-hover: var(--ufi-gray-100);
+  --ufi-color-action-secondary-bg-active: var(--ufi-gray-200);
+  --ufi-color-action-secondary-fg: var(--ufi-gray-900);
+  --ufi-color-action-secondary-border: var(--ufi-gray-300);
+
+  --ufi-color-action-ghost-bg-hover: var(--ufi-gray-100);
+  --ufi-color-action-ghost-bg-active: var(--ufi-gray-200);
+  --ufi-color-action-ghost-fg: var(--ufi-gray-900);
+
+  --ufi-color-action-danger-bg: var(--ufi-red-600);
+  --ufi-color-action-danger-bg-hover: var(--ufi-red-700);
+  --ufi-color-action-danger-bg-active: var(--ufi-red-800);
+  --ufi-color-action-danger-fg: var(--ufi-gray-0);
+
+  /* Form controls */
+  --ufi-color-control-bg: var(--ufi-gray-0);
+  --ufi-color-control-bg-disabled: var(--ufi-gray-100);
+  --ufi-color-control-checked-bg: var(--ufi-blue-600);
+  --ufi-color-control-checked-fg: var(--ufi-gray-0);
+
+  /* Status (feedback) */
+  --ufi-color-info-bg: var(--ufi-blue-50);
+  --ufi-color-info-border: var(--ufi-blue-200);
+  --ufi-color-info-fg: var(--ufi-blue-800);
+
+  --ufi-color-success-bg: var(--ufi-green-50);
+  --ufi-color-success-border: var(--ufi-green-200);
+  --ufi-color-success-fg: var(--ufi-green-800);
+
+  --ufi-color-warning-bg: var(--ufi-amber-50);
+  --ufi-color-warning-border: var(--ufi-amber-200);
+  --ufi-color-warning-fg: var(--ufi-amber-800);
+
+  --ufi-color-danger-bg: var(--ufi-red-50);
+  --ufi-color-danger-border: var(--ufi-red-200);
+  --ufi-color-danger-fg: var(--ufi-red-800);
+
+  /* Focus */
+  --ufi-focus-ring-width: 2px;
+  --ufi-focus-ring-offset: 2px;
+  --ufi-focus-ring-color: var(--ufi-color-border-focus);
+
+  /* Typography */
+  --ufi-font-body: var(--ufi-font-family-sans);
+  --ufi-font-heading: var(--ufi-font-family-sans);
+  --ufi-font-code: var(--ufi-font-family-mono);
+
+  --ufi-text-xs: var(--ufi-font-size-100);
+  --ufi-text-sm: var(--ufi-font-size-200);
+  --ufi-text-md: var(--ufi-font-size-300);
+  --ufi-text-lg: var(--ufi-font-size-400);
+  --ufi-text-xl: var(--ufi-font-size-500);
+  --ufi-text-2xl: var(--ufi-font-size-600);
+  --ufi-text-3xl: var(--ufi-font-size-700);
+  --ufi-text-4xl: var(--ufi-font-size-800);
+
+  --ufi-weight-regular: var(--ufi-font-weight-400);
+  --ufi-weight-medium: var(--ufi-font-weight-500);
+  --ufi-weight-semibold: var(--ufi-font-weight-600);
+  --ufi-weight-bold: var(--ufi-font-weight-700);
+
+  --ufi-leading-tight: var(--ufi-line-height-100);
+  --ufi-leading-snug: var(--ufi-line-height-200);
+  --ufi-leading-normal: var(--ufi-line-height-300);
+
+  /* Spacing */
+  --ufi-space-none: var(--ufi-space-0);
+  --ufi-space-2xs: var(--ufi-space-1);
+  --ufi-space-xs: var(--ufi-space-2);
+  --ufi-space-sm: var(--ufi-space-3);
+  --ufi-space-md: var(--ufi-space-4);
+  --ufi-space-lg: var(--ufi-space-6);
+  --ufi-space-xl: var(--ufi-space-8);
+  --ufi-space-2xl: var(--ufi-space-12);
+
+  /* Sizing — shared by buttons and inputs so they align in a row */
+  --ufi-control-height-sm: var(--ufi-space-8);
+  --ufi-control-height-md: var(--ufi-space-10);
+  --ufi-control-height-lg: var(--ufi-space-12);
+  --ufi-border-width: 1px;
+  --ufi-opacity-disabled: 0.5;
+
+  /* Radii */
+  --ufi-radius-none: var(--ufi-radius-0);
+  --ufi-radius-sm: var(--ufi-radius-1);
+  --ufi-radius-md: var(--ufi-radius-2);
+  --ufi-radius-lg: var(--ufi-radius-4);
+  --ufi-radius-full: var(--ufi-radius-round);
+
+  /* Shadows */
+  --ufi-shadow-sm: var(--ufi-shadow-1);
+  --ufi-shadow-md: var(--ufi-shadow-2);
+  --ufi-shadow-overlay: var(--ufi-shadow-3);
+
+  /* Z-index — for content that does not live in the browser top layer */
+  --ufi-z-base: 0;
+  --ufi-z-dropdown: 1000;
+  --ufi-z-sticky: 1100;
+  --ufi-z-overlay: 1200;
+  --ufi-z-modal: 1300;
+  --ufi-z-toast: 1400;
+  --ufi-z-tooltip: 1500;
+
+  /* Motion */
+  --ufi-duration-fast: var(--ufi-duration-100);
+  --ufi-duration-normal: var(--ufi-duration-200);
+  --ufi-duration-slow: var(--ufi-duration-300);
+  --ufi-easing-default: var(--ufi-easing-standard);
+}

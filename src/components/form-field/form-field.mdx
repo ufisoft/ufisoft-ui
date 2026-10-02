@@ -1,0 +1,88 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as FormFieldStories from './form-field.stories';
+
+<Meta of={FormFieldStories} />
+
+# FormField
+
+Groups a label, a control, helper text and a validation message, and wires their ids and ARIA attributes together automatically.
+
+Family: `FormField`, `FormLabel`, `FormDescription`, `FormMessage`, and the `useFormField` hook.
+
+<Canvas of={FormFieldStories.Default} />
+
+## When to use
+
+- Every labelled form control that may have helper text or validation messages.
+
+## When not to use
+
+- A standalone control without label or messages (e.g. a search box in a toolbar) — use the control alone with an `aria-label`.
+
+## Props
+
+<ArgTypes of={FormFieldStories} />
+
+| Part              | Renders | Wiring                                                           |
+| ----------------- | ------- | ---------------------------------------------------------------- |
+| `FormField`       | `div`   | Generates ids; shares `invalid`, `required`, `disabled`.         |
+| `FormLabel`       | `label` | `htmlFor` → control id; shows the required marker.               |
+| `FormDescription` | `p`     | Added to the control's `aria-describedby` while rendered.        |
+| `FormMessage`     | `p`     | Added to `aria-describedby`; styled as an error while `invalid`. |
+
+Controls (`Input`, `Checkbox`) read the field automatically. Props set directly on the control win over field state.
+
+**Ids:** to give the control a specific id, set `controlId` on `FormField` — not `id` on the control, or the label link breaks.
+
+## States
+
+<Canvas of={FormFieldStories.Required} />
+<Canvas of={FormFieldStories.Invalid} />
+<Canvas of={FormFieldStories.Disabled} />
+
+## Examples
+
+<Canvas of={FormFieldStories.ValidationFlow} />
+
+Form state and validation stay in your application (plain React, React Hook Form, …). FormField only needs `invalid` and the message text:
+
+```tsx
+<FormField invalid={!!errors.email} required>
+  <FormLabel>Email</FormLabel>
+  <Input type="email" {...register('email')} />
+  {errors.email && <FormMessage>{errors.email.message}</FormMessage>}
+</FormField>
+```
+
+<Canvas of={FormFieldStories.WithCheckbox} />
+
+### Custom controls
+
+Connect any control — including third-party ones — with `useFormField`:
+
+```tsx
+function DatePickerField(props: DatePickerProps) {
+  const fieldProps = useFormField(props);
+  return <ThirdPartyDatePicker {...fieldProps} />;
+}
+```
+
+## Accessibility
+
+- Label → `htmlFor`/`id`; description and message → `aria-describedby`; `invalid` → `aria-invalid`; `required` → native `required`.
+- `aria-describedby` only references parts that are actually rendered.
+- `FormMessage` is not a live region: render it on submit/blur and screen readers read it when the control is focused. For a form-level error summary, use an `Alert`.
+
+## Do / Don't
+
+| Do                                                        | Don't                                                    |
+| --------------------------------------------------------- | -------------------------------------------------------- |
+| Explain how to fix an error: “Use at least 3 characters.” | Show only “Invalid”.                                     |
+| Validate on submit or blur.                               | Show errors on every keystroke while the user is typing. |
+| Use `controlId` for a fixed id.                           | Set `id` on the control inside a `FormField`.            |
+
+## Related components
+
+- `Input`, `Checkbox` — controls that join a field.
+- `Label` — standalone label outside a field.
+- `Alert` — form-level error summary.

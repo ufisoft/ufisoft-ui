@@ -1,0 +1,59 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as InputStories from './input.stories';
+
+<Meta of={InputStories} />
+
+# Input
+
+A single-line text field. A styled native `<input>` that works controlled or uncontrolled and with any form library.
+
+<Canvas of={InputStories.Default} />
+
+## When to use
+
+- Short free-text values: name, email, search, numbers, passwords.
+
+## When not to use
+
+- Multi-line text — use `Textarea` (planned).
+- Choosing from a fixed set — use `Checkbox`, `Radio` (planned) or a select.
+
+## Props
+
+<ArgTypes of={InputStories} />
+
+All native `<input>` attributes are supported. The native `size` attribute (character width) is available as `htmlSize`, because `size` is the visual size.
+
+Inside a `FormField`, `id`, `aria-describedby`, `aria-invalid`, `required` and `disabled` come from the field.
+
+## Sizes
+
+<Canvas of={InputStories.Sizes} />
+<Canvas of={InputStories.AlignedWithButton} />
+
+## States
+
+<Canvas of={InputStories.Invalid} />
+<Canvas of={InputStories.Disabled} />
+<Canvas of={InputStories.ReadOnly} />
+
+Prefer `readOnly` over `disabled` for values the user should read or copy: read-only fields stay focusable and are submitted with the form.
+
+## Accessibility
+
+- Every input needs a label: a `FormField` + `FormLabel`, or `aria-label` when no visible label exists.
+- `invalid` sets `aria-invalid`; pair it with a `FormMessage` explaining the problem.
+- Use the right `type` and `autoComplete` (`email`, `tel`, `current-password`…) for mobile keyboards and autofill.
+
+## Do / Don't
+
+| Do                                      | Don't                                             |
+| --------------------------------------- | ------------------------------------------------- |
+| Use a visible label.                    | Use `placeholder` as the label.                   |
+| Set `type` and `autoComplete`.          | Use `type="text"` for emails or phone numbers.    |
+| Use `readOnly` for non-editable values. | Use `disabled` for values the user needs to read. |
+
+## Related components
+
+- `FormField` — label, description and validation wiring.
+- `Button` — matching heights for inline forms.

@@ -1,0 +1,58 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as CheckboxStories from './checkbox.stories';
+
+<Meta of={CheckboxStories} />
+
+# Checkbox
+
+Toggles a single option on or off, or selects any number of options from a set.
+
+<Canvas of={CheckboxStories.Default} />
+
+## When to use
+
+- Independent options where any combination is valid.
+- Agreeing to terms; opting in to something.
+
+## When not to use
+
+- Mutually exclusive options — use `Radio` (planned).
+- Settings that take effect immediately — use `Switch` (planned).
+
+## Props
+
+<ArgTypes of={CheckboxStories} />
+
+`children` is the label; the whole label is clickable. `className` applies to the wrapping label; all other props go to the native `<input type="checkbox">`, including `ref`.
+
+## States
+
+<Canvas of={CheckboxStories.States} />
+
+## Examples
+
+<Canvas of={CheckboxStories.SelectAll} />
+
+`indeterminate` is a visual and announced “mixed” state; the input's `checked` value is unchanged. Use it for a parent that controls a partially selected group.
+
+## Edge cases
+
+<Canvas of={CheckboxStories.LongLabel} />
+
+## Accessibility
+
+- A native checkbox: Space toggles it, the label is its accessible name.
+- The native input is styled directly instead of hidden behind a fake box, so focus, form submission and validation stay native.
+- In Windows High Contrast (forced colors) mode the system checkbox is shown.
+
+## Do / Don't
+
+| Do                                                 | Don't                                              |
+| -------------------------------------------------- | -------------------------------------------------- |
+| Phrase labels positively: “Send me updates”.       | Use negatives: “Don't send me updates”.            |
+| Use `indeterminate` for partially selected groups. | Use `indeterminate` as a third value of the field. |
+
+## Related components
+
+- `FormField` — description and validation for a checkbox.
+- `Radio`, `Switch` (planned).

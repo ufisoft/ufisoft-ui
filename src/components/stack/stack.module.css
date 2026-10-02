@@ -1,0 +1,90 @@
+.stack {
+  display: flex;
+  min-inline-size: 0;
+  padding: 0;
+  list-style: none;
+  border: 0;
+}
+
+.vertical {
+  flex-direction: column;
+}
+
+.horizontal {
+  flex-direction: row;
+}
+
+.wrap {
+  flex-wrap: wrap;
+}
+
+/* Gap */
+.gap-none {
+  gap: var(--ufi-space-none);
+}
+
+.gap-2xs {
+  gap: var(--ufi-space-2xs);
+}
+
+.gap-xs {
+  gap: var(--ufi-space-xs);
+}
+
+.gap-sm {
+  gap: var(--ufi-space-sm);
+}
+
+.gap-md {
+  gap: var(--ufi-space-md);
+}
+
+.gap-lg {
+  gap: var(--ufi-space-lg);
+}
+
+.gap-xl {
+  gap: var(--ufi-space-xl);
+}
+
+.gap-2xl {
+  gap: var(--ufi-space-2xl);
+}
+
+/* Cross axis */
+.align-start {
+  align-items: flex-start;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-end {
+  align-items: flex-end;
+}
+
+.align-stretch {
+  align-items: stretch;
+}
+
+.align-baseline {
+  align-items: baseline;
+}
+
+/* Main axis */
+.justify-start {
+  justify-content: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-between {
+  justify-content: space-between;
+}

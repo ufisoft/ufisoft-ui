@@ -1,0 +1,30 @@
+.heading {
+  font-family: var(--ufi-font-heading);
+  font-weight: var(--ufi-weight-semibold);
+  line-height: var(--ufi-leading-tight);
+  color: var(--ufi-color-text-default);
+}
+
+.size-xs {
+  font-size: var(--ufi-text-sm);
+}
+
+.size-sm {
+  font-size: var(--ufi-text-md);
+}
+
+.size-md {
+  font-size: var(--ufi-text-lg);
+}
+
+.size-lg {
+  font-size: var(--ufi-text-xl);
+}
+
+.size-xl {
+  font-size: var(--ufi-text-2xl);
+}
+
+.size-2xl {
+  font-size: var(--ufi-text-3xl);
+}

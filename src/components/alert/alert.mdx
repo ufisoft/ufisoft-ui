@@ -1,0 +1,62 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as AlertStories from './alert.stories';
+
+<Meta of={AlertStories} />
+
+# Alert
+
+A prominent message about the state of a page, section or action.
+
+<Canvas of={AlertStories.Default} />
+
+## When to use
+
+- Results of an action that need attention: “Payment failed”.
+- Important contextual information: an expiring trial, a form-level error summary.
+
+## When not to use
+
+- Errors of a single form field — use `FormMessage`.
+- Brief, transient confirmations — use a toast (planned).
+- Decisions the user must make before continuing — use `Modal`.
+
+## Props
+
+<ArgTypes of={AlertStories} />
+
+## Tones
+
+<Canvas of={AlertStories.Tones} />
+
+| Tone      | Default role | Use for                             |
+| --------- | ------------ | ----------------------------------- |
+| `info`    | `status`     | Neutral information.                |
+| `success` | `status`     | A completed action.                 |
+| `warning` | `alert`      | Something that may cause a problem. |
+| `danger`  | `alert`      | An error or a failed action.        |
+
+## Examples
+
+<Canvas of={AlertStories.TitleOnly} />
+<Canvas of={AlertStories.WithAction} />
+
+## Accessibility
+
+<Canvas of={AlertStories.StaticContent} />
+
+- `role="alert"` interrupts screen readers immediately; `role="status"` waits politely. Both only announce content that **appears** after the page has loaded.
+- For alerts that are part of the initial page, pass `role={undefined}` to avoid noisy announcements.
+- Tone is conveyed by colour and by the text — always state the problem in words.
+
+## Do / Don't
+
+| Do                                              | Don't                                                   |
+| ----------------------------------------------- | ------------------------------------------------------- |
+| Say what happened and what to do next.          | Show raw error codes only.                              |
+| Use `danger` for failures that need action.     | Use `danger` for neutral information to draw attention. |
+| Use `role={undefined}` for static page content. | Stack several `role="alert"` messages at once.          |
+
+## Related components
+
+- `FormMessage` — field-level validation.
+- `Modal` — blocking decisions.

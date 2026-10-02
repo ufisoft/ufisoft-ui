@@ -1,0 +1,86 @@
+/* The <dialog> box is the click target for the backdrop; .panel holds the content. */
+.dialog {
+  inline-size: min(var(--_width), calc(100vw - 2 * var(--ufi-space-md)));
+  max-inline-size: none;
+  max-block-size: calc(100dvh - 2 * var(--ufi-space-md));
+  padding: 0;
+  margin: auto;
+  overflow: hidden;
+  color: var(--ufi-color-text-default);
+  background-color: var(--ufi-color-bg-surface);
+  border: 0;
+  border-radius: var(--ufi-radius-lg);
+  box-shadow: var(--ufi-shadow-overlay);
+}
+
+.dialog[open] {
+  display: flex;
+}
+
+.dialog::backdrop {
+  background-color: var(--ufi-color-bg-backdrop);
+}
+
+/* Prevent the page behind an open modal from scrolling. */
+:global(html):has(.dialog[open]) {
+  overflow: hidden;
+}
+
+.sm {
+  --_width: 25rem;
+}
+
+.md {
+  --_width: 32rem;
+}
+
+.lg {
+  --_width: 48rem;
+}
+
+.panel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-block-size: 0;
+}
+
+.header {
+  display: flex;
+  gap: var(--ufi-space-md);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--ufi-space-lg) var(--ufi-space-lg) var(--ufi-space-sm);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-2xs);
+}
+
+.title {
+  font-family: var(--ufi-font-heading);
+  font-size: var(--ufi-text-lg);
+  font-weight: var(--ufi-weight-semibold);
+  line-height: var(--ufi-leading-tight);
+}
+
+.description {
+  font-size: var(--ufi-text-sm);
+  color: var(--ufi-color-text-muted);
+}
+
+.body {
+  flex: 1;
+  padding: var(--ufi-space-sm) var(--ufi-space-lg);
+  overflow-y: auto;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-xs);
+  justify-content: flex-end;
+  padding: var(--ufi-space-sm) var(--ufi-space-lg) var(--ufi-space-lg);
+}

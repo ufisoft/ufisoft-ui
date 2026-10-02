@@ -1,0 +1,56 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as IconButtonStories from './icon-button.stories';
+
+<Meta of={IconButtonStories} />
+
+# IconButton
+
+A square button that shows only an icon. Built on `Button`, so it shares its variants, sizes and states.
+
+<Canvas of={IconButtonStories.Default} />
+
+## When to use
+
+- Compact, universally understood actions: close, delete, edit, more options.
+- Dense UIs such as toolbars and table rows.
+
+## When not to use
+
+- When the icon's meaning is not obvious — use a `Button` with a text label instead.
+- For the primary action of a page — text is clearer.
+
+## Props
+
+<ArgTypes of={IconButtonStories} />
+
+`aria-label` is **required** by the type system. The UI Kit ships no icon set: pass any SVG or icon component as `icon`.
+
+```tsx
+<IconButton aria-label="Delete item" variant="ghost" icon={<TrashIcon />} onClick={remove} />
+```
+
+## Variants and sizes
+
+<Canvas of={IconButtonStories.Variants} />
+<Canvas of={IconButtonStories.Sizes} />
+
+## States
+
+<Canvas of={IconButtonStories.Loading} />
+
+## Accessibility
+
+- The accessible name comes from `aria-label`; the icon is `aria-hidden`.
+- Describe the action, not the icon: “Delete item”, not “Trash can”.
+- Sighted mouse users don't see the label. Until `Tooltip` exists, prefer a text `Button` where meaning may be unclear.
+
+## Do / Don't
+
+| Do                                             | Don't                                        |
+| ---------------------------------------------- | -------------------------------------------- |
+| Label the action: `aria-label="Close dialog"`. | Describe the picture: `aria-label="X icon"`. |
+| Use for well-known actions.                    | Use ambiguous icons for important actions.   |
+
+## Related components
+
+- `Button` — actions with a visible label.

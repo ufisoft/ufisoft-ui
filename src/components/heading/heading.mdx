@@ -1,0 +1,48 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as HeadingStories from './heading.stories';
+
+<Meta of={HeadingStories} />
+
+# Heading
+
+Section titles that build the document outline (`h1`–`h6`).
+
+<Canvas of={HeadingStories.Default} />
+
+## When to use
+
+- Titles of pages, sections, cards and dialogs.
+
+## When not to use
+
+- To make text big or bold — use `Text` with `size` / `weight`.
+- For labels of form controls — use `Label` / `FormLabel`.
+
+## Props
+
+<ArgTypes of={HeadingStories} />
+
+`level` decides **structure**; `size` decides **appearance**. When `size` is omitted it follows the level.
+
+## Levels
+
+<Canvas of={HeadingStories.Levels} />
+
+## Accessibility
+
+<Canvas of={HeadingStories.LevelIndependentOfSize} />
+
+- Screen reader users navigate by headings. Levels must follow the page structure without skipping (h1 → h2 → h3).
+- Use one `h1` per page.
+- Choose `level` for the outline, then adjust `size` for the design — never pick a level for its looks.
+
+## Do / Don't
+
+| Do                                                 | Don't                                        |
+| -------------------------------------------------- | -------------------------------------------- |
+| `<Heading level={2} size="sm">` in a compact card. | Use `level={5}` just because it looks small. |
+| Keep heading levels sequential.                    | Jump from `h1` to `h4`.                      |
+
+## Related components
+
+- `Text` — body copy.

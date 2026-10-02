@@ -1,0 +1,114 @@
+/*
+ * Variants and sizes only set local custom properties (`--_*`);
+ * the base rule reads them. Adding a variant never touches the base rule.
+ */
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ufi-space-xs);
+  block-size: var(--_height);
+  padding-inline: var(--_padding-x);
+  font-family: var(--ufi-font-body);
+  font-size: var(--_font-size);
+  font-weight: var(--ufi-weight-medium);
+  line-height: var(--ufi-leading-tight);
+  color: var(--_fg);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  background-color: var(--_bg);
+  border: var(--ufi-border-width) solid var(--_border, transparent);
+  border-radius: var(--ufi-radius-md);
+  transition:
+    background-color var(--ufi-duration-fast) var(--ufi-easing-default),
+    border-color var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.button:hover:not(:disabled, [aria-disabled='true']) {
+  background-color: var(--_bg-hover);
+}
+
+.button:active:not(:disabled, [aria-disabled='true']) {
+  background-color: var(--_bg-active);
+}
+
+.button:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: var(--ufi-opacity-disabled);
+}
+
+.button[data-loading] {
+  cursor: progress;
+}
+
+/* Variants */
+.primary {
+  --_bg: var(--ufi-color-action-primary-bg);
+  --_bg-hover: var(--ufi-color-action-primary-bg-hover);
+  --_bg-active: var(--ufi-color-action-primary-bg-active);
+  --_fg: var(--ufi-color-action-primary-fg);
+}
+
+.secondary {
+  --_bg: var(--ufi-color-action-secondary-bg);
+  --_bg-hover: var(--ufi-color-action-secondary-bg-hover);
+  --_bg-active: var(--ufi-color-action-secondary-bg-active);
+  --_fg: var(--ufi-color-action-secondary-fg);
+  --_border: var(--ufi-color-action-secondary-border);
+}
+
+.ghost {
+  --_bg: transparent;
+  --_bg-hover: var(--ufi-color-action-ghost-bg-hover);
+  --_bg-active: var(--ufi-color-action-ghost-bg-active);
+  --_fg: var(--ufi-color-action-ghost-fg);
+}
+
+.danger {
+  --_bg: var(--ufi-color-action-danger-bg);
+  --_bg-hover: var(--ufi-color-action-danger-bg-hover);
+  --_bg-active: var(--ufi-color-action-danger-bg-active);
+  --_fg: var(--ufi-color-action-danger-fg);
+}
+
+/* Sizes */
+.sm {
+  --_height: var(--ufi-control-height-sm);
+  --_padding-x: var(--ufi-space-sm);
+  --_font-size: var(--ufi-text-sm);
+}
+
+.md {
+  --_height: var(--ufi-control-height-md);
+  --_padding-x: var(--ufi-space-md);
+  --_font-size: var(--ufi-text-sm);
+}
+
+.lg {
+  --_height: var(--ufi-control-height-lg);
+  --_padding-x: var(--ufi-space-lg);
+  --_font-size: var(--ufi-text-md);
+}
+
+/* Loading: label stays in the accessibility tree and keeps the width stable. */
+.content {
+  display: inline-flex;
+  align-items: center;
+  gap: inherit;
+}
+
+.button[data-loading] .content {
+  opacity: 0;
+}
+
+.spinner {
+  position: absolute;
+}

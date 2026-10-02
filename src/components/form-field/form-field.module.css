@@ -1,0 +1,17 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-2xs);
+  min-inline-size: 0;
+}
+
+.description,
+.message {
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-muted);
+}
+
+.message.invalid {
+  color: var(--ufi-color-text-danger);
+}

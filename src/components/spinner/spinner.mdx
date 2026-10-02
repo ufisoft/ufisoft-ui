@@ -1,0 +1,50 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as SpinnerStories from './spinner.stories';
+
+<Meta of={SpinnerStories} />
+
+# Spinner
+
+Indicates that something is loading and its duration is unknown.
+
+<Canvas of={SpinnerStories.Default} />
+
+## When to use
+
+- Short waits (roughly under a few seconds) where content shape is unknown.
+- Inside components while they load (`Button` uses it for `loading`).
+
+## When not to use
+
+- Loading content with a known layout — use `Skeleton` (planned) to reduce layout shift.
+- Long operations with measurable progress — show progress instead.
+- Button loading — use `<Button loading>`, not a Spinner inside a Button.
+
+## Props
+
+<ArgTypes of={SpinnerStories} />
+
+## Sizes
+
+<Canvas of={SpinnerStories.Sizes} />
+<Canvas of={SpinnerStories.InheritsColor} />
+
+The spinner uses `currentColor`, so it matches its surrounding text.
+
+## Accessibility
+
+<Canvas of={SpinnerStories.CustomLabel} />
+
+- Renders `role="status"` with a visually hidden `label` (default “Loading”). Make the label specific: “Loading orders”.
+- With `prefers-reduced-motion`, the rotation slows down instead of stopping, so the state remains perceivable.
+
+## Do / Don't
+
+| Do                                      | Don't                                         |
+| --------------------------------------- | --------------------------------------------- |
+| Give a specific `label`.                | Show many spinners at once on a page.         |
+| Place it where the content will appear. | Use it for content with a predictable layout. |
+
+## Related components
+
+- `Button` (`loading`), `Skeleton` (planned).

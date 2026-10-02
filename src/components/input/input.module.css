@@ -1,0 +1,62 @@
+.input {
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--_height);
+  padding-inline: var(--ufi-space-sm);
+  font-family: var(--ufi-font-body);
+  font-size: var(--_font-size);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  background-color: var(--ufi-color-control-bg);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-default);
+  border-radius: var(--ufi-radius-md);
+  transition: border-color var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.input::placeholder {
+  color: var(--ufi-color-text-subtle);
+}
+
+.input:hover:not(:disabled, :focus-visible) {
+  border-color: var(--ufi-color-border-strong);
+}
+
+.input:focus-visible {
+  border-color: var(--ufi-color-border-focus);
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: 0;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--ufi-color-border-danger);
+}
+
+.input[aria-invalid='true']:focus-visible {
+  outline-color: var(--ufi-color-border-danger);
+}
+
+.input:disabled {
+  cursor: not-allowed;
+  background-color: var(--ufi-color-control-bg-disabled);
+  opacity: var(--ufi-opacity-disabled);
+}
+
+.input:read-only:not(:disabled) {
+  background-color: var(--ufi-color-bg-subtle);
+}
+
+/* Sizes — share heights with Button so they align in a row */
+.sm {
+  --_height: var(--ufi-control-height-sm);
+  --_font-size: var(--ufi-text-sm);
+}
+
+.md {
+  --_height: var(--ufi-control-height-md);
+  --_font-size: var(--ufi-text-sm);
+}
+
+.lg {
+  --_height: var(--ufi-control-height-lg);
+  --_font-size: var(--ufi-text-md);
+}

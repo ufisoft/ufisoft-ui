@@ -1,0 +1,53 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as StackStories from './stack.stories';
+
+<Meta of={StackStories} />
+
+# Stack
+
+Lays out children in one direction with consistent spacing from the spacing scale.
+
+<Canvas of={StackStories.Vertical} />
+
+## When to use
+
+- Vertical rhythm of form fields, cards or sections.
+- Horizontal rows of buttons, tags or toolbar items.
+
+## When not to use
+
+- Two-dimensional layouts (rows **and** columns) — a `Grid` component will cover this later.
+- Spacing a single element — use the parent's layout or a token in your own CSS.
+
+## Props
+
+<ArgTypes of={StackStories} />
+
+`gap` only accepts spacing tokens (`2xs` … `2xl`), which keeps spacing consistent across products.
+
+## Examples
+
+<Canvas of={StackStories.Horizontal} />
+<Canvas of={StackStories.ToolbarLayout} />
+
+## Edge cases
+
+<Canvas of={StackStories.Wrapping} />
+
+## Accessibility
+
+<Canvas of={StackStories.AsList} />
+
+- Stack adds no semantics. When the items form a list, render `as="ul"` with `li` children so screen readers announce the item count.
+- Visual order follows DOM order; never reverse it with CSS, keyboard order would no longer match.
+
+## Do / Don't
+
+| Do                                             | Don't                                  |
+| ---------------------------------------------- | -------------------------------------- |
+| Use `gap` tokens for spacing between siblings. | Add margins to children to space them. |
+| Use `as="ul"` for lists of items.              | Use Stack for 2D grids.                |
+
+## Related components
+
+- `Grid` (planned) — two-dimensional layouts.

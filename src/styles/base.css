@@ -1,0 +1,33 @@
+/*
+ * Global defaults: typography and accessibility rules only.
+ * Component styles never belong here.
+ */
+@layer ufi-base {
+  body {
+    font-family: var(--ufi-font-body);
+    font-size: var(--ufi-text-md);
+    line-height: var(--ufi-leading-normal);
+    color: var(--ufi-color-text-default);
+    background-color: var(--ufi-color-bg-canvas);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+    outline-offset: var(--ufi-focus-ring-offset);
+  }
+
+  /*
+   * Transitions are decorative, so they are disabled globally.
+   * Animations may carry meaning (e.g. Spinner), so each component
+   * handles `prefers-reduced-motion` itself instead of being stopped here.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
