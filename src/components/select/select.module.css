@@ -1,0 +1,96 @@
+/*
+ * A native <select> takes no pseudo-elements, so the chevron is two gradient
+ * triangles in the background — no wrapper element, ref and className stay on
+ * the select itself.
+ */
+.select {
+  --_chevron: var(--ufi-space-2xs);
+  --_chevron-end: var(--ufi-space-sm);
+
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--_height);
+  padding-inline: var(--ufi-space-sm) calc(var(--_chevron-end) + var(--ufi-space-lg));
+  font-family: var(--ufi-font-body);
+  font-size: var(--_font-size);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  text-overflow: ellipsis;
+  cursor: pointer;
+  appearance: none;
+  background-color: var(--ufi-color-control-bg);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ufi-color-text-muted) 50%),
+    linear-gradient(135deg, var(--ufi-color-text-muted) 50%, transparent 50%);
+  background-repeat: no-repeat;
+  background-position:
+    calc(100% - var(--_chevron-end) - var(--_chevron)) 55%,
+    calc(100% - var(--_chevron-end)) 55%;
+  background-size: var(--_chevron) var(--_chevron);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-default);
+  border-radius: var(--ufi-radius-md);
+  transition: border-color var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.select:dir(rtl) {
+  background-position:
+    var(--_chevron-end) 55%,
+    calc(var(--_chevron-end) + var(--_chevron)) 55%;
+}
+
+/* An empty-value option acts as the placeholder. */
+.select:has(option[value='']:checked) {
+  color: var(--ufi-color-text-subtle);
+}
+
+.select option {
+  color: var(--ufi-color-text-default);
+}
+
+.select:hover:not(:disabled, :focus-visible) {
+  border-color: var(--ufi-color-border-strong);
+}
+
+.select:focus-visible {
+  border-color: var(--ufi-color-border-focus);
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: 0;
+}
+
+.select[aria-invalid='true'] {
+  border-color: var(--ufi-color-border-danger);
+}
+
+.select[aria-invalid='true']:focus-visible {
+  outline-color: var(--ufi-color-border-danger);
+}
+
+.select:disabled {
+  cursor: not-allowed;
+  background-color: var(--ufi-color-control-bg-disabled);
+  opacity: var(--ufi-opacity-disabled);
+}
+
+/* Forced colors drop background images: fall back to the system select. */
+@media (forced-colors: active) {
+  .select {
+    appearance: auto;
+    padding-inline-end: var(--ufi-space-sm);
+  }
+}
+
+/* Sizes — share heights with Input and Button so they align in a row */
+.sm {
+  --_height: var(--ufi-control-height-sm);
+  --_font-size: var(--ufi-text-sm);
+}
+
+.md {
+  --_height: var(--ufi-control-height-md);
+  --_font-size: var(--ufi-text-sm);
+}
+
+.lg {
+  --_height: var(--ufi-control-height-lg);
+  --_font-size: var(--ufi-text-md);
+}

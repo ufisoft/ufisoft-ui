@@ -51,6 +51,7 @@ export {
 } from './components/form-field';
 export { Input, type InputProps, type InputSize } from './components/input';
 export { Textarea, type TextareaProps, type TextareaSize } from './components/textarea';
+export { Select, type SelectProps, type SelectSize } from './components/select';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 
 // Feedback

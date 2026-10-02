@@ -1,0 +1,72 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as SelectStories from './select.stories';
+
+<Meta of={SelectStories} />
+
+# Select
+
+A single-choice dropdown. A styled native `<select>` that works controlled or uncontrolled and with any form library.
+
+<Canvas of={SelectStories.Default} />
+
+## When to use
+
+- Choosing one value from a known list of roughly 5–15 options: country, status, time zone.
+
+## When not to use
+
+- 2–4 options that should all be visible — use `Radio` (planned).
+- Choosing several values — use `Checkbox` items; `multiple` is not supported.
+- Long lists the user needs to search — use a combobox (planned).
+- An on/off choice — use `Checkbox`.
+
+## Props
+
+<ArgTypes of={SelectStories} />
+
+All native `<select>` attributes are supported except `multiple` and `size`, which turn the field into a list box. Options are plain `<option>` and `<optgroup>` children.
+
+Inside a `FormField`, `id`, `aria-describedby`, `aria-invalid`, `required` and `disabled` come from the field.
+
+**Placeholder:** add `<option value="">Choose…</option>` first. While it is selected, the text is shown in the subtle color, and `required` rejects it on submit.
+
+## Sizes
+
+<Canvas of={SelectStories.Sizes} />
+
+## States
+
+<Canvas of={SelectStories.WithValue} />
+<Canvas of={SelectStories.Invalid} />
+<Canvas of={SelectStories.Disabled} />
+<Canvas of={SelectStories.LongOption} />
+
+A native `<select>` has no read-only state. To show a fixed value, use a read-only `Input`.
+
+## Examples
+
+<Canvas of={SelectStories.Groups} />
+<Canvas of={SelectStories.InFormField} />
+<Canvas of={SelectStories.AlignedWithInput} />
+
+## Accessibility
+
+- Every select needs a label: a `FormField` + `FormLabel`, or `aria-label` when no visible label exists.
+- Keyboard and screen-reader behaviour is the platform's: arrow keys change the value, typing jumps to a matching option, and mobile devices open their native picker.
+- `invalid` sets `aria-invalid`; pair it with a `FormMessage` explaining the problem.
+- In forced-colors mode the browser's own select is shown, so the chevron stays visible.
+
+## Do / Don't
+
+| Do                                                 | Don't                                                 |
+| -------------------------------------------------- | ----------------------------------------------------- |
+| Use a visible label.                               | Use the placeholder option as the label.              |
+| Order options logically (alphabetical, frequency). | Hide 2–3 options behind a dropdown.                   |
+| Group long lists with `<optgroup>`.                | Put hundreds of options in a select without search.   |
+| Change the value only through the user's choice.   | Trigger navigation or saving on `onChange` by itself. |
+
+## Related components
+
+- `Input` — free-text values.
+- `Checkbox` — on/off and multiple choices.
+- `FormField` — label, description and validation wiring.
