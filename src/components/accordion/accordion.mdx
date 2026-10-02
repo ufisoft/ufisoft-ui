@@ -1,0 +1,64 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as AccordionStories from './accordion.stories';
+
+<Meta of={AccordionStories} />
+
+# Accordion
+
+A stack of collapsible sections; each header shows or hides its content.
+
+<Canvas of={AccordionStories.Default} />
+
+## When to use
+
+- Long pages of secondary content the user scans by heading: FAQs, help topics, optional settings groups.
+
+## When not to use
+
+- Content most users need — show it; collapsing it adds a click.
+- Switching between alternative views of one object — use `Tabs`.
+- A single show/hide toggle next to a control — a lone `AccordionItem` works, but consider whether the content should simply be visible.
+
+## Props
+
+<ArgTypes of={AccordionStories} />
+
+- `Accordion` — the container. `type="single"` closes the other items when one opens; `multiple` (default) lets items open independently.
+- `AccordionItem` — one section. `title` is the always-visible header; `children` is the content. Use `defaultOpen` for the initial state, or `open` + `onOpenChange` to control it.
+
+Each part passes `className`, `ref` and native props to its element (`AccordionItem` is a `<details>`).
+
+Built on native `<details>` and `<summary>`: keyboard support and exclusive opening (`<details name>`) come from the browser, with no JavaScript dependency.
+
+## Variants
+
+<Canvas of={AccordionStories.Single} />
+
+## States
+
+<Canvas of={AccordionStories.LongContent} />
+
+## Examples
+
+<Canvas of={AccordionStories.Settings} />
+<Canvas of={AccordionStories.Controlled} />
+
+## Accessibility
+
+- Each header is a native `<summary>`, announced as a button with its expanded or collapsed state.
+- Tab moves between headers; Enter or Space toggles the focused one.
+- In browsers that support it (e.g. Chromium), find-in-page (Ctrl+F) searches collapsed content and opens the matching item.
+- A header is not a heading. If the sections need to appear in a screen reader's headings list, put a `Heading` before the accordion or use headings inside the content.
+
+## Do / Don't
+
+| Do                                              | Don't                                          |
+| ----------------------------------------------- | ---------------------------------------------- |
+| Write titles that predict the content.          | Hide required form fields in a collapsed item. |
+| Open the most relevant item with `defaultOpen`. | Nest accordions inside accordions.             |
+| Keep each item's content short.                 | Use an accordion for two or three lines.       |
+
+## Related components
+
+- `Tabs` — alternative views in the same place.
+- `Switch` — settings inside an item.

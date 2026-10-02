@@ -1,0 +1,63 @@
+.accordion {
+  border-block-start: var(--ufi-border-width) solid var(--ufi-color-border-default);
+}
+
+.item {
+  border-block-end: var(--ufi-border-width) solid var(--ufi-color-border-default);
+}
+
+.summary {
+  display: flex;
+  gap: var(--ufi-space-sm);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ufi-space-sm) var(--ufi-space-2xs);
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-md);
+  font-weight: var(--ufi-weight-medium);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  cursor: pointer;
+  list-style: none;
+  border-radius: var(--ufi-radius-sm);
+}
+
+/* Safari still draws its own marker. */
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron: two borders of a rotated square, in the text colour (kept in forced colors). */
+.summary::after {
+  --_size: calc(var(--ufi-space-xs) - var(--ufi-border-width));
+
+  flex-shrink: 0;
+  inline-size: var(--_size);
+  block-size: var(--_size);
+  margin-inline-end: var(--ufi-space-2xs);
+  content: '';
+  border-block-end: calc(var(--ufi-border-width) * 2) solid currentcolor;
+  border-inline-end: calc(var(--ufi-border-width) * 2) solid currentcolor;
+  transform: translateY(-25%) rotate(45deg);
+  transition: transform var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.item[open] > .summary::after {
+  transform: translateY(25%) rotate(-135deg);
+}
+
+.summary:hover {
+  color: var(--ufi-color-text-link);
+}
+
+.summary:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: calc(var(--ufi-focus-ring-width) * -1);
+}
+
+.content {
+  padding: 0 var(--ufi-space-2xs) var(--ufi-space-md);
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-normal);
+  color: var(--ufi-color-text-default);
+}

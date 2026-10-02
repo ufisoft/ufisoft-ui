@@ -101,6 +101,13 @@ export {
   type TabsPanelProps,
   type TabsOrientation,
 } from './components/tabs';
+export {
+  Accordion,
+  AccordionItem,
+  type AccordionProps,
+  type AccordionItemProps,
+  type AccordionType,
+} from './components/accordion';
 
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';
