@@ -152,6 +152,7 @@ describe('DataTable search and filters', () => {
     );
   });
 
+  // Opens four editors, one with a calendar: over 5 s when the whole suite runs in parallel.
   it('filters by several options, a number range, dates and a yes/no value', async () => {
     const user = userEvent.setup();
     // An explicit locale: summaries format numbers and dates for it, whatever the test machine uses.
@@ -190,7 +191,7 @@ describe('DataTable search and filters', () => {
       'Active: Active',
       'Clear all filters',
     ]);
-  });
+  }, 15_000);
 
   it('opens a filter with its current value and clears it from the editor', async () => {
     const user = userEvent.setup();
