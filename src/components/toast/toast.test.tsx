@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { ToastProvider, useToast, type ToastOptions } from '.';
@@ -54,15 +54,22 @@ describe('Toast', () => {
     );
   });
 
-  it('closes by itself after its duration', async () => {
-    const user = userEvent.setup();
-    renderWithProvider({ title: 'Page saved' }, 100);
+  // Fake timers: the test controls time, so it does not depend on machine load.
+  it('closes by itself after its duration', () => {
+    // Only timeouts are faked; fireEvent avoids user-event's own timers.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      renderWithProvider({ title: 'Page saved' }, 3000);
 
-    await user.click(screen.getByRole('button', { name: 'Save' }));
-    expect(screen.getByText('Page saved')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByText('Page saved')).not.toBeInTheDocument(), {
-      timeout: 2000,
-    });
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      act(() => vi.advanceTimersByTime(2900));
+      expect(screen.getByText('Page saved')).toBeInTheDocument();
+
+      act(() => vi.advanceTimersByTime(200));
+      expect(screen.queryByText('Page saved')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('stacks several toasts', async () => {
