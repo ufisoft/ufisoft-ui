@@ -435,6 +435,38 @@ export const KeyboardGrid: Story = {
   },
 };
 
+export const GroupingAndTotals: Story = {
+  name: 'Grouping, totals and column menu',
+  args: {
+    columnMenu: true,
+    defaultGroupBy: ['role'],
+    columns: columns.map((column) => ({
+      ...column,
+      groupable: ['role', 'status', 'verified'].includes(column.id),
+      aggregate:
+        column.id === 'orders'
+          ? ('sum' as const)
+          : column.id === 'createdAt'
+            ? ('max' as const)
+            : undefined,
+    })) as DataTableColumn<unknown>[],
+  },
+};
+
+export const ExportAndViews: Story = {
+  name: 'CSV export and saved views',
+  args: {
+    globalSearch: true,
+    columnMenu: true,
+    columnChooser: true,
+    csvExport: { fileName: 'users' },
+    savedViews: true,
+    selectable: true,
+    // Views survive a reload of this story.
+    storageKey: 'storybook-users-views',
+  },
+};
+
 export const Loading: Story = {
   args: { data: [], loading: true },
 };

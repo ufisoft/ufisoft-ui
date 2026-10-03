@@ -6,7 +6,7 @@ import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 # DataTable
 
-A data table for admin screens: sorting, search, column filters, pages, row selection and actions, column management, row reordering, virtualization and inline editing, on the client or the server.
+A data table for admin screens: sorting, search, column filters, pages, row selection and actions, column management, row reordering, virtualization, inline editing, grouping, CSV export and saved views, on the client or the server.
 
 <Canvas of={DataTableStories.Default} />
 
@@ -118,6 +118,14 @@ onCellEdit={async ({ rowId, columnId, value }) => {
 
 **Keyboard grid.** With an editable column — or `cellNavigation` without one — the table follows the ARIA grid pattern: it is one tab stop, and the arrow keys, Home / End, Ctrl+Home / Ctrl+End and PageUp / PageDown move between cells, headers included. A cell whose only control is a button, link or checkbox gets focus on that control (Space toggles a checkbox, Enter opens a menu); a cell with several controls or a field gets focus itself, Enter or F2 moves into its controls, Tab cycles them and Escape returns to the cell.
 
+**Column menu.** `columnMenu` adds a menu button to each header: sort ascending or descending, add the column as the next sort (“Then sort ascending” — the keyboard way to a multi-column sort), clear its sort, group by it (`groupable` columns), pin it left or right, hide it, reset its width.
+
+**Grouping and totals.** `groupBy` (controlled, or `defaultGroupBy`, `onGroupByChange`) groups rows by column values, outermost first; dates group by day. Each group gets a header row with a toggle (“Role: Admin (12)”) and the column aggregates; collapsed groups are `collapsedGroups` (`defaultCollapsedGroups`, `onCollapsedGroupsChange`), keyed like `role:Admin/status:Active`. A column's `aggregate` is `sum`, `avg` (two decimals), `min`, `max`, `count` or your own `(rows) => value`; with any aggregate, a totals row (`totals`, on by default) sums up every matching row and stays visible under a `maxHeight`. Grouping covers the rows the table has — in server mode, the page — and turns paging, virtualization and row reordering off while active.
+
+**CSV export.** `csvExport` adds an export button for the shown columns in their order: the selected rows when there are some (“Export 3 selected”), otherwise every matching row in the current sort (in server mode, the page). Options: `fileName` and `delimiter` (`,`, `;` for Turkish Excel, or tab). Dates are written as `yyyy-mm-dd`, the file starts with a UTF-8 byte order mark, and text that starts like a formula is prefixed with `'`. `exportValue` and `exportable` per column change what is written.
+
+**Saved views.** `savedViews` adds a “Views” popover: save the current sort, filters, search, page size, columns and grouping under a name (the same name replaces), apply one, or delete it. Views are controlled (`views`, `onViewsChange`), start from `defaultViews`, or — uncontrolled with `storageKey` — are kept in `localStorage`. Applying a view calls each change callback and `onQueryChange` once.
+
 **State.** Sort, filters, search, page and page size each work controlled (`sort` + `onSortChange`, `filters` + `onFiltersChange`, `search` + `onSearchChange`) or uncontrolled (`defaultSort`, `defaultFilters`, `defaultSearch`). A new sort, filter, search or page size goes back to page 1. Keep the query in the URL or a store (`createStore`) to restore a view.
 
 **Labels.** `labels` translates every text, including the range (“1–10 of 245”) and the sort description; `locale` sets text sorting and number formatting.
@@ -134,6 +142,8 @@ onCellEdit={async ({ rowId, columnId, value }) => {
 <Canvas of={DataTableStories.InfiniteLoading} />
 <Canvas of={DataTableStories.InlineEditing} />
 <Canvas of={DataTableStories.KeyboardGrid} />
+<Canvas of={DataTableStories.GroupingAndTotals} />
+<Canvas of={DataTableStories.ExportAndViews} />
 <Canvas of={DataTableStories.MultiSort} />
 <Canvas of={DataTableStories.Compact} />
 <Canvas of={DataTableStories.StickyHeader} />
@@ -180,9 +190,12 @@ While `loading`, the table is marked busy and the footer says “Loading…”. 
 - With editing or `cellNavigation`, the table has `role="grid"` and its data cells `role="gridcell"`. Only one cell is in the Tab order; focus stays visible on the cell. A grid without editors is `aria-readonly`; in an editable grid, cells that cannot be edited are `aria-readonly`, and editable cells are described as “Press Enter to edit.”
 - The editor is named after the column and row (“Edit Email for Ayşe Kaya”). A validation or save error is announced (`role="alert"`), marks the field invalid and describes it. While saving, the editor is busy and read-only, so focus stays in it. After saving or cancelling, focus returns to the cell.
 - Popups opened from a cell (filter, menus, calendar) keep their own keys; the grid's arrow keys do not reach them.
+- Each header's menu button is named “Column options for Name”; its items are a menu with roving focus. After “Hide column” focus moves to the table's scroll region, as the button is gone.
+- Group toggles are buttons with `aria-expanded`, named with the column, value and count. Active groupings are a named list of chips, each with a remove button. The totals row is in `<tfoot>`.
+- The views popover is a named dialog with a labelled name field; a missing name is announced, and saving or deleting a view is confirmed in a status region.
 - `onRowClick` is a pointer shortcut only: rows are not focusable, so keep a link or a row action that does the same.
 - When filters or search leave no rows, the empty message says so and offers a button that clears them.
-- Shift+click has no keyboard equivalent beyond Shift+Enter in most browsers — offer a preset view (as in the controlled example) when a multi-column order matters.
+- Shift+click has no keyboard equivalent beyond Shift+Enter in most browsers — turn on `columnMenu` (“Then sort ascending”) or offer a saved view when a multi-column order matters.
 
 ## Do / Don't
 

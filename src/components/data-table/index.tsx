@@ -3,6 +3,7 @@
 import { clsx } from 'clsx';
 import {
   Fragment,
+  isValidElement,
   useEffect,
   useId,
   useRef,
@@ -84,6 +85,16 @@ import { useRowDrag, type RowDropTarget } from './use-row-drag';
 import { useRowHeights, useVirtualRows } from './use-virtual-rows';
 import { dropIndex, renderedRows, type DataTableDropPosition } from './virtual';
 import { CellEditor } from './cell-editor';
+import { ColumnMenu, ViewsMenu, type ColumnMenuItem } from './column-menu';
+import { downloadCsv, toCsv, type DataTableCsvDelimiter } from './csv';
+import {
+  aggregate,
+  flattenGroups,
+  groupRows,
+  type DataTableAggregate,
+  type GroupNode,
+} from './grouping';
+import { parseViews, saveView, type DataTableView } from './views';
 import { draftOf, parseEdit, sameValue, type DataTableCellEditor, type EditDraft } from './editing';
 import { headerRow, useGridNavigation, type GridCell } from './use-grid-navigation';
 
@@ -92,6 +103,9 @@ export type { DataTableSelection } from './selection';
 export type { DataTableColumnPin, DataTableColumnState } from './columns';
 export type { DataTableDropPosition } from './virtual';
 export type { DataTableCellEditor } from './editing';
+export type { DataTableAggregate } from './grouping';
+export type { DataTableCsvDelimiter } from './csv';
+export type { DataTableView, DataTableViewState } from './views';
 export type {
   DataTableColumnFilter,
   DataTableFilter,
@@ -144,6 +158,14 @@ export interface DataTableColumn<T> {
   editor?: DataTableCellEditor<T>;
   /** With `editor`: whether a row's cell can be edited. Defaults to true. */
   editable?: (row: T) => boolean;
+  /** With `columnMenu`: rows can be grouped by this column. Defaults to false. */
+  groupable?: boolean;
+  /** Summarizes the column in group rows and the totals row. */
+  aggregate?: DataTableAggregate<T>;
+  /** The value written to CSV, when it differs from `value`. */
+  exportValue?: (row: T) => unknown;
+  /** Whether CSV export includes the column. Defaults to true when it has a value. */
+  exportable?: boolean;
 }
 
 /** Everything a server needs to fetch one page: sorting, filters, search and pagination. */
@@ -305,6 +327,40 @@ export interface DataTableLabels {
   numberMax: (max: number) => string;
   saving: string;
   saveFailed: string;
+  /** Grouping and totals. */
+  group: (column: string, value: string, count: number) => string;
+  emptyGroup: string;
+  groupedBy: string;
+  removeGrouping: (column: string) => string;
+  total: string;
+  /** Column header menu. */
+  columnMenu: (column: string) => string;
+  sortAscending: string;
+  sortDescending: string;
+  thenAscending: string;
+  thenDescending: string;
+  clearSort: string;
+  groupByColumn: string;
+  ungroupColumn: string;
+  pinLeft: string;
+  pinRight: string;
+  unpin: string;
+  hideColumn: string;
+  resetWidth: string;
+  /** CSV export. */
+  exportCsv: string;
+  exportSelected: (count: number) => string;
+  /** Saved views. */
+  views: string;
+  savedViews: string;
+  noViews: string;
+  viewName: string;
+  saveView: string;
+  viewNameRequired: string;
+  viewSaved: (name: string) => string;
+  viewDeleted: (name: string) => string;
+  applyView: (name: string) => string;
+  deleteView: (name: string) => string;
 }
 
 export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children'>, EventDataProps {
@@ -425,6 +481,33 @@ export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children
    */
   cellNavigation?: boolean;
 
+  /**
+   * Columns to group rows by, outermost first (controlled). Groups the rows the table has (in
+   * server mode, the page); turns paging and virtualization off.
+   */
+  groupBy?: string[];
+  defaultGroupBy?: string[];
+  onGroupByChange?: (groupBy: string[]) => void;
+  /** Keys of collapsed groups (controlled). Groups start open. */
+  collapsedGroups?: string[];
+  defaultCollapsedGroups?: string[];
+  onCollapsedGroupsChange?: (collapsedGroups: string[]) => void;
+  /** Shows a totals row under the rows when a column has an `aggregate`. Defaults to true. */
+  totals?: boolean;
+  /** Adds a menu to each header: sort, group (with `groupable` columns), pin, hide, reset width. */
+  columnMenu?: boolean;
+  /**
+   * Adds an “Export CSV” button for the shown columns: the selected rows when there are any,
+   * otherwise every row that matches (in server mode, the page).
+   */
+  csvExport?: boolean | { fileName?: string; delimiter?: DataTableCsvDelimiter };
+  /** Adds a “Views” button that saves the sort, filters, search, columns and grouping by name. */
+  savedViews?: boolean;
+  /** Saved views (controlled). Uncontrolled with `storageKey`, they are kept in `localStorage`. */
+  views?: DataTableView[];
+  defaultViews?: DataTableView[];
+  onViewsChange?: (views: DataTableView[]) => void;
+
   /** Adds a handle to each header's edge: drag it, or focus it and use the arrow keys. */
   resizableColumns?: boolean;
   /** Headers can be dragged to reorder columns. The column chooser does the same by keyboard. */
@@ -528,6 +611,36 @@ function defaultLabels(locale: string | undefined): DataTableLabels {
     numberMax: (max) => `Enter ${number.format(max)} or less`,
     saving: 'Saving…',
     saveFailed: 'Could not save. Try again.',
+    group: (column, value, count) => `${column}: ${value} (${number.format(count)})`,
+    emptyGroup: '(empty)',
+    groupedBy: 'Grouped by',
+    removeGrouping: (column) => `Stop grouping by ${column}`,
+    total: 'Total',
+    columnMenu: (column) => `Column options for ${column}`,
+    sortAscending: 'Sort ascending',
+    sortDescending: 'Sort descending',
+    thenAscending: 'Then sort ascending',
+    thenDescending: 'Then sort descending',
+    clearSort: 'Clear sort',
+    groupByColumn: 'Group by this column',
+    ungroupColumn: 'Stop grouping by this column',
+    pinLeft: 'Pin left',
+    pinRight: 'Pin right',
+    unpin: 'Unpin',
+    hideColumn: 'Hide column',
+    resetWidth: 'Reset width',
+    exportCsv: 'Export CSV',
+    exportSelected: (count) => `Export ${number.format(count)} selected`,
+    views: 'Views',
+    savedViews: 'Saved views',
+    noViews: 'No saved views yet.',
+    viewName: 'View name',
+    saveView: 'Save view',
+    viewNameRequired: 'Enter a name for the view',
+    viewSaved: (name) => `Saved view “${name}”.`,
+    viewDeleted: (name) => `Deleted view “${name}”.`,
+    applyView: (name) => `Apply view ${name}`,
+    deleteView: (name) => `Delete view ${name}`,
   };
 }
 
@@ -552,7 +665,7 @@ export function DataTable<T>({
   sort: sortProp,
   defaultSort = [],
   onSortChange,
-  paginated = true,
+  paginated: paginatedProp = true,
   page: pageProp,
   defaultPage = 1,
   onPageChange,
@@ -584,12 +697,25 @@ export function DataTable<T>({
   onExpandedChange,
   reorderableRows = false,
   onRowReorder,
-  virtualized = false,
+  virtualized: virtualizedProp = false,
   estimatedRowHeight,
   overscan = 8,
   hasMore = false,
   onCellEdit,
   cellNavigation,
+  groupBy: groupByProp,
+  defaultGroupBy = [],
+  onGroupByChange,
+  collapsedGroups: collapsedProp,
+  defaultCollapsedGroups = [],
+  onCollapsedGroupsChange,
+  totals = true,
+  columnMenu = false,
+  csvExport = false,
+  savedViews = false,
+  views: viewsProp,
+  defaultViews,
+  onViewsChange,
   onLoadMore,
   resizableColumns = false,
   reorderableColumns = false,
@@ -621,6 +747,17 @@ export function DataTable<T>({
   const [innerFilters, setInnerFilters] = useState(defaultFilters);
   const [innerSelection, setInnerSelection] = useState(defaultSelection);
   const [innerExpanded, setInnerExpanded] = useState(defaultExpandedRowIds);
+  const [innerGroupBy, setInnerGroupBy] = useState(defaultGroupBy);
+  const [innerCollapsed, setInnerCollapsed] = useState(defaultCollapsedGroups);
+  // Only columns with a value can group.
+  const groupBy = (groupByProp ?? innerGroupBy).filter((id) =>
+    columns.some((column) => column.id === id && column.value),
+  );
+  const collapsedGroups = collapsedProp ?? innerCollapsed;
+  const grouped = groupBy.length > 0;
+  // Groups need all their rows together: no paging, no virtualization while grouped.
+  const paginated = paginatedProp && !grouped;
+  const virtualized = virtualizedProp && !grouped;
   const sort = sortProp ?? innerSort;
   const search = searchProp ?? innerSearch;
   const filters = filtersProp ?? innerFilters;
@@ -660,6 +797,17 @@ export function DataTable<T>({
   // Index of the first visible row among all rows (0 when the server sends one page, or no paging).
   const offset = isServer || !paginated ? 0 : (page - 1) * pageSize;
   const visible = isServer || !paginated ? rows : rows.slice(offset, offset + pageSize);
+  const collator = new Intl.Collator(locale, { numeric: true });
+  const groups = grouped
+    ? groupRows(
+        visible,
+        groupBy,
+        columns,
+        (id) => sort.find((entry) => entry.columnId === id)?.direction,
+        collator,
+      )
+    : [];
+  const displayItems = grouped ? flattenGroups(groups, new Set(collapsedGroups)) : [];
 
   // Ids use the row's index in `data`, so the default id stays the same when rows sort or filter.
   const dataIndex = new Map(data.map((row, index) => [row, index]));
@@ -776,7 +924,7 @@ export function DataTable<T>({
   });
 
   // Row reordering, in the order shown; the move is applied to `data` by the consumer.
-  const dragEnabled = reorderableRows && sort.length === 0;
+  const dragEnabled = reorderableRows && sort.length === 0 && !grouped;
   function reorderRow(id: string, target: RowDropTarget) {
     const from = data.findIndex((row, index) => getRowId(row, index) === id);
     const over = data.findIndex((row, index) => getRowId(row, index) === target.id);
@@ -847,7 +995,16 @@ export function DataTable<T>({
   const gridNavigation = useGridNavigation({
     enabled: grid,
     tableRef,
-    rows: [headerRow, ...visibleIds],
+    rows: [
+      headerRow,
+      ...(grouped
+        ? displayItems.map((item) =>
+            item.kind === 'group'
+              ? `group:${item.group.key}`
+              : rowId(item.row, visible.indexOf(item.row)),
+          )
+        : visibleIds),
+    ],
     cols: gridCols,
     onEdit: (cell, typed) => startEdit(cell, typed),
   });
@@ -1061,7 +1218,10 @@ export function DataTable<T>({
   });
 
   function changeSort(columnId: string, multi: boolean) {
-    const next = nextSort(sort, columnId, multi);
+    applySort(nextSort(sort, columnId, multi));
+  }
+
+  function applySort(next: DataTableSort[]) {
     if (sameSort(next, sort)) return;
     if (sortProp === undefined) setInnerSort(next);
     onSortChange?.(next);
@@ -1256,6 +1416,310 @@ export function DataTable<T>({
       : [];
   });
 
+  function changeGroupBy(next: string[]) {
+    if (next.length === groupBy.length && next.every((id, index) => groupBy[index] === id)) return;
+    if (groupByProp === undefined) setInnerGroupBy(next);
+    onGroupByChange?.(next);
+    emit('datatable.state.onGroupBy', {
+      groupBy: next,
+      previousGroupBy: groupBy,
+      source: source(),
+    });
+  }
+
+  function toggleGroup(key: string) {
+    const expanded = collapsedGroups.includes(key);
+    const next = expanded
+      ? collapsedGroups.filter((candidate) => candidate !== key)
+      : [...collapsedGroups, key];
+    if (collapsedProp === undefined) setInnerCollapsed(next);
+    onCollapsedGroupsChange?.(next);
+    emit('datatable.state.onGroupToggle', { groupKey: key, expanded, source: source() });
+  }
+
+  /** A column's aggregate over some rows, as shown in a cell. */
+  function aggregateOf(column: DataTableColumn<T>, of: T[]): ReactNode {
+    if (!column.aggregate) return null;
+    const value =
+      typeof column.aggregate === 'function'
+        ? column.aggregate(of)
+        : aggregate(
+            column.aggregate,
+            of.map((row) => column.value?.(row)),
+          );
+    if (isValidElement(value)) return value;
+    // Averages: at most two decimals.
+    const shown =
+      column.aggregate === 'avg' && typeof value === 'number'
+        ? Math.round(value * 100) / 100
+        : value;
+    return formatValue(shown, locale);
+  }
+
+  const exportOptions = typeof csvExport === 'object' ? csvExport : {};
+  const selectedForExport =
+    selectable && selection.ids.length > 0
+      ? (isServer ? data : sortRows(data, sort, columns, collator)).filter((row, index) =>
+          selection.ids.includes(
+            isServer ? getRowId(row, index) : getRowId(row, dataIndex.get(row) ?? index),
+          ),
+        )
+      : null;
+
+  function exportCsv() {
+    const exported = selectedForExport ?? rows;
+    const exportColumns = shown
+      .map(({ column }) => column)
+      .filter((column) => column.exportable ?? Boolean(column.value || column.exportValue))
+      .map((column) => ({
+        header: columnLabel(column),
+        value: (row: T) => (column.exportValue ?? column.value)?.(row),
+      }));
+    downloadCsv(
+      toCsv(exported, exportColumns, exportOptions.delimiter ?? ','),
+      exportOptions.fileName ?? 'export.csv',
+    );
+    emit('datatable.interaction.onExport', {
+      format: 'csv',
+      rowCount: exported.length,
+      selected: selectedForExport !== null,
+      source: source(),
+    });
+  }
+
+  // Saved views: controlled, stored under storageKey, or kept in state.
+  const [innerViews, setInnerViews] = useState<DataTableView[] | undefined>(undefined);
+  const viewsName = storageName ? `${storageName}:views` : undefined;
+  const storedViews = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener('storage', onChange);
+      return () => window.removeEventListener('storage', onChange);
+    },
+    () => (viewsName ? readStorage(viewsName) : null),
+    () => null,
+  );
+  const views = viewsProp ?? innerViews ?? parseViews(storedViews) ?? defaultViews ?? [];
+
+  function changeViews(next: DataTableView[]) {
+    if (viewsProp === undefined) setInnerViews(next);
+    onViewsChange?.(next);
+    if (viewsName && viewsProp === undefined) {
+      try {
+        window.localStorage.setItem(viewsName, JSON.stringify(next));
+      } catch {
+        // Not stored: the views still apply for this visit.
+      }
+    }
+  }
+
+  function saveCurrentView(name: string) {
+    const view: DataTableView = {
+      id: newViewId(),
+      name,
+      state: {
+        sort,
+        filters,
+        search,
+        pageSize: paginated ? pageSize : undefined,
+        columns: columnState,
+        groupBy,
+      },
+    };
+    const next = saveView(views, view);
+    changeViews(next);
+    const saved = next.find((candidate) => candidate.name === name) ?? view;
+    emit('datatable.state.onViewSave', { viewId: saved.id, name, source: source() });
+  }
+
+  function deleteView(view: DataTableView) {
+    changeViews(views.filter((candidate) => candidate.id !== view.id));
+    emit('datatable.state.onViewDelete', { viewId: view.id, name: view.name, source: source() });
+  }
+
+  /** Restores a view's state at once: each callback fires, and onQueryChange once. */
+  function applyView(view: DataTableView) {
+    const state = view.state;
+    if (!sameSort(state.sort, sort)) {
+      if (sortProp === undefined) setInnerSort(state.sort);
+      onSortChange?.(state.sort);
+    }
+    if (!sameFilters(state.filters, filters)) {
+      if (filtersProp === undefined) setInnerFilters(state.filters);
+      onFiltersChange?.(state.filters);
+    }
+    if (state.search !== search) {
+      clearTimeout(searchTimer.current);
+      if (searchProp === undefined) setInnerSearch(state.search);
+      setSearchInput(state.search);
+      onSearchChange?.(state.search);
+    }
+    const nextPageSize = state.pageSize !== undefined && paginated ? state.pageSize : pageSize;
+    if (nextPageSize !== pageSize) {
+      if (pageSizeProp === undefined) setInnerPageSize(nextPageSize);
+      onPageSizeChange?.(nextPageSize);
+    }
+    if (pageProp === undefined) setInnerPage(1);
+    if (page !== 1) onPageChange?.(1);
+    changeColumns(normalizeColumnState(state.columns, fallbackColumns), () => {});
+    if (!(
+      state.groupBy.length === groupBy.length && state.groupBy.every((id, i) => groupBy[i] === id)
+    )) {
+      if (groupByProp === undefined) setInnerGroupBy(state.groupBy);
+      onGroupByChange?.(state.groupBy);
+    }
+    if (selection.allMatching) changeSelection({ ids: selection.ids, allMatching: false });
+    onQueryChange?.({
+      sort: state.sort,
+      filters: state.filters,
+      search: state.search,
+      page: 1,
+      pageSize: nextPageSize,
+    });
+    emit('datatable.state.onViewApply', { viewId: view.id, name: view.name, source: source() });
+  }
+
+  /** The header menu's items for a column, in sections. */
+  function menuSections(column: DataTableColumn<T>): ColumnMenuItem[][] {
+    const id = column.id;
+    const sortable = column.sortable ?? Boolean(column.value || column.compare);
+    const entry = sort.find((candidate) => candidate.columnId === id);
+    const sortItems: ColumnMenuItem[] = sortable
+      ? [
+          {
+            id: 'asc',
+            label: labels.sortAscending,
+            onSelect: () => applySort([{ columnId: id, direction: 'asc' }]),
+          },
+          {
+            id: 'desc',
+            label: labels.sortDescending,
+            onSelect: () => applySort([{ columnId: id, direction: 'desc' }]),
+          },
+          ...(sort.length > 0 && !entry
+            ? [
+                {
+                  id: 'then-asc',
+                  label: labels.thenAscending,
+                  onSelect: () => applySort([...sort, { columnId: id, direction: 'asc' }]),
+                },
+                {
+                  id: 'then-desc',
+                  label: labels.thenDescending,
+                  onSelect: () => applySort([...sort, { columnId: id, direction: 'desc' }]),
+                },
+              ]
+            : []),
+          ...(entry
+            ? [
+                {
+                  id: 'clear',
+                  label: labels.clearSort,
+                  onSelect: () => applySort(sort.filter((candidate) => candidate.columnId !== id)),
+                },
+              ]
+            : []),
+        ]
+      : [];
+    const groupItems: ColumnMenuItem[] =
+      column.groupable && column.value
+        ? [
+            groupBy.includes(id)
+              ? {
+                  id: 'ungroup',
+                  label: labels.ungroupColumn,
+                  onSelect: () => changeGroupBy(groupBy.filter((candidate) => candidate !== id)),
+                }
+              : {
+                  id: 'group',
+                  label: labels.groupByColumn,
+                  onSelect: () => changeGroupBy([...groupBy, id]),
+                },
+          ]
+        : [];
+    const pin = columnState.pinned[id] ?? null;
+    const pinItems: ColumnMenuItem[] = [
+      ...(pin !== 'start'
+        ? [{ id: 'pin-start', label: labels.pinLeft, onSelect: () => pinColumn(id, 'start') }]
+        : []),
+      ...(pin !== 'end'
+        ? [{ id: 'pin-end', label: labels.pinRight, onSelect: () => pinColumn(id, 'end') }]
+        : []),
+      ...(pin ? [{ id: 'unpin', label: labels.unpin, onSelect: () => pinColumn(id, null) }] : []),
+    ];
+    const viewItems: ColumnMenuItem[] = [
+      ...((column.hideable ?? true) && shown.length > 1
+        ? [
+            {
+              id: 'hide',
+              label: labels.hideColumn,
+              onSelect: () => {
+                showColumn(id, false);
+                // The menu's button goes away with the column: keep focus in the table.
+                setTimeout(() => tableRef.current?.parentElement?.focus(), 0);
+              },
+            },
+          ]
+        : []),
+      ...(columnState.widths[id] !== undefined
+        ? [{ id: 'reset-width', label: labels.resetWidth, onSelect: () => resizeColumn(id, null) }]
+        : []),
+    ];
+    return [sortItems, groupItems, pinItems, viewItems];
+  }
+
+  /** A group's header row: a toggle with the group's value and count, and the aggregates. */
+  function renderGroupRow(group: GroupNode<T>, open: boolean) {
+    const groupColumn = columnById.get(group.columnId);
+    const name = groupColumn ? columnLabel(groupColumn) : group.columnId;
+    const empty = group.value === null || group.value === undefined || group.value === '';
+    const value = empty ? labels.emptyGroup : String(formatValue(group.value, locale));
+    return (
+      <TableRow
+        key={`group:${group.key}`}
+        data-grid-row={`group:${group.key}`}
+        className={styles.groupRow}
+      >
+        {reorderableRows && <TableCell className={controlClass('start')} />}
+        {selectable && <TableCell className={controlClass('start')} />}
+        {hasDetail && <TableCell className={controlClass('start')} />}
+        {shown.map(({ column, slot }, index) => (
+          <TableCell
+            key={column.id}
+            align={index === 0 ? 'start' : column.align}
+            className={clsx(pinClass(slot), index === 0 && styles.groupCell)}
+            style={{ '--_pin-offset': pinOffset(slot), '--_pin-controls': pinControls(slot) }}
+          >
+            {index === 0 ? (
+              <button
+                type="button"
+                className={styles.groupToggle}
+                aria-expanded={open}
+                style={{ '--_group-depth': group.depth }}
+                onClick={() => toggleGroup(group.key)}
+              >
+                <ExpandIcon />
+                <span>{labels.group(name, value, group.rows.length)}</span>
+              </button>
+            ) : (
+              aggregateOf(column, group.rows)
+            )}
+          </TableCell>
+        ))}
+        {hasRowActions && <TableCell className={controlClass('end')} />}
+      </TableRow>
+    );
+  }
+
+  const renderItems: (
+    { kind: 'group'; group: GroupNode<T>; expanded: boolean } | { kind: 'row'; index: number }
+  )[] = grouped
+    ? displayItems.map((item) =>
+        item.kind === 'group' ? item : { kind: 'row' as const, index: visible.indexOf(item.row) },
+      )
+    : renderIndexes.map((index) => ({ kind: 'row' as const, index }));
+  const showTotals =
+    totals && error == null && rows.length > 0 && columns.some((column) => column.aggregate);
+
   const sections = (
     <>
       <TableHeader>
@@ -1390,6 +1854,12 @@ export function DataTable<T>({
                       dateLocale={dateLocale}
                     />
                   )}
+                  {columnMenu && (
+                    <ColumnMenu
+                      label={labels.columnMenu(columnLabel(column))}
+                      sections={menuSections(column)}
+                    />
+                  )}
                 </div>
                 {resizable && (
                   <ResizeHandle
@@ -1471,7 +1941,9 @@ export function DataTable<T>({
             </TableCell>
           </TableRow>
         ) : (
-          renderIndexes.map((index, position) => {
+          renderItems.map((item, position) => {
+            if (item.kind === 'group') return renderGroupRow(item.group, item.expanded);
+            const index = item.index;
             const row = visible[index] as T;
             const id = rowId(row, offset + index);
             // Rows between this one and the one rendered before it are not rendered.
@@ -1491,6 +1963,7 @@ export function DataTable<T>({
                 <TableRow
                   ref={virtualized ? measureRow : undefined}
                   data-row-id={id}
+                  data-grid-row={id}
                   data-measure-key={virtualized ? `row:${id}` : undefined}
                   aria-rowindex={rowIndex}
                   className={clsx(
@@ -1672,6 +2145,26 @@ export function DataTable<T>({
             />
           )}
       </TableBody>
+      {showTotals && (
+        <tfoot className={styles.totals}>
+          <TableRow>
+            {reorderableRows && <TableCell className={controlClass('start')} />}
+            {selectable && <TableCell className={controlClass('start')} />}
+            {hasDetail && <TableCell className={controlClass('start')} />}
+            {shown.map(({ column, slot }, index) => (
+              <TableCell
+                key={column.id}
+                align={column.align}
+                className={pinClass(slot)}
+                style={{ '--_pin-offset': pinOffset(slot), '--_pin-controls': pinControls(slot) }}
+              >
+                {index === 0 && !column.aggregate ? labels.total : aggregateOf(column, rows)}
+              </TableCell>
+            ))}
+            {hasRowActions && <TableCell className={controlClass('end')} />}
+          </TableRow>
+        </tfoot>
+      )}
     </>
   );
 
@@ -1722,9 +2215,9 @@ export function DataTable<T>({
       )}
       {...props}
     >
-      {(globalSearch || filtering || columnChooser) && (
+      {(globalSearch || filtering || columnChooser || grouped || csvExport || savedViews) && (
         <div className={styles.toolbar}>
-          {(globalSearch || columnChooser) && (
+          {(globalSearch || columnChooser || csvExport || savedViews) && (
             <div className={styles.toolbarRow}>
               {globalSearch && (
                 <Input
@@ -1737,16 +2230,64 @@ export function DataTable<T>({
                   className={styles.search}
                 />
               )}
-              {columnChooser && (
-                <ColumnChooser
-                  columns={chooserColumns}
-                  onVisibleChange={showColumn}
-                  onStep={(id, step) => reorder(id, stepColumn(columnState, id, step))}
-                  onPin={pinColumn}
-                  onReset={resetColumns}
-                  labels={labels}
-                />
-              )}
+              <div className={styles.toolbarActions}>
+                {savedViews && (
+                  <ViewsMenu
+                    views={views}
+                    onApply={applyView}
+                    onDelete={deleteView}
+                    onSave={saveCurrentView}
+                    labels={labels}
+                  />
+                )}
+                {csvExport && (
+                  // DataTable's own button: only datatable.interaction.onExport is emitted.
+                  <EventScope silent>
+                    <Button size="sm" variant="secondary" onClick={exportCsv}>
+                      {selectedForExport
+                        ? labels.exportSelected(selectedForExport.length)
+                        : labels.exportCsv}
+                    </Button>
+                  </EventScope>
+                )}
+                {columnChooser && (
+                  <ColumnChooser
+                    columns={chooserColumns}
+                    onVisibleChange={showColumn}
+                    onStep={(id, step) => reorder(id, stepColumn(columnState, id, step))}
+                    onPin={pinColumn}
+                    onReset={resetColumns}
+                    labels={labels}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+          {grouped && (
+            <div className={styles.groupedBy}>
+              <span id={`${descriptionId}-grouped-by`}>{labels.groupedBy}</span>
+              <ul className={styles.chips} aria-labelledby={`${descriptionId}-grouped-by`}>
+                {groupBy.map((id) => {
+                  const column = columnById.get(id);
+                  const name = column ? columnLabel(column) : id;
+                  return (
+                    <li key={id} className={styles.chip}>
+                      <span>{name}</span>
+                      <EventScope silent>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          aria-label={labels.removeGrouping(name)}
+                          icon={<CloseIcon />}
+                          onClick={() =>
+                            changeGroupBy(groupBy.filter((candidate) => candidate !== id))
+                          }
+                        />
+                      </EventScope>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
           <ActiveFilters
@@ -1866,6 +2407,21 @@ export function DataTable<T>({
         )}
       </div>
     </div>
+  );
+}
+
+/** A unique id for a saved view (random where the browser allows it). */
+function newViewId(): string {
+  return (
+    globalThis.crypto?.randomUUID?.() ?? `view-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+      <path d="M4.5 4.5l7 7M11.5 4.5l-7 7" strokeLinecap="round" />
+    </svg>
   );
 }
 

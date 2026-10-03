@@ -571,3 +571,88 @@
   font-size: var(--ufi-text-xs);
   color: var(--ufi-color-text-danger);
 }
+
+/* Toolbar actions (views, export, columns) sit together at the end. */
+.toolbarActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+  margin-inline-start: auto;
+}
+
+/* Group rows: a toggle with the value and count, indented by depth, then the aggregates. */
+.groupRow > * {
+  font-weight: var(--ufi-weight-semibold);
+  background-color: var(--_row-bg, var(--ufi-color-bg-subtle));
+}
+
+.table td.groupCell {
+  overflow: visible;
+}
+
+.groupToggle {
+  display: inline-flex;
+  gap: var(--ufi-space-2xs);
+  align-items: center;
+  padding: 0;
+  padding-inline-start: calc(var(--_group-depth, 0) * var(--ufi-space-lg));
+  font: inherit;
+  color: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--ufi-radius-sm);
+}
+
+.groupToggle svg {
+  flex-shrink: 0;
+  inline-size: var(--ufi-space-md);
+  block-size: var(--ufi-space-md);
+}
+
+.groupToggle[aria-expanded='true'] svg {
+  transform: rotate(90deg);
+}
+
+.groupToggle:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+/* Totals row under the rows; it stays visible under a max height. */
+.totals td {
+  position: sticky;
+  inset-block-end: 0;
+  font-weight: var(--ufi-weight-semibold);
+  background-color: var(--ufi-color-bg-subtle);
+  border-block-start: var(--ufi-border-width) solid var(--ufi-color-border-default);
+}
+
+/* Saved views */
+.viewsEmpty {
+  margin: 0;
+  color: var(--ufi-color-text-muted);
+}
+
+.viewName {
+  flex: 1;
+  justify-content: flex-start;
+  min-inline-size: 0;
+}
+
+.viewForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-xs);
+}
+
+.groupedBy {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+  font-size: var(--ufi-text-sm);
+  color: var(--ufi-color-text-muted);
+}

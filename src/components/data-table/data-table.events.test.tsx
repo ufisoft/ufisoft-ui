@@ -339,4 +339,64 @@ describe('DataTable events', () => {
       },
     ]);
   });
+  it('emits grouping, export and saved view events, and nothing from their parts', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    URL.createObjectURL = () => 'blob:csv';
+    URL.revokeObjectURL = () => {};
+    const click = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = () => {};
+    render(
+      <DataTable
+        caption="Items"
+        columnMenu
+        csvExport
+        savedViews
+        getRowId={(row) => String(row.id)}
+        columns={[
+          {
+            id: 'name',
+            header: 'Name',
+            value: (row: { name: string }) => row.name,
+            groupable: true,
+          },
+        ]}
+        data={data.slice(0, 2)}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Column options for Name' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Group by this column' }));
+    await user.click(screen.getByRole('button', { name: 'Name: Item 1 (1)' }));
+    await user.click(screen.getByRole('button', { name: 'Export CSV' }));
+    await user.click(screen.getByRole('button', { name: 'Views' }));
+    await user.type(screen.getByRole('textbox', { name: 'View name' }), 'Mine{Enter}');
+    await user.click(screen.getByRole('button', { name: 'Apply view Mine' }));
+    await user.click(screen.getByRole('button', { name: 'Views' }));
+    await user.click(screen.getByRole('button', { name: 'Delete view Mine' }));
+    HTMLAnchorElement.prototype.click = click;
+
+    const viewId = (
+      events.find((event) => event.name === 'datatable.state.onViewSave')?.payload as {
+        viewId: string;
+      }
+    ).viewId;
+    expect(events).toEqual([
+      {
+        name: 'datatable.state.onGroupBy',
+        payload: { groupBy: ['name'], previousGroupBy: [], source: {} },
+      },
+      {
+        name: 'datatable.state.onGroupToggle',
+        payload: { groupKey: 'name:Item%201', expanded: false, source: {} },
+      },
+      {
+        name: 'datatable.interaction.onExport',
+        payload: { format: 'csv', rowCount: 2, selected: false, source: {} },
+      },
+      { name: 'datatable.state.onViewSave', payload: { viewId, name: 'Mine', source: {} } },
+      { name: 'datatable.state.onViewApply', payload: { viewId, name: 'Mine', source: {} } },
+      { name: 'datatable.state.onViewDelete', payload: { viewId, name: 'Mine', source: {} } },
+    ]);
+  });
 });

@@ -1,0 +1,5 @@
+---
+'@ufisoft/ui': minor
+---
+
+`DataTable` phase 7: grouping, totals, column menu, CSV export and saved views. `groupBy` (with `defaultGroupBy` / `onGroupByChange`) groups rows under toggle rows with counts and column `aggregate`s (`sum`, `avg`, `min`, `max`, `count` or a function); `collapsedGroups` keeps closed groups; a totals row (`totals`) sums up every matching row. `columnMenu` adds a header menu to sort (including “Then sort” for multi-column order by keyboard), group (`groupable` columns), pin, hide and reset width. `csvExport` exports the shown columns of the selected or matching rows (`fileName`, `delimiter`; `exportValue`, `exportable` per column), guarding against CSV formula injection. `savedViews` saves and applies named views of sort, filters, search, page size, columns and grouping (`views` / `defaultViews` / `onViewsChange`, or `localStorage` with `storageKey`). Emits `datatable.state.onGroupBy`, `onGroupToggle`, `onViewSave`, `onViewDelete`, `onViewApply` and `datatable.interaction.onExport`.

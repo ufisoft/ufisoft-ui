@@ -53,7 +53,7 @@ export function focusTarget(cell: HTMLElement): HTMLElement {
 interface GridOptions {
   enabled: boolean;
   tableRef: RefObject<HTMLTableElement | null>;
-  /** Row keys in order: `'header'`, then the shown rows' ids. */
+  /** Row keys in order: `'header'`, then the shown rows' ids (and group rows' keys). */
   rows: string[];
   /** Column keys in the order the cells are rendered. */
   cols: string[];
@@ -92,7 +92,9 @@ export function useGridNavigation({
     const row =
       cell.row === headerRow
         ? table.tHead?.rows[0]
-        : table.querySelector<HTMLTableRowElement>(`tr[data-row-id="${CSS.escape(cell.row)}"]`);
+        : table.querySelector<HTMLTableRowElement>(
+            `tbody tr[data-grid-row="${CSS.escape(cell.row)}"]`,
+          );
     return (row?.cells[cols.indexOf(cell.col)] as HTMLElement | undefined) ?? null;
   }
 
@@ -101,13 +103,14 @@ export function useGridNavigation({
   useLayoutEffect(() => {
     const table = tableRef.current;
     if (!enabled || !table) return;
-    // Cells of the header row and the data rows are grid cells (detail and message rows are not).
+    // Cells of the header row, data rows and group rows are grid cells (detail and message rows
+    // are not).
     for (const cell of table.tHead?.rows[0]?.cells ?? []) {
       cell.setAttribute('data-cell-row', headerRow);
     }
-    for (const row of table.querySelectorAll<HTMLTableRowElement>('tbody tr[data-row-id]')) {
+    for (const row of table.querySelectorAll<HTMLTableRowElement>('tbody tr[data-grid-row]')) {
       for (const cell of row.cells) {
-        cell.setAttribute('data-cell-row', row.dataset.rowId as string);
+        cell.setAttribute('data-cell-row', row.dataset.gridRow as string);
         // Explicit: not every browser and screen reader maps a grid's <td> to gridcell.
         if (cell.tagName === 'TD') cell.setAttribute('role', 'gridcell');
       }

@@ -270,5 +270,74 @@ export const dataTableEvents = defineEvents(
       },
       example: { rowId: '42', columnId: 'email', source: { id: 'users' } },
     },
+    'state.onGroupBy': {
+      description:
+        'The columns rows are grouped by changed: from a column menu or a grouping chip.',
+      payload: payload<{ groupBy: string[]; previousGroupBy: string[]; source: EventSource }>(),
+      fields: {
+        groupBy: 'string[] — the grouping columns now, outermost first; [] when ungrouped',
+        previousGroupBy: 'string[] — the grouping columns before',
+        source: sourceField,
+      },
+      example: { groupBy: ['role'], previousGroupBy: [], source: { id: 'users' } },
+    },
+    'state.onGroupToggle': {
+      description: 'The user opened or closed a group.',
+      payload: payload<{ groupKey: string; expanded: boolean; source: EventSource }>(),
+      fields: {
+        groupKey: 'string — the group, e.g. "role:Admin" or "role:Admin/status:Active"',
+        expanded: 'boolean — true when it opened',
+        source: sourceField,
+      },
+      example: { groupKey: 'role:Admin', expanded: false, source: { id: 'users' } },
+    },
+    'interaction.onExport': {
+      description: 'The user exported rows as CSV.',
+      payload: payload<{
+        format: 'csv';
+        rowCount: number;
+        selected: boolean;
+        source: EventSource;
+      }>(),
+      fields: {
+        format: "'csv' — the file format",
+        rowCount: 'number — rows in the file',
+        selected: 'boolean — true when only the selected rows were exported',
+        source: sourceField,
+      },
+      example: { format: 'csv', rowCount: 57, selected: false, source: { id: 'users' } },
+    },
+    'state.onViewSave': {
+      description:
+        'The user saved the current view under a name (replacing a view with that name).',
+      payload: payload<{ viewId: string; name: string; source: EventSource }>(),
+      fields: {
+        viewId: 'string — the saved view',
+        name: 'string — its name',
+        source: sourceField,
+      },
+      example: { viewId: 'b2c1…', name: 'Active admins', source: { id: 'users' } },
+    },
+    'state.onViewDelete': {
+      description: 'The user deleted a saved view.',
+      payload: payload<{ viewId: string; name: string; source: EventSource }>(),
+      fields: {
+        viewId: 'string — the deleted view',
+        name: 'string — its name',
+        source: sourceField,
+      },
+      example: { viewId: 'b2c1…', name: 'Active admins', source: { id: 'users' } },
+    },
+    'state.onViewApply': {
+      description:
+        'The user applied a saved view: sort, filters, search, page size, columns and grouping changed at once.',
+      payload: payload<{ viewId: string; name: string; source: EventSource }>(),
+      fields: {
+        viewId: 'string — the applied view',
+        name: 'string — its name',
+        source: sourceField,
+      },
+      example: { viewId: 'b2c1…', name: 'Active admins', source: { id: 'users' } },
+    },
   },
 );
