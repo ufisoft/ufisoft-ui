@@ -1,0 +1,77 @@
+/* height: auto keeps the ratio of the width/height attributes, so the page does not jump on load. */
+.image {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  border-radius: var(--_radius, 0);
+}
+
+/* A fixed ratio fills the parent's width; the height follows. */
+.ratio-1-1,
+.ratio-4-3,
+.ratio-3-2,
+.ratio-16-9 {
+  inline-size: 100%;
+}
+
+.ratio-1-1 {
+  aspect-ratio: 1;
+}
+
+.ratio-4-3 {
+  aspect-ratio: 4 / 3;
+}
+
+.ratio-3-2 {
+  aspect-ratio: 3 / 2;
+}
+
+.ratio-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
+.cover {
+  object-fit: cover;
+}
+
+.contain {
+  object-fit: contain;
+}
+
+.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--ufi-control-height-lg);
+  overflow: hidden;
+  color: var(--ufi-color-text-muted);
+  background-color: var(--ufi-color-bg-muted);
+}
+
+/* Radii */
+.radius-none {
+  --_radius: var(--ufi-radius-none);
+}
+
+.radius-sm {
+  --_radius: var(--ufi-radius-sm);
+}
+
+.radius-md {
+  --_radius: var(--ufi-radius-md);
+}
+
+.radius-lg {
+  --_radius: var(--ufi-radius-lg);
+}
+
+.radius-full {
+  --_radius: var(--ufi-radius-full);
+}
+
+/* Forced colors drop the placeholder background; outline the empty box instead. */
+@media (forced-colors: active) {
+  .fallback {
+    border: var(--ufi-border-width) solid GrayText;
+  }
+}

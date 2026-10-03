@@ -1,0 +1,67 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as FileUploadStories from './file-upload.stories';
+
+<Meta of={FileUploadStories} />
+
+# FileUpload
+
+A drop zone around a native file input: click to pick files, or drop them on it.
+
+<Canvas of={FileUploadStories.Default} />
+
+## When to use
+
+- Attaching files in a form: documents, images, imports.
+- When dropping files from the desktop saves users time (several files, recurring uploads).
+
+## When not to use
+
+- Changing a profile picture with crop and preview — compose your own flow around `<input type="file">`.
+- Pasting a link to a file — use `Input type="url"`.
+
+## Props
+
+<ArgTypes of={FileUploadStories} />
+
+A native `<input type="file">` covers the whole zone, invisibly: a click anywhere opens the system file picker, and the input stays in the form so `name` submits the files natively. Native input props (`name`, `accept`, `multiple`, `capture`, `required`, `disabled`) and `ref` go to the input; `className` goes to the zone.
+
+- `onFilesChange(files)` is called with the accepted files each time files are picked or dropped. The component does not keep a list — keep it yourself and show it with `FilePreview`.
+- `accept` (`.pdf`, `image/*`, `image/png`) and `maxSize` (bytes) are checked for picked **and** dropped files; files that fail go to `onFilesReject([{ file, reason: 'type' | 'size' }])`. Without `multiple` only the first file is kept.
+- `children` is the zone's text — say what can be uploaded (“PDF up to 10 MB”). It also becomes the input's description.
+
+These checks help users; the server must still validate type and size.
+
+## States
+
+<Canvas of={FileUploadStories.AcceptAndSize} />
+<Canvas of={FileUploadStories.Invalid} />
+<Canvas of={FileUploadStories.Disabled} />
+
+While files are dragged over it, the zone is highlighted.
+
+## Examples
+
+<Canvas of={FileUploadStories.InFormField} />
+<Canvas of={FileUploadStories.WithPreviews} />
+<Canvas of={FileUploadStories.Turkish} />
+
+## Accessibility
+
+- The input itself is the Tab stop: Enter or Space opens the file picker, so keyboard and screen-reader users never need drag and drop. The zone draws the focus ring.
+- Name it with a `FormField` + `FormLabel` or `aria-label`; the zone text and the field's description and message describe it.
+- Inside a `FormField`, `required`, `disabled` and `invalid` apply to the input.
+- Tell users which files were rejected and why, in text — e.g. `FilePreview` with an `error` — not only in the console or with colour.
+
+## Do / Don't
+
+| Do                                                        | Don't                                          |
+| --------------------------------------------------------- | ---------------------------------------------- |
+| State the allowed types and size in the zone text.        | Leave users guessing until a file is rejected. |
+| List picked files with `FilePreview` and a remove button. | Hide what was picked.                          |
+| Validate again on the server.                             | Rely on `accept` and `maxSize` for security.   |
+
+## Related components
+
+- `FilePreview` — shows each picked file.
+- `Progress` — upload progress.
+- `FormField` — label, description and validation wiring.

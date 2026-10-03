@@ -1,0 +1,62 @@
+.divider {
+  flex-shrink: 0;
+  margin: 0;
+  border: 0;
+}
+
+/* Background, not border: the line keeps one colour token and the reset's <hr> styles do not leak in. */
+.horizontal {
+  align-self: stretch;
+  block-size: var(--ufi-border-width);
+  margin-block: var(--_spacing);
+  background-color: var(--ufi-color-border-default);
+}
+
+/* In a horizontal Stack or flex row, the line stretches to the row's height. */
+.vertical {
+  align-self: stretch;
+  inline-size: var(--ufi-border-width);
+  block-size: auto;
+  min-block-size: 1em;
+  margin-inline: var(--_spacing);
+  background-color: var(--ufi-color-border-default);
+}
+
+.spacing-none {
+  --_spacing: var(--ufi-space-none);
+}
+
+.spacing-2xs {
+  --_spacing: var(--ufi-space-2xs);
+}
+
+.spacing-xs {
+  --_spacing: var(--ufi-space-xs);
+}
+
+.spacing-sm {
+  --_spacing: var(--ufi-space-sm);
+}
+
+.spacing-md {
+  --_spacing: var(--ufi-space-md);
+}
+
+.spacing-lg {
+  --_spacing: var(--ufi-space-lg);
+}
+
+.spacing-xl {
+  --_spacing: var(--ufi-space-xl);
+}
+
+.spacing-2xl {
+  --_spacing: var(--ufi-space-2xl);
+}
+
+/* Forced colors replace backgrounds; draw the line with the system text colour. */
+@media (forced-colors: active) {
+  .divider {
+    background-color: CanvasText;
+  }
+}

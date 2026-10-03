@@ -1,0 +1,68 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as FilePreviewStories from './file-preview.stories';
+
+<Meta of={FilePreviewStories} />
+
+# FilePreview
+
+One file with its thumbnail, name, size, upload progress or error, and an optional remove button.
+
+<Canvas of={FilePreviewStories.Default} />
+
+## When to use
+
+- Under a `FileUpload`, to list the files the user picked before or while they upload.
+- To show files already attached to a record (an invoice's PDFs, a ticket's screenshots).
+
+## When not to use
+
+- A photo or illustration as content — use `Image`.
+- A large gallery of images — use `Grid` with `Image`s.
+- A table of many files with sorting and columns — use `Table`.
+
+## Props
+
+<ArgTypes of={FilePreviewStories} />
+
+`file` is a `File` the user picked or a stored file's details: `{ name, size?, type?, url? }`. Images get a thumbnail — an object URL for a `File` (released when the file changes or the preview unmounts), or `url` for a stored file. Other files show a document icon with the extension.
+
+The size is shown in B, KB, MB or GB (1024-based), formatted for `locale` (`1,5 MB` for `tr`).
+
+`progress` (0–100) shows a small progress bar under the name while it is below 100. `error` replaces the size and progress with a message and marks the preview in the danger colour. `onRemove` adds a remove button, named after the file (“Remove report.pdf”) unless `removeLabel` is set.
+
+Native `div` props and `ref` go to the wrapper; `className` is merged.
+
+## States
+
+<Canvas of={FilePreviewStories.ImageFile} />
+<Canvas of={FilePreviewStories.Removable} />
+<Canvas of={FilePreviewStories.Uploading} />
+<Canvas of={FilePreviewStories.Failed} />
+<Canvas of={FilePreviewStories.LongName} />
+
+## Examples
+
+<Canvas of={FilePreviewStories.UploadList} />
+<Canvas of={FilePreviewStories.Turkish} />
+
+## Accessibility
+
+- Put several previews in a list (`ul` / `li`, e.g. `Stack as="ul"`) so screen readers announce the count.
+- The thumbnail is decorative: the file name next to it is the information. A long name is cut with an ellipsis on screen; screen readers read it in full, and the `title` shows it on hover.
+- The remove button names the file (“Remove report.pdf”), so a list of them is not a row of identical “Remove” buttons. Translate it with `removeLabel` and keep the file name in it.
+- The progress bar is named by the file name. Announce completion or failure in text (the `error` message, or a live region of your own).
+- After removing a file, move focus to a sensible place (the next file's remove button or the `FileUpload`) — the removed button disappears.
+
+## Do / Don't
+
+| Do                                                               | Don't                                           |
+| ---------------------------------------------------------------- | ----------------------------------------------- |
+| Say what is wrong in `error`: “File is too large (max. 100 MB)”. | Show only a red border.                         |
+| Keep the file name in a translated `removeLabel`.                | Translate it to a bare “Kaldır” for every file. |
+| Render a list of previews as `ul` / `li`.                        | Stack bare `div`s.                              |
+
+## Related components
+
+- `FileUpload` — where the files come from.
+- `Progress` — the upload bar on its own.
+- `Image` — images as content.

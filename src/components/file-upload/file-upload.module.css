@@ -1,0 +1,82 @@
+.fileUpload {
+  --_border: var(--ufi-color-border-default);
+  --_bg: var(--ufi-color-bg-surface);
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: calc(var(--ufi-space-2xl) * 2.5);
+  padding: var(--ufi-space-lg);
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  color: var(--ufi-color-text-muted);
+  text-align: center;
+  background-color: var(--_bg);
+  border: calc(var(--ufi-border-width) * 2) dashed var(--_border);
+  border-radius: var(--ufi-radius-md);
+}
+
+.fileUpload:hover:not([data-disabled]) {
+  --_border: var(--ufi-color-border-strong);
+}
+
+/* The input has focus; the zone draws the ring. */
+.fileUpload:has(.input:focus-visible) {
+  --_border: var(--ufi-color-border-focus);
+
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: var(--ufi-focus-ring-offset);
+}
+
+.fileUpload:has(.input[aria-invalid='true']) {
+  --_border: var(--ufi-color-border-danger);
+}
+
+.dragging {
+  --_border: var(--ufi-color-border-focus);
+  --_bg: var(--ufi-color-bg-subtle);
+}
+
+/* Disabled by colours, not opacity: the zone text stays readable. */
+.fileUpload[data-disabled] {
+  --_border: var(--ufi-color-border-subtle);
+  --_bg: var(--ufi-color-control-bg-disabled);
+}
+
+.prompt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+}
+
+.icon {
+  inline-size: var(--ufi-space-lg);
+  block-size: var(--ufi-space-lg);
+}
+
+/* Native input over the whole zone, invisible; it still takes focus, clicks and drops. */
+.input {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.input::file-selector-button {
+  cursor: pointer;
+}
+
+.input:disabled,
+.input:disabled::file-selector-button {
+  cursor: not-allowed;
+}
+
+@media (forced-colors: active) {
+  .dragging {
+    border-color: Highlight;
+  }
+}

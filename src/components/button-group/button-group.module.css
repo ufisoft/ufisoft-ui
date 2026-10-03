@@ -1,0 +1,45 @@
+.buttonGroup {
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.horizontal {
+  flex-direction: row;
+}
+
+.vertical {
+  flex-direction: column;
+}
+
+/*
+ * Neighbours overlap by one border so two borders never sit side by side. An open DropdownMenu
+ * renders its popup wrapper as the last child (no portal); it is skipped, so the trigger keeps its
+ * outer corners while the menu is open.
+ */
+.horizontal > :not(:first-child, [data-radix-popper-content-wrapper]) {
+  margin-inline-start: calc(var(--ufi-border-width) * -1);
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.horizontal > :not(:last-child, :has(+ [data-radix-popper-content-wrapper]:last-child)) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.vertical > :not(:first-child, [data-radix-popper-content-wrapper]) {
+  margin-block-start: calc(var(--ufi-border-width) * -1);
+  border-start-start-radius: 0;
+  border-start-end-radius: 0;
+}
+
+.vertical > :not(:last-child, :has(+ [data-radix-popper-content-wrapper]:last-child)) {
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+/* The hovered or focused button draws its full border and focus ring above its neighbours. */
+.buttonGroup > :hover,
+.buttonGroup > :focus-visible {
+  z-index: 1;
+}

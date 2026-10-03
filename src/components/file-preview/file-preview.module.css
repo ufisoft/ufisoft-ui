@@ -1,0 +1,80 @@
+.filePreview {
+  --_border: var(--ufi-color-border-default);
+
+  display: flex;
+  gap: var(--ufi-space-sm);
+  align-items: center;
+  min-inline-size: 0;
+  padding: var(--ufi-space-xs);
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  background-color: var(--ufi-color-bg-surface);
+  border: var(--ufi-border-width) solid var(--_border);
+  border-radius: var(--ufi-radius-md);
+}
+
+.failed {
+  --_border: var(--ufi-color-border-danger);
+}
+
+.thumbnail {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--ufi-control-height-lg);
+  block-size: var(--ufi-control-height-lg);
+  overflow: hidden;
+  color: var(--ufi-color-text-muted);
+  background-color: var(--ufi-color-bg-muted);
+  border-radius: var(--ufi-radius-sm);
+}
+
+.image {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.fileIcon {
+  inline-size: var(--ufi-space-lg);
+  block-size: var(--ufi-space-lg);
+}
+
+/* The extension sits on the icon's lower half, like a label on a document. */
+.extension {
+  position: absolute;
+  inset-block-end: var(--ufi-space-2xs);
+  font-size: var(--ufi-text-xs);
+  font-weight: var(--ufi-weight-semibold);
+  line-height: var(--ufi-leading-tight);
+  color: var(--ufi-color-text-default);
+}
+
+.details {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--ufi-space-2xs);
+  min-inline-size: 0;
+}
+
+/* Long names stay on one line; the full name is in the title and read by screen readers. */
+.name {
+  overflow: hidden;
+  font-weight: var(--ufi-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  color: var(--ufi-color-text-muted);
+}
+
+.error {
+  color: var(--ufi-color-text-danger);
+}

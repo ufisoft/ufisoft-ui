@@ -1,0 +1,55 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as SkeletonStories from './skeleton.stories';
+
+<Meta of={SkeletonStories} />
+
+# Skeleton
+
+A placeholder in the shape of content that is still loading.
+
+<Canvas of={SkeletonStories.Default} />
+
+## When to use
+
+- Content whose layout is known before its data arrives: a card, a list row, a profile header. The page does not jump when the data comes in.
+
+## When not to use
+
+- An action in progress (saving, submitting) — use `Button`'s `loading` or `Spinner`.
+- A long task with a known share done (an upload) — use `Progress`.
+- Content that loads in well under a second — show nothing; a flash of placeholders is noisier than a short wait.
+
+## Props
+
+<ArgTypes of={SkeletonStories} />
+
+`shape`: `text` (default) draws `lines` lines one text-line high, the last of several shorter; `rect` is a full-width block; `circle` is round. `size` sets the height of `rect` and the diameter of `circle` from the control heights (`sm` 32 / `md` 40 / `lg` 48px). For other sizes pass a `className` — e.g. an image's aspect ratio or a fixed height. Native `div` props and `ref` go to the wrapper.
+
+## Variants
+
+<Canvas of={SkeletonStories.Shapes} />
+<Canvas of={SkeletonStories.CustomSize} />
+
+## Examples
+
+<Canvas of={SkeletonStories.LoadingCard} />
+
+## Accessibility
+
+- Skeletons are `aria-hidden`: a screen reader would otherwise read empty boxes. Put `aria-busy="true"` on the region that is loading and remove it when the content is in, so assistive technology waits for the real content.
+- If the wait is long, announce it with text (e.g. a visually hidden “Loading…” or `Spinner` with a label).
+- The pulse stops under `prefers-reduced-motion`; in forced-colors mode the shapes are outlined.
+
+## Do / Don't
+
+| Do                                     | Don't                                                       |
+| -------------------------------------- | ----------------------------------------------------------- |
+| Match the layout of the real content.  | Show a generic block that looks nothing like what arrives.  |
+| Set `aria-busy` on the loading region. | Rely on the skeleton alone to tell screen readers anything. |
+| Use it for page and section loading.   | Use it for button or form submission state.                 |
+
+## Related components
+
+- `Spinner` — an indeterminate wait without a known layout.
+- `Progress` — a task with a known share done.
+- `Card` — the usual container being loaded.

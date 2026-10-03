@@ -1,0 +1,68 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as DrawerStories from './drawer.stories';
+
+<Meta of={DrawerStories} />
+
+# Drawer
+
+A panel that slides over the page from an edge, for a task that keeps its context.
+
+<Canvas of={DrawerStories.Default} />
+
+## When to use
+
+- Secondary tasks next to the page users are on: filters for a list, details of a selected row, a shopping cart, settings for one item.
+- Content too long for a `Modal` but not worth a new page.
+- `side="bottom"` for short choices on small screens.
+
+## When not to use
+
+- A short confirmation or a decision that blocks the flow — use `Modal`.
+- Site navigation that should always be visible on large screens — use a layout sidebar (`Row` / `Col`).
+- A few extra controls next to a button — use `Popover` or `DropdownMenu`.
+
+## Props
+
+<ArgTypes of={DrawerStories} />
+
+A Drawer is a `Modal` placed at an edge, so it takes every Modal prop: `open` + `onOpenChange` (controlled), `title`, `description`, `footer`, `closeLabel`, and native `<dialog>` props and `ref`. `className` is merged.
+
+- `side`: `end` (default) and `start` are full-height panels on the inline end or start — they follow the writing direction, so `end` is on the right in left-to-right pages and on the left in right-to-left ones. `bottom` is a full-width panel as tall as its content.
+- `size` sets the width of a `start` / `end` panel with Modal's sizes (`sm` 400 / `md` 512 / `lg` 768px); a strip of the page always stays visible beside it.
+
+The body scrolls when the content is long; the header and footer stay in place.
+
+## Sizes
+
+<Canvas of={DrawerStories.Sizes} />
+
+## Variants
+
+<Canvas of={DrawerStories.Start} />
+<Canvas of={DrawerStories.Bottom} />
+<Canvas of={DrawerStories.LongContent} />
+
+## Examples
+
+<Canvas of={DrawerStories.Turkish} />
+
+## Accessibility
+
+- It is a modal `<dialog>`, as in `Modal`: named by `title`, described by `description`; the rest of the page is inert while it is open, focus moves into it and returns to the trigger on close.
+- Escape, the close button and a click on the visible page beside it ask to close (`onOpenChange(false)`).
+- The page behind does not scroll while it is open.
+- Translate the close button with `closeLabel`.
+
+## Do / Don't
+
+| Do                                                            | Don't                                                |
+| ------------------------------------------------------------- | ---------------------------------------------------- |
+| Use `end` for details and filters, so the list stays visible. | Open a drawer from a drawer.                         |
+| Put the main action in `footer` so it is always reachable.    | Hide the only Save button at the end of a long body. |
+| Keep it about one task.                                       | Turn it into a second app with its own navigation.   |
+
+## Related components
+
+- `Modal` — the centred version, for short decisions.
+- `Popover` — non-modal content next to a trigger.
+- `FormField` — fields in a filter or edit drawer.

@@ -1,0 +1,65 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ProgressStories from './progress.stories';
+
+<Meta of={ProgressStories} />
+
+# Progress
+
+Shows how much of a task is done.
+
+<Canvas of={ProgressStories.Default} />
+
+## When to use
+
+- A task with a known amount done: an upload, an import, a multi-step setup.
+- A quantity against a limit: storage used, a quota.
+- A task that will take a while but whose amount is not known yet — leave `value` out for the indeterminate bar.
+
+## When not to use
+
+- A short wait without an amount, inside a button or a small area — use `Spinner` or `Button`'s `loading`.
+- Content that is loading into a known layout — use `Skeleton`.
+- A rating or a value the user sets — use a slider or `Radio`.
+
+## Props
+
+<ArgTypes of={ProgressStories} />
+
+A native `<progress>`: `value` goes from 0 to `max` (default 100) and is clamped to that range. Without `value` the bar is indeterminate. Native props and `ref` go to the element; `className` is merged.
+
+`tone` colours the fill: `default`, `success` (done), `danger` (failed). Do not rely on colour alone — say “Upload failed” in text as well.
+
+## Sizes
+
+<Canvas of={ProgressStories.Sizes} />
+
+## States
+
+<Canvas of={ProgressStories.Tones} />
+<Canvas of={ProgressStories.Indeterminate} />
+
+## Examples
+
+<Canvas of={ProgressStories.WithLabel} />
+<Canvas of={ProgressStories.Upload} />
+
+## Accessibility
+
+- The element has the `progressbar` role; screen readers read its value as a percentage of `max`. Without a value it is announced as busy.
+- Every Progress needs a name: `aria-label`, or a `Label` with `htmlFor` pointing at its `id` (`<progress>` is a labelable element).
+- Screen readers do not announce each change. For important steps (“Upload complete”) add text in an `aria-live="polite"` region, as in the running-task example.
+- The indeterminate animation slows down under `prefers-reduced-motion`; in forced-colors mode the bar uses system colours.
+
+## Do / Don't
+
+| Do                                                   | Don't                                             |
+| ---------------------------------------------------- | ------------------------------------------------- |
+| Name what is progressing: “Uploading report.pdf”.    | Leave the bar without a label.                    |
+| Show the result in text when the task ends or fails. | Signal failure with the red fill alone.           |
+| Use the indeterminate bar until the amount is known. | Fake a moving value that does not match the task. |
+
+## Related components
+
+- `Spinner` — a short, indeterminate wait.
+- `Skeleton` — content loading into a known layout.
+- `FilePreview` — shows an upload's progress next to the file.

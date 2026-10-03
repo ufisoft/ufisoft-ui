@@ -1,0 +1,61 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ContextMenuStories from './context-menu.stories';
+
+<Meta of={ContextMenuStories} />
+
+# ContextMenu
+
+A list of actions for an area, opened at the pointer by right-click or long-press.
+
+<Canvas of={ContextMenuStories.Default} />
+
+## When to use
+
+- A shortcut to actions on an object users work with a lot: rows in a file list, items on a canvas, cards on a board.
+- Desktop-style apps where users expect right-click.
+
+## When not to use
+
+- As the only way to reach an action — right-click is hidden and many users never try it. Offer the same actions in a visible `DropdownMenu` (a “More” button) or toolbar too.
+- Actions for a button — use `DropdownMenu`.
+- On text users may want to copy or look up — leave the browser's menu (`disabled`).
+
+## Props
+
+<ArgTypes of={ContextMenuStories} />
+
+`children` is the area: one element that accepts `ref` and spreads props. `content` holds `ContextMenuItem`, `ContextMenuSeparator` and `ContextMenuLabel`, which work like their `DropdownMenu` counterparts (`onSelect`, `disabled`, `tone="danger"`, `asChild`, `textValue`).
+
+The menu opens at the pointer (or the area for the keyboard) and flips to stay on screen. `onOpenChange` reports opening and closing. `disabled` turns the custom menu off and leaves the browser's own. Remaining props and `className` go to the menu.
+
+Built on [Radix ContextMenu](https://www.radix-ui.com/primitives/docs/components/context-menu); styles mirror `DropdownMenu`.
+
+## Variants
+
+<Canvas of={ContextMenuStories.WithLabelsAndSeparators} />
+<Canvas of={ContextMenuStories.Disabled} />
+
+## Examples
+
+<Canvas of={ContextMenuStories.FileList} />
+<Canvas of={ContextMenuStories.Turkish} />
+
+## Accessibility
+
+- The menu has `role="menu"` with `menuitem`s. Arrow keys move through items (skipping disabled ones), typing jumps to an item, Enter or Space chooses it, Escape closes the menu and returns focus.
+- On the keyboard, the Menu key or Shift+F10 opens it — but only on an element that can take focus. Make the area focusable (a button, a link, or `tabIndex={0}`), as in the examples.
+- Screen readers do not announce that an area has a context menu. Always offer the same actions somewhere visible.
+- The menu renders in place (no portal), so it works inside a `Modal`.
+
+## Do / Don't
+
+| Do                                                      | Don't                                                |
+| ------------------------------------------------------- | ---------------------------------------------------- |
+| Repeat the actions in a visible “More” menu or toolbar. | Hide actions only behind right-click.                |
+| Make the area focusable for the Menu key and Shift+F10. | Attach it to a plain, unfocusable `div`.             |
+| Keep the menu short and specific to the object.         | Replace the browser menu on text users need to copy. |
+
+## Related components
+
+- `DropdownMenu` — the visible equivalent, opened from a button.
+- `Divider` — separators outside menus.

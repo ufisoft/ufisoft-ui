@@ -1,0 +1,60 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ButtonGroupStories from './button-group.stories';
+
+<Meta of={ButtonGroupStories} />
+
+# ButtonGroup
+
+Joins related buttons into one visual control.
+
+<Canvas of={ButtonGroupStories.Default} />
+
+## When to use
+
+- A few closely related actions that read as one unit: Undo / Redo, Zoom in / out, a split button (main action + more options).
+
+## When not to use
+
+- Picking one option from a set (Day / Week / Month as a filter) that stays selected — use `Tabs` for views, or `Radio` for a form value. ButtonGroup has no selected state.
+- Unrelated actions side by side (Save and Cancel) — use a horizontal `Stack` of separate buttons.
+- Many actions — move the rest into a `DropdownMenu`.
+
+## Props
+
+<ArgTypes of={ButtonGroupStories} />
+
+Children are `Button`s, `IconButton`s or a `DropdownMenu` around one; they keep their own `variant`, `size` and `disabled`. Neighbours share a border and only the outer corners are rounded. Use the same `variant` and `size` for every child; `secondary` shows the joins best. Native `div` props and `ref` go to the wrapper.
+
+## Sizes
+
+<Canvas of={ButtonGroupStories.Sizes} />
+
+## States
+
+<Canvas of={ButtonGroupStories.Vertical} />
+<Canvas of={ButtonGroupStories.Disabled} />
+
+## Examples
+
+<Canvas of={ButtonGroupStories.SplitButton} />
+
+## Accessibility
+
+- The wrapper has `role="group"`; name it with `aria-label` (“History”, “Zoom”) so screen readers announce what the buttons belong to. Orientation is visual only: the `group` role has no `aria-orientation`, and the buttons are reached with Tab either way.
+- Every button stays its own Tab stop, as in a row of separate buttons. This is not a `toolbar`: no arrow-key navigation is added.
+- Icon-only buttons need their own `aria-label` (`IconButton` requires it).
+- A hovered or focused button is drawn above its neighbours, so its border and focus ring are fully visible.
+
+## Do / Don't
+
+| Do                                     | Don't                                                 |
+| -------------------------------------- | ----------------------------------------------------- |
+| Group 2–4 related actions.             | Use it as a segmented control with a selected option. |
+| Give the group an `aria-label`.        | Mix `primary` and `secondary` buttons in one group.   |
+| Keep `size` the same for every button. | Put Save and Delete in one group.                     |
+
+## Related components
+
+- `Button` / `IconButton` — the children.
+- `DropdownMenu` — the “more options” half of a split button.
+- `Tabs` — switching between views with a selected state.

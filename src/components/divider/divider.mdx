@@ -1,0 +1,55 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as DividerStories from './divider.stories';
+
+<Meta of={DividerStories} />
+
+# Divider
+
+A thin line that separates content.
+
+<Canvas of={DividerStories.Default} />
+
+## When to use
+
+- Between groups of content that belong to different topics: settings sections, groups of toolbar buttons, footer link groups.
+
+## When not to use
+
+- To add space — use `Stack`'s `gap` or `Grid`'s `gap`.
+- Between every item of a list — use spacing, or `Table` for rows.
+- Inside a menu — use `DropdownMenuSeparator` / `ContextMenuSeparator`.
+
+## Props
+
+<ArgTypes of={DividerStories} />
+
+A native `<hr>`: native props and `ref` go to it, `className` is merged. `spacing` (spacing scale, default `md`) sets the margin on both sides of the line — above and below a horizontal line, left and right of a vertical one.
+
+## Variants
+
+<Canvas of={DividerStories.Spacing} />
+<Canvas of={DividerStories.Vertical} />
+
+A vertical Divider stretches to the height of its flex row (e.g. a horizontal `Stack`).
+
+## Examples
+
+<Canvas of={DividerStories.Decorative} />
+
+## Accessibility
+
+- An `<hr>` has the `separator` role, so screen readers announce a break between topics. A vertical one adds `aria-orientation="vertical"`.
+- When the line is only visual (the groups already have headings), pass `role="presentation"` so it is not announced.
+- In forced-colors mode the line uses the system text colour.
+
+## Do / Don't
+
+| Do                                                  | Don't                                             |
+| --------------------------------------------------- | ------------------------------------------------- |
+| Separate groups with different topics.              | Put a Divider between every list item.            |
+| Use `role="presentation"` for a purely visual line. | Draw separators with `border` in your own `div`s. |
+
+## Related components
+
+- `Stack` — spacing between items.
+- `DropdownMenu` — has its own separator.

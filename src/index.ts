@@ -54,12 +54,25 @@ export {
   type GridColumnCount,
   type GridColumns,
 } from './components/grid';
+export { Divider, type DividerProps, type DividerOrientation } from './components/divider';
+export {
+  Image,
+  type ImageProps,
+  type ImageFit,
+  type ImageRatio,
+  type ImageRadius,
+} from './components/image';
 export { Card, type CardProps, type CardVariant, type CardPadding } from './components/card';
 export { Avatar, type AvatarProps, type AvatarSize } from './components/avatar';
 
 // Actions
 export { Button, type ButtonProps, type ButtonVariant, type ButtonSize } from './components/button';
 export { IconButton, type IconButtonProps } from './components/icon-button';
+export {
+  ButtonGroup,
+  type ButtonGroupProps,
+  type ButtonGroupOrientation,
+} from './components/button-group';
 
 // Forms
 export {
@@ -106,11 +119,24 @@ export {
   type RadioGroupOrientation,
 } from './components/radio';
 export { Switch, type SwitchProps } from './components/switch';
+export { FileUpload, type FileUploadProps, type FileRejection } from './components/file-upload';
 
 // Feedback
 export { Alert, type AlertProps, type AlertTone } from './components/alert';
 export { Spinner, type SpinnerProps, type SpinnerSize } from './components/spinner';
 export { Badge, type BadgeProps, type BadgeTone, type BadgeSize } from './components/badge';
+export {
+  Skeleton,
+  type SkeletonProps,
+  type SkeletonShape,
+  type SkeletonSize,
+} from './components/skeleton';
+export {
+  Progress,
+  type ProgressProps,
+  type ProgressSize,
+  type ProgressTone,
+} from './components/progress';
 export {
   ToastProvider,
   useToast,
@@ -121,6 +147,7 @@ export {
 
 // Overlay
 export { Modal, type ModalProps, type ModalSize } from './components/modal';
+export { Drawer, type DrawerProps, type DrawerSide, type DrawerSize } from './components/drawer';
 export { Tooltip, type TooltipProps, type TooltipSide } from './components/tooltip';
 export {
   Popover,
@@ -141,6 +168,17 @@ export {
   type DropdownMenuAlign,
   type DropdownMenuItemTone,
 } from './components/dropdown-menu';
+export {
+  ContextMenu,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuLabel,
+  type ContextMenuProps,
+  type ContextMenuItemProps,
+  type ContextMenuSeparatorProps,
+  type ContextMenuLabelProps,
+  type ContextMenuItemTone,
+} from './components/context-menu';
 
 // Navigation
 export {
@@ -185,6 +223,7 @@ export {
   type TableCellProps,
   type TableCellAlign,
 } from './components/table';
+export { FilePreview, type FilePreviewProps, type FileInfo } from './components/file-preview';
 
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';

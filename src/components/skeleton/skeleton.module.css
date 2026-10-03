@@ -1,0 +1,75 @@
+.skeleton {
+  --_fill: var(--ufi-color-bg-muted);
+}
+
+/* The pulse is decorative: it stops under reduced motion (the shape alone says "loading"). */
+.rect,
+.circle,
+.line {
+  background-color: var(--_fill);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-xs);
+}
+
+/* One line of body text: the height of its glyphs, not of the whole line box. */
+.line {
+  block-size: 1em;
+  border-radius: var(--ufi-radius-sm);
+}
+
+.line:last-child:not(:first-child) {
+  inline-size: 60%;
+}
+
+.rect {
+  inline-size: 100%;
+  block-size: var(--_size);
+  border-radius: var(--ufi-radius-md);
+}
+
+.circle {
+  flex-shrink: 0;
+  inline-size: var(--_size);
+  block-size: var(--_size);
+  border-radius: var(--ufi-radius-full);
+}
+
+.sm {
+  --_size: var(--ufi-control-height-sm);
+}
+
+.md {
+  --_size: var(--ufi-control-height-md);
+}
+
+.lg {
+  --_size: var(--ufi-control-height-lg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rect,
+  .circle,
+  .line {
+    animation: none;
+  }
+}
+
+/* Forced colors drop backgrounds; keep the shapes visible as outlines. */
+@media (forced-colors: active) {
+  .rect,
+  .circle,
+  .line {
+    border: var(--ufi-border-width) solid GrayText;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}

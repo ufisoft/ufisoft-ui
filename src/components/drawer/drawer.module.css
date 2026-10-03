@@ -1,0 +1,39 @@
+/*
+ * Overrides Modal's centred box. Every rule combines .drawer with a side class, so it outranks
+ * Modal's single-class rules whatever order the two stylesheets load in.
+ */
+.drawer:is(.start, .end, .bottom) {
+  max-inline-size: none;
+  max-block-size: none;
+  margin: 0;
+  border-radius: 0;
+}
+
+/* Full height at one inline edge; a strip of page stays visible, and a click on it closes. */
+.drawer:is(.start, .end) {
+  inset-block: 0;
+  inline-size: min(var(--_width), calc(100vw - var(--ufi-space-2xl)));
+  block-size: 100dvh;
+}
+
+.drawer.start {
+  inset-inline: 0 auto;
+  border-start-end-radius: var(--ufi-radius-lg);
+  border-end-end-radius: var(--ufi-radius-lg);
+}
+
+.drawer.end {
+  inset-inline: auto 0;
+  border-start-start-radius: var(--ufi-radius-lg);
+  border-end-start-radius: var(--ufi-radius-lg);
+}
+
+/* Full width at the bottom, as tall as its content up to most of the screen. */
+.drawer.bottom {
+  inset-block: auto 0;
+  inset-inline: 0;
+  inline-size: 100%;
+  max-block-size: calc(100dvh - var(--ufi-space-2xl));
+  border-start-start-radius: var(--ufi-radius-lg);
+  border-start-end-radius: var(--ufi-radius-lg);
+}

@@ -1,0 +1,106 @@
+/*
+ * A native <progress> with appearance: none. Chromium/WebKit draw the track and the fill with
+ * ::-webkit-progress-bar / ::-webkit-progress-value, Firefox the fill with ::-moz-progress-bar.
+ */
+.progress {
+  display: block;
+  inline-size: 100%;
+  block-size: var(--_height);
+  overflow: hidden;
+  appearance: none;
+  color: var(--_fill);
+  background-color: var(--_track);
+  border: 0;
+  border-radius: var(--ufi-radius-full);
+
+  --_track: var(--ufi-color-bg-muted);
+}
+
+.progress::-webkit-progress-bar {
+  background-color: var(--_track);
+  border-radius: var(--ufi-radius-full);
+}
+
+.progress::-webkit-progress-value {
+  background-color: var(--_fill);
+  border-radius: var(--ufi-radius-full);
+}
+
+.progress::-moz-progress-bar {
+  background-color: var(--_fill);
+  border-radius: var(--ufi-radius-full);
+}
+
+/* Indeterminate: a segment slides along the track, drawn on the element itself in every engine. */
+.progress:indeterminate {
+  background-image: linear-gradient(
+    to right,
+    var(--_track) 0 40%,
+    var(--_fill) 40% 60%,
+    var(--_track) 60% 100%
+  );
+  background-size: 250% 100%;
+  animation: slide 1.4s linear infinite;
+}
+
+.progress:indeterminate::-webkit-progress-bar {
+  background-color: transparent;
+}
+
+.progress:indeterminate::-moz-progress-bar {
+  background-color: transparent;
+}
+
+/* The motion says the task is still running: slow it down, do not stop it. */
+@media (prefers-reduced-motion: reduce) {
+  .progress:indeterminate {
+    animation-duration: 4s;
+  }
+}
+
+/* Sizes */
+.sm {
+  --_height: var(--ufi-space-2xs);
+}
+
+.md {
+  --_height: var(--ufi-space-xs);
+}
+
+.lg {
+  --_height: var(--ufi-space-sm);
+}
+
+/* Tones */
+.tone-default {
+  --_fill: var(--ufi-color-action-primary-bg);
+}
+
+.tone-success {
+  --_fill: var(--ufi-color-text-success);
+}
+
+.tone-danger {
+  --_fill: var(--ufi-color-text-danger);
+}
+
+/* Forced colors: an outlined track with a system-coloured fill. */
+@media (forced-colors: active) {
+  .progress {
+    --_track: Canvas;
+    --_fill: Highlight;
+
+    forced-color-adjust: none;
+    border: var(--ufi-border-width) solid CanvasText;
+  }
+}
+
+@keyframes slide {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: 0 0;
+  }
+}

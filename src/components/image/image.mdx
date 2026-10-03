@@ -1,0 +1,71 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ImageStories from './image.stories';
+
+<Meta of={ImageStories} />
+
+# Image
+
+A native `<img>` that loads lazily, keeps an aspect ratio and shows a fallback when it fails.
+
+<Canvas of={ImageStories.Default} />
+
+## When to use
+
+- Content images: product photos, article images, card media, thumbnails.
+- Whenever the box should keep its shape before the image arrives or if it never does.
+
+## When not to use
+
+- A person's or organisation's picture with initials as fallback — use `Avatar`.
+- Icons — use inline SVG next to the text.
+- A preview of a file the user picked — use `FilePreview`.
+- Responsive art direction with several sources (`<picture>`, `srcSet` per breakpoint) beyond what `srcSet`/`sizes` on `<img>` give — render `<picture>` yourself.
+
+## Props
+
+<ArgTypes of={ImageStories} />
+
+All native `<img>` props pass through (`srcSet`, `sizes`, `width`, `height`, `fetchPriority` …); `loading` defaults to `lazy` and `decoding` to `async`. Pass `loading="eager"` for the main image at the top of the page.
+
+- `alt` is required: describe the image, or pass `""` when it is decorative.
+- `ratio` (`1/1`, `4/3`, `3/2`, `16/9`) makes the image fill its parent's width at that ratio; `auto` (default) keeps the image's own. Set `width` and `height` too, so the browser reserves the space before loading.
+- `fit` decides what happens when the ratio differs from the picture: `cover` (default) crops, `contain` letterboxes.
+- `radius` rounds the corners from the radius tokens.
+- `fallback` is shown in the same box when the source is empty or fails to load; it defaults to an empty placeholder. A new `src` is tried again.
+
+`ref` reaches the `<img>`; while the fallback is shown it is `null`. `className` is merged onto the image or the fallback box.
+
+## Variants
+
+<Canvas of={ImageStories.Ratios} />
+<Canvas of={ImageStories.Fit} />
+<Canvas of={ImageStories.Radius} />
+
+## States
+
+<Canvas of={ImageStories.Fallback} />
+<Canvas of={ImageStories.Decorative} />
+
+## Examples
+
+<Canvas of={ImageStories.CardMedia} />
+
+## Accessibility
+
+- `alt` is required by the types. Write what the image shows for this page (“Red sofa, three-seater”), not “image of”. Use `alt=""` when nearby text already says it (the card title) so screen readers skip it.
+- The fallback keeps the image's name: it has `role="img"` and `aria-label` from `alt`, so nothing is lost when loading fails. A decorative fallback is hidden.
+- Text inside the fallback is not read separately (the box is named by `alt`); do not put essential information only there.
+
+## Do / Don't
+
+| Do                                                       | Don't                                                       |
+| -------------------------------------------------------- | ----------------------------------------------------------- |
+| Set `width` / `height` or `ratio` to avoid layout jumps. | Let the page jump when images load.                         |
+| Use `alt=""` when a caption or title says the same.      | Repeat the title as `alt` (“Alpine lakes”, “Alpine lakes”). |
+| Use `loading="eager"` for the main image above the fold. | Lazy-load the hero image.                                   |
+
+## Related components
+
+- `Avatar` — pictures of people with an initials fallback.
+- `FilePreview` — a file the user picked, with name and size.
+- `Card` — `padding="none"` for edge-to-edge media.
