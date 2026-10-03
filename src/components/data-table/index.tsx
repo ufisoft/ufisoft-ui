@@ -7,7 +7,9 @@ import {
   useId,
   useRef,
   useState,
+  useSyncExternalStore,
   type ComponentProps,
+  type DragEvent,
   type MouseEvent,
   type ReactNode,
   type SyntheticEvent,
@@ -33,6 +35,24 @@ import {
   type TableCellAlign,
 } from '../table';
 import { BulkBar, ExpandIcon, RowActionsButton, rowContextItems } from './actions';
+import { ColumnChooser, ResizeHandle } from './column-tools';
+import {
+  clampWidth,
+  defaultColumnState as columnDefaults,
+  displayOrder,
+  layoutColumns,
+  moveColumn,
+  normalizeColumnState,
+  parseColumnState,
+  sameColumnState,
+  setHidden,
+  setPinned,
+  setWidth,
+  stepColumn,
+  type ColumnSlot,
+  type DataTableColumnPin,
+  type DataTableColumnState,
+} from './columns';
 import styles from './data-table.module.css';
 import {
   filterRows,
@@ -63,6 +83,7 @@ import {
 
 export type { DataTableSort, DataTableSortDirection } from './sorting';
 export type { DataTableSelection } from './selection';
+export type { DataTableColumnPin, DataTableColumnState } from './columns';
 export type {
   DataTableColumnFilter,
   DataTableFilter,
@@ -98,6 +119,19 @@ export interface DataTableColumn<T> {
   filterValue?: (row: T) => unknown;
   /** Whether global search looks at this column. Defaults to true when it has a value. */
   searchable?: boolean;
+  /** Starting width in pixels. Without one, the column shares the free space. */
+  width?: number;
+  /** Resize limits in pixels. Default 48 and 1200. */
+  minWidth?: number;
+  maxWidth?: number;
+  /** With `resizableColumns`: whether this column can be resized. Defaults to true. */
+  resizable?: boolean;
+  /** With `columnChooser`: whether this column can be hidden. Defaults to true. */
+  hideable?: boolean;
+  /** Starts hidden; the column chooser can show it. */
+  hidden?: boolean;
+  /** Starts pinned to the table's start or end side. */
+  pinned?: DataTableColumnPin;
 }
 
 /** Everything a server needs to fetch one page: sorting, filters, search and pagination. */
@@ -202,6 +236,18 @@ export interface DataTableLabels {
   /** Detail button (with `aria-expanded`), and the hidden header of its column. */
   details: (row: string) => string;
   detailsColumn: string;
+  /** Column management. `column` is the column's plain-text name. */
+  columns: string;
+  resizeColumn: (column: string) => string;
+  moveUp: (column: string) => string;
+  moveDown: (column: string) => string;
+  /** Announced after a move in the column chooser. */
+  columnMoved: (column: string, position: number, count: number) => string;
+  pinColumn: (column: string) => string;
+  notPinned: string;
+  pinStart: string;
+  pinEnd: string;
+  resetColumns: string;
 }
 
 export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children'>, EventDataProps {
@@ -287,6 +333,19 @@ export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children
   defaultExpandedRowIds?: string[];
   onExpandedChange?: (expandedRowIds: string[]) => void;
 
+  /** Adds a handle to each header's edge: drag it, or focus it and use the arrow keys. */
+  resizableColumns?: boolean;
+  /** Headers can be dragged to reorder columns. The column chooser does the same by keyboard. */
+  reorderableColumns?: boolean;
+  /** Adds a “Columns” button that shows, hides, orders and pins columns. */
+  columnChooser?: boolean;
+  /** Column order, visibility, widths and pinning (controlled). */
+  columnState?: DataTableColumnState;
+  defaultColumnState?: Partial<DataTableColumnState>;
+  onColumnStateChange?: (columnState: DataTableColumnState) => void;
+  /** Uncontrolled: keeps the column state in `localStorage` under this key, across visits. */
+  storageKey?: string;
+
   /** Shows skeleton rows when there are none yet, and marks the table busy. */
   loading?: boolean;
   /** Replaces the rows with an error message. */
@@ -350,6 +409,16 @@ function defaultLabels(locale: string | undefined): DataTableLabels {
     actionsColumn: 'Actions',
     details: (row) => `Details for ${row}`,
     detailsColumn: 'Details',
+    columns: 'Columns',
+    resizeColumn: (column) => `Resize ${column}`,
+    moveUp: (column) => `Move ${column} up`,
+    moveDown: (column) => `Move ${column} down`,
+    columnMoved: (column, position, count) => `${column} moved to position ${position} of ${count}`,
+    pinColumn: (column) => `Pin ${column}`,
+    notPinned: 'Not pinned',
+    pinStart: 'Left',
+    pinEnd: 'Right',
+    resetColumns: 'Reset columns',
   };
 }
 
@@ -404,6 +473,13 @@ export function DataTable<T>({
   expandedRowIds: expandedProp,
   defaultExpandedRowIds = [],
   onExpandedChange,
+  resizableColumns = false,
+  reorderableColumns = false,
+  columnChooser = false,
+  columnState: columnStateProp,
+  defaultColumnState,
+  onColumnStateChange,
+  storageKey,
   loading = false,
   error,
   emptyMessage,
@@ -483,6 +559,183 @@ export function DataTable<T>({
     canSelect(row) ? [rowId(row, offset + index)] : [],
   );
   const pageState = pageSelection(selection, pageIds);
+
+  // Column management: the definitions give the starting state; the user's changes override it.
+  const fallbackColumns = normalizeColumnState(defaultColumnState, columnDefaults(columns));
+  const [innerColumns, setInnerColumns] = useState<DataTableColumnState | undefined>(undefined);
+  const storageName = storageKey && `ufi-datatable:${storageKey}`;
+  // The stored state (uncontrolled with storageKey). The server and hydration see none, so both
+  // render the defaults; other tabs' changes arrive through the storage event.
+  const stored = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener('storage', onChange);
+      return () => window.removeEventListener('storage', onChange);
+    },
+    () => (storageName ? readStorage(storageName) : null),
+    () => null,
+  );
+  const columnState = normalizeColumnState(
+    columnStateProp ?? innerColumns ?? parseColumnState(stored),
+    fallbackColumns,
+  );
+  // While a resize handle is dragged: the width shown, kept when the drag ends.
+  const [preview, setPreview] = useState<{ id: string; width: number } | null>(null);
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ id: string; side: 'before' | 'after' } | null>(
+    null,
+  );
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  const columnById = new Map(columns.map((column) => [column.id, column]));
+  const minWidthOf = (id: string) => columnById.get(id)?.minWidth ?? 48;
+  const maxWidthOf = (id: string) => columnById.get(id)?.maxWidth ?? 1200;
+  const headerCell = (id: string) =>
+    tableRef.current?.querySelector<HTMLElement>(`th[data-column-id="${CSS.escape(id)}"]`);
+  const measure = (id: string) => headerCell(id)?.getBoundingClientRect().width ?? 0;
+  const widthOf = (id: string): number | undefined => {
+    if (preview?.id === id) return preview.width;
+    const width = columnState.widths[id] ?? columnById.get(id)?.width;
+    // Pinned columns need a width: the sticky offsets of their neighbours add it up.
+    return width ?? (columnState.pinned[id] ? 160 : undefined);
+  };
+
+  const pinsStart = Object.values(columnState.pinned).includes('start');
+  const pinsEnd = Object.values(columnState.pinned).includes('end');
+  const controlsStart = Number(selectable) + Number(renderDetail !== undefined);
+  const controlsEnd = Number(rowActions.length > 0);
+  const slots = layoutColumns(
+    columnState,
+    widthOf,
+    pinsStart ? controlsStart : 0,
+    pinsEnd ? controlsEnd : 0,
+  );
+  const shown = slots.flatMap((slot) => {
+    const column = columnById.get(slot.id);
+    return column ? [{ column, slot }] : [];
+  });
+  // Set widths only hold when the table lays columns out by them, not by their content.
+  const fixedLayout = resizableColumns || pinsStart || pinsEnd;
+
+  function changeColumns(next: DataTableColumnState, emitChange: () => void) {
+    if (sameColumnState(next, columnState)) return;
+    if (columnStateProp === undefined) setInnerColumns(next);
+    onColumnStateChange?.(next);
+    emitChange();
+    if (storageName && columnStateProp === undefined) {
+      try {
+        window.localStorage.setItem(storageName, JSON.stringify(next));
+      } catch {
+        // Not stored: the state still applies for this visit.
+      }
+    }
+  }
+
+  function resizeColumn(id: string, width: number | null) {
+    setPreview(null);
+    const previousWidth = widthOf(id) ?? null;
+    const next = setWidth(
+      columnState,
+      id,
+      width === null ? null : clampWidth(width, minWidthOf(id), maxWidthOf(id)),
+    );
+    changeColumns(next, () =>
+      emit('datatable.state.onColumnResize', {
+        columnId: id,
+        width: next.widths[id] ?? null,
+        previousWidth: columnState.widths[id] ?? previousWidth,
+        source: source(),
+      }),
+    );
+  }
+
+  function showColumn(id: string, visible: boolean) {
+    changeColumns(setHidden(columnState, id, !visible), () =>
+      emit('datatable.state.onColumnVisibilityChange', {
+        columnId: id,
+        visible,
+        source: source(),
+      }),
+    );
+  }
+
+  function reorder(id: string, next: DataTableColumnState) {
+    changeColumns(next, () =>
+      emit('datatable.state.onColumnMove', {
+        columnId: id,
+        order: displayOrder(next),
+        previousOrder: displayOrder(columnState),
+        source: source(),
+      }),
+    );
+  }
+
+  function pinColumn(id: string, pin: DataTableColumnPin | null) {
+    let next = setPinned(columnState, id, pin);
+    // A newly pinned column keeps the width it has now.
+    if (pin && widthOf(id) === undefined && measure(id) > 0) next = setWidth(next, id, measure(id));
+    changeColumns(next, () =>
+      emit('datatable.state.onColumnPin', {
+        columnId: id,
+        pinned: pin,
+        previousPinned: columnState.pinned[id] ?? null,
+        source: source(),
+      }),
+    );
+  }
+
+  function resetColumns() {
+    changeColumns(fallbackColumns, () =>
+      emit('datatable.state.onColumnsReset', { source: source() }),
+    );
+  }
+
+  /** Header drag and drop: only within a pinned group, before or after the column under the pointer. */
+  function dragOver(event: DragEvent<HTMLTableCellElement>, id: string) {
+    if (!dragging || dragging === id) return;
+    if (columnState.pinned[dragging] !== columnState.pinned[id]) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    const rect = event.currentTarget.getBoundingClientRect();
+    const rtl = getComputedStyle(event.currentTarget).direction === 'rtl';
+    const before = event.clientX < rect.left + rect.width / 2 !== rtl;
+    const side = before ? 'before' : 'after';
+    if (dropTarget?.id !== id || dropTarget.side !== side) setDropTarget({ id, side });
+  }
+
+  function drop(event: DragEvent<HTMLTableCellElement>, id: string) {
+    event.preventDefault();
+    if (dragging && dropTarget?.id === id) {
+      reorder(dragging, moveColumn(columnState, dragging, id, dropTarget.side));
+    }
+    setDragging(null);
+    setDropTarget(null);
+  }
+
+  // Pinned cells read their sticky offset from --_pin-offset (px) plus --_pin-controls control
+  // columns; sized headers read --_width.
+  const pinClass = (slot: ColumnSlot) =>
+    clsx(
+      slot.pinned === 'start' && styles.pinStart,
+      slot.pinned === 'end' && styles.pinEnd,
+      slot.edge && styles.pinEdge,
+    );
+  const pinOffset = (slot: ColumnSlot) => (slot.pinned ? `${slot.offset}px` : undefined);
+  const pinControls = (slot: ColumnSlot) => (slot.pinned ? slot.controls : undefined);
+  const px = (width: number | undefined) => (width === undefined ? undefined : `${width}px`);
+
+  /** A selection, detail or action cell: pinned with the data columns on its side. */
+  const controlClass = (side: DataTableColumnPin) =>
+    clsx(
+      styles.controlCell,
+      side === 'start' && pinsStart && styles.pinStart,
+      side === 'end' && pinsEnd && styles.pinEnd,
+    );
+  const controlOffset = (side: DataTableColumnPin) =>
+    (side === 'start' ? pinsStart : pinsEnd) ? '0px' : undefined;
+  // The detail column sits after the selection column.
+  const detailControls = pinsStart ? Number(selectable) : undefined;
+  const pinnedControls = (side: DataTableColumnPin) =>
+    (side === 'start' ? pinsStart : pinsEnd) ? 0 : undefined;
 
   function applyPage(next: number) {
     if (next === page) return;
@@ -666,8 +919,7 @@ export function DataTable<T>({
 
   const hasDetail = renderDetail !== undefined;
   const hasRowActions = rowActions.length > 0;
-  const columnCount =
-    columns.length + Number(selectable) + Number(hasDetail) + Number(hasRowActions);
+  const columnCount = shown.length + Number(selectable) + Number(hasDetail) + Number(hasRowActions);
   const selectedCount = selection.allMatching && isServer ? total : selection.ids.length;
   const matchingCount = isServer ? total : rows.filter(canSelect).length;
   const offerAllMatching =
@@ -677,13 +929,33 @@ export function DataTable<T>({
     menuIndex >= 0 && menuRowId !== null
       ? { row: visible[menuIndex] as T, id: menuRowId }
       : undefined;
+  const chooserColumns = displayOrder(columnState).flatMap((id) => {
+    const column = columnById.get(id);
+    return column
+      ? [
+          {
+            id,
+            label: columnLabel(column),
+            visible: !columnState.hidden.includes(id),
+            pinned: columnState.pinned[id] ?? null,
+            hideable: column.hideable ?? true,
+          },
+        ]
+      : [];
+  });
 
   const sections = (
     <>
       <TableHeader>
         <TableRow>
           {selectable && (
-            <TableHead className={styles.controlCell}>
+            <TableHead
+              className={controlClass('start')}
+              style={{
+                '--_pin-offset': controlOffset('start'),
+                '--_pin-controls': pinnedControls('start'),
+              }}
+            >
               <EventScope silent>
                 <Checkbox
                   ref={selectAllRef}
@@ -699,22 +971,64 @@ export function DataTable<T>({
             </TableHead>
           )}
           {hasDetail && (
-            <TableHead className={styles.controlCell}>
+            <TableHead
+              className={controlClass('start')}
+              style={{ '--_pin-offset': controlOffset('start'), '--_pin-controls': detailControls }}
+            >
               <span className={styles.visuallyHidden}>{labels.detailsColumn}</span>
             </TableHead>
           )}
-          {columns.map((column) => {
+          {shown.map(({ column, slot }) => {
             const sortable = column.sortable ?? Boolean(column.value || column.compare);
             const index = sort.findIndex((entry) => entry.columnId === column.id);
             const entry = index >= 0 ? sort[index] : undefined;
             const filterColumn = filterColumns.find((candidate) => candidate.id === column.id);
+            const resizable = resizableColumns && (column.resizable ?? true);
+            // The header is named by its label alone, not by its filter button or resize handle.
+            const labelId = `${descriptionId}-label-${columns.indexOf(column)}`;
             return (
               <TableHead
                 key={column.id}
+                data-column-id={column.id}
+                aria-labelledby={labelId}
                 align={column.align}
                 // Only the primary sort is announced on the header (one aria-sort at a time).
                 aria-sort={entry && index === 0 ? ariaSort[entry.direction] : undefined}
-                className={column.headerClassName}
+                className={clsx(
+                  column.headerClassName,
+                  pinClass(slot),
+                  slot.width !== undefined && styles.sized,
+                  resizable && styles.resizable,
+                  dragging === column.id && styles.dragging,
+                  dropTarget?.id === column.id &&
+                    (dropTarget.side === 'before' ? styles.dropBefore : styles.dropAfter),
+                )}
+                style={{
+                  '--_pin-offset': pinOffset(slot),
+                  '--_pin-controls': pinControls(slot),
+                  '--_width': px(slot.width),
+                }}
+                draggable={reorderableColumns || undefined}
+                onDragStart={
+                  reorderableColumns
+                    ? (event) => {
+                        event.dataTransfer.effectAllowed = 'move';
+                        // Firefox starts a drag only with data.
+                        event.dataTransfer.setData('text/plain', column.id);
+                        setDragging(column.id);
+                      }
+                    : undefined
+                }
+                onDragOver={reorderableColumns ? (event) => dragOver(event, column.id) : undefined}
+                onDrop={reorderableColumns ? (event) => drop(event, column.id) : undefined}
+                onDragEnd={
+                  reorderableColumns
+                    ? () => {
+                        setDragging(null);
+                        setDropTarget(null);
+                      }
+                    : undefined
+                }
               >
                 <div className={styles.headerContent}>
                   {sortable ? (
@@ -724,7 +1038,9 @@ export function DataTable<T>({
                       aria-describedby={entry ? `${descriptionId}-${column.id}` : undefined}
                       onClick={(event) => changeSort(column.id, event.shiftKey)}
                     >
-                      <span>{column.header}</span>
+                      <span id={labelId} className={styles.headerLabel}>
+                        {column.header}
+                      </span>
                       <SortIcon direction={entry?.direction} />
                       {entry && multiSort && (
                         <span className={styles.priority} aria-hidden="true">
@@ -738,7 +1054,9 @@ export function DataTable<T>({
                       )}
                     </button>
                   ) : (
-                    column.header
+                    <span id={labelId} className={styles.headerLabel}>
+                      {column.header}
+                    </span>
                   )}
                   {filterColumn && (
                     <FilterButton
@@ -750,11 +1068,30 @@ export function DataTable<T>({
                     />
                   )}
                 </div>
+                {resizable && (
+                  <ResizeHandle
+                    label={labels.resizeColumn(columnLabel(column))}
+                    width={slot.width}
+                    min={minWidthOf(column.id)}
+                    max={maxWidthOf(column.id)}
+                    measure={() => measure(column.id)}
+                    onPreview={(width) => setPreview({ id: column.id, width })}
+                    onCommit={(width) => resizeColumn(column.id, width)}
+                    onReset={() => resizeColumn(column.id, null)}
+                  />
+                )}
               </TableHead>
             );
           })}
           {hasRowActions && (
-            <TableHead align="end" className={styles.controlCell}>
+            <TableHead
+              align="end"
+              className={controlClass('end')}
+              style={{
+                '--_pin-offset': controlOffset('end'),
+                '--_pin-controls': pinnedControls('end'),
+              }}
+            >
               <span className={styles.visuallyHidden}>{labels.actionsColumn}</span>
             </TableHead>
           )}
@@ -772,7 +1109,7 @@ export function DataTable<T>({
             <TableRow key={`skeleton-${i}`}>
               {selectable && <TableCell />}
               {hasDetail && <TableCell />}
-              {columns.map((column) => (
+              {shown.map(({ column }) => (
                 <TableCell key={column.id} align={column.align}>
                   <Skeleton />
                 </TableCell>
@@ -817,7 +1154,13 @@ export function DataTable<T>({
                   onClick={onRowClick ? (event) => clickRow(row, id, event) : undefined}
                 >
                   {selectable && (
-                    <TableCell className={styles.controlCell}>
+                    <TableCell
+                      className={controlClass('start')}
+                      style={{
+                        '--_pin-offset': controlOffset('start'),
+                        '--_pin-controls': pinnedControls('start'),
+                      }}
+                    >
                       <EventScope silent>
                         <Checkbox
                           aria-label={labels.selectRow(label)}
@@ -831,7 +1174,13 @@ export function DataTable<T>({
                     </TableCell>
                   )}
                   {hasDetail && (
-                    <TableCell className={styles.controlCell}>
+                    <TableCell
+                      className={controlClass('start')}
+                      style={{
+                        '--_pin-offset': controlOffset('start'),
+                        '--_pin-controls': detailControls,
+                      }}
+                    >
                       {detail != null && (
                         <EventScope silent>
                           <IconButton
@@ -848,17 +1197,28 @@ export function DataTable<T>({
                       )}
                     </TableCell>
                   )}
-                  {columns.map((column) => (
+                  {shown.map(({ column, slot }) => (
                     <TableCell
                       key={column.id}
                       align={column.align}
-                      className={column.cellClassName}
+                      className={clsx(column.cellClassName, pinClass(slot))}
+                      style={{
+                        '--_pin-offset': pinOffset(slot),
+                        '--_pin-controls': pinControls(slot),
+                      }}
                     >
                       {column.cell ? column.cell(row) : formatValue(column.value?.(row), locale)}
                     </TableCell>
                   ))}
                   {hasRowActions && (
-                    <TableCell align="end" className={styles.controlCell}>
+                    <TableCell
+                      align="end"
+                      className={controlClass('end')}
+                      style={{
+                        '--_pin-offset': controlOffset('end'),
+                        '--_pin-controls': pinnedControls('end'),
+                      }}
+                    >
                       <RowActionsButton
                         row={row}
                         rowLabel={label}
@@ -884,11 +1244,22 @@ export function DataTable<T>({
     </>
   );
 
+  const knownWidth = shown.reduce((sum, { slot }) => sum + (slot.width ?? 0), 0);
   const table = (
     <Table
+      ref={tableRef}
       caption={caption}
       aria-busy={loading || undefined}
-      className={styles.table}
+      className={clsx(styles.table, fixedLayout && styles.fixedLayout)}
+      // Fixed layout: the table is at least as wide as the set widths, plus a minimum for each
+      // column that shares the free space, plus the control columns.
+      style={{
+        '--_table-px': fixedLayout ? `${knownWidth}px` : undefined,
+        '--_auto-count': fixedLayout
+          ? shown.filter(({ slot }) => slot.width === undefined).length
+          : undefined,
+        '--_controls': fixedLayout ? controlsStart + controlsEnd : undefined,
+      }}
       onPointerOver={hasRowActions ? trackMenuRow : undefined}
       onFocus={hasRowActions ? trackMenuRow : undefined}
     >
@@ -911,18 +1282,32 @@ export function DataTable<T>({
       )}
       {...props}
     >
-      {(globalSearch || filtering) && (
+      {(globalSearch || filtering || columnChooser) && (
         <div className={styles.toolbar}>
-          {globalSearch && (
-            <Input
-              type="search"
-              size="sm"
-              aria-label={labels.search}
-              placeholder={labels.searchPlaceholder}
-              value={searchInput}
-              onChange={(event) => typeSearch(event.target.value)}
-              className={styles.search}
-            />
+          {(globalSearch || columnChooser) && (
+            <div className={styles.toolbarRow}>
+              {globalSearch && (
+                <Input
+                  type="search"
+                  size="sm"
+                  aria-label={labels.search}
+                  placeholder={labels.searchPlaceholder}
+                  value={searchInput}
+                  onChange={(event) => typeSearch(event.target.value)}
+                  className={styles.search}
+                />
+              )}
+              {columnChooser && (
+                <ColumnChooser
+                  columns={chooserColumns}
+                  onVisibleChange={showColumn}
+                  onStep={(id, step) => reorder(id, stepColumn(columnState, id, step))}
+                  onPin={pinColumn}
+                  onReset={resetColumns}
+                  labels={labels}
+                />
+              )}
+            </div>
           )}
           <ActiveFilters
             columns={filterColumns}
@@ -1012,6 +1397,15 @@ export function DataTable<T>({
       </div>
     </div>
   );
+}
+
+/** A stored column state, or null when there is none or storage is blocked (private mode, policies). */
+function readStorage(name: string): string | null {
+  try {
+    return window.localStorage.getItem(name);
+  } catch {
+    return null;
+  }
 }
 
 /** The default cell text: dates and numbers in the locale's format, empty values as nothing. */

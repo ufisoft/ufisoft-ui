@@ -264,6 +264,27 @@ export const RowDetail: Story = {
   },
 };
 
+/** Wide columns, so the table scrolls sideways and pinning shows. */
+const wideColumns = columns.map((column) => ({
+  ...column,
+  width: { name: 200, email: 260, role: 140, status: 150, orders: 120, createdAt: 160 }[column.id],
+  pinned: column.id === 'name' ? ('start' as const) : undefined,
+}));
+
+export const ColumnManagement: Story = {
+  name: 'Resize, reorder, hide and pin columns',
+  args: {
+    columns: wideColumns as DataTableColumn<unknown>[],
+    resizableColumns: true,
+    reorderableColumns: true,
+    columnChooser: true,
+    selectable: true,
+    rowActions: userActions(() => {}) as DataTableRowAction<unknown>[],
+    // Changes survive a reload of this story.
+    storageKey: 'storybook-users',
+  },
+};
+
 export const Loading: Story = {
   args: { data: [], loading: true },
 };

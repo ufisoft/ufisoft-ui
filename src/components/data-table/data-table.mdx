@@ -6,7 +6,7 @@ import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 # DataTable
 
-A data table for admin screens: sorting, search, column filters, pages, row selection and actions, on the client or the server.
+A data table for admin screens: sorting, search, column filters, pages, row selection and actions, and column management, on the client or the server.
 
 <Canvas of={DataTableStories.Default} />
 
@@ -80,6 +80,12 @@ A filter applies on _Apply_ or Enter — a server is asked once, not per keystro
 
 **Row click and details.** `onRowClick` is called for clicks on a row outside its buttons, links and fields (not while text is selected). `renderDetail` adds a button at each row's start that opens a full-width detail row below it; return `null` for rows without one. Open rows are controlled with `expandedRowIds` + `onExpandedChange`, or `defaultExpandedRowIds`.
 
+**Columns: resize, reorder, hide, pin.** `resizableColumns` adds a handle to each header's end edge: drag it, or focus it and use the arrow keys (Shift for steps of 50 px), Home and End; double-click resets the width. `reorderableColumns` lets headers be dragged within their pinned group. `columnChooser` adds a “Columns” button whose popover shows or hides each column, moves it up or down (the keyboard way to reorder) and pins it to the left or right; “Reset columns” returns to the defaults. Per column: `width` (px; without one the column shares the free space), `minWidth` / `maxWidth` (48 / 1200), `resizable`, `hideable`, and the starting `hidden` and `pinned`.
+
+Resizable or pinned columns switch the table to a fixed layout: set widths hold, long cell text ends in “…”, and columns without a width share the rest (at least 8rem each). Pinned columns stick while the table scrolls sideways; the selection and detail columns pin with the left group, the actions column with the right one. A pinned column without a width keeps the width it had (160 px when pinned from the start).
+
+The column state is `{ order, hidden, widths, pinned }` — controlled with `columnState` + `onColumnStateChange`, or `defaultColumnState`. With `storageKey` (uncontrolled), it is kept in `localStorage` and restored on the next visit, after the first render so server and client agree. Hidden columns keep their filters and sort.
+
 **State.** Sort, filters, search, page and page size each work controlled (`sort` + `onSortChange`, `filters` + `onFiltersChange`, `search` + `onSearchChange`) or uncontrolled (`defaultSort`, `defaultFilters`, `defaultSearch`). A new sort, filter, search or page size goes back to page 1. Keep the query in the URL or a store (`createStore`) to restore a view.
 
 **Labels.** `labels` translates every text, including the range (“1–10 of 245”) and the sort description; `locale` sets text sorting and number formatting.
@@ -90,6 +96,7 @@ A filter applies on _Apply_ or Enter — a server is asked once, not per keystro
 <Canvas of={DataTableStories.PresetFilters} />
 <Canvas of={DataTableStories.SelectionAndActions} />
 <Canvas of={DataTableStories.RowDetail} />
+<Canvas of={DataTableStories.ColumnManagement} />
 <Canvas of={DataTableStories.MultiSort} />
 <Canvas of={DataTableStories.Compact} />
 <Canvas of={DataTableStories.StickyHeader} />
@@ -126,6 +133,10 @@ While `loading`, the table is marked busy and the footer says “Loading…”. 
 - The bulk bar is a group named “Bulk actions”; its count is a status region, so “3 selected” and “All 245 results selected” are announced. When the bar disappears, focus moves to the header checkbox; after “Select all results”, focus moves to “Clear selection”.
 - The row menu button is named “Actions for Ayşe Kaya”; the menu has roving focus and typeahead. The same actions open from the keyboard with the Menu key or Shift+F10 while focus is in the row.
 - The detail button is named “Details for Ayşe Kaya”, has `aria-expanded` and points to the detail row with `aria-controls`. The detail and action columns have visually hidden header names.
+- A column header is named by its label alone (`aria-labelledby`), not by its filter button or resize handle.
+- Each resize handle is a focusable separator named “Resize Name”, with its width in pixels as `aria-valuenow` and the limits as `aria-valuemin` / `aria-valuemax`.
+- Dragging headers is pointer-only; the column chooser moves columns with buttons (“Move Name up”), keeps focus on the button and announces the new position. Its checkboxes are named after the columns; a column that cannot be hidden, and the last shown one, are disabled. Each pin select is named “Pin Name”.
+- The default pin labels say “Left” and “Right”: translate them in right-to-left apps, where the start side is on the right.
 - `onRowClick` is a pointer shortcut only: rows are not focusable, so keep a link or a row action that does the same.
 - When filters or search leave no rows, the empty message says so and offers a button that clears them.
 - Shift+click has no keyboard equivalent beyond Shift+Enter in most browsers — offer a preset view (as in the controlled example) when a multi-column order matters.
@@ -141,6 +152,8 @@ While `loading`, the table is marked busy and the footer says “Loading…”. 
 | Add filters to the columns users actually narrow by.         | Put a filter on every column.                            |
 | Confirm destructive bulk actions, then `clearSelection()`.   | Delete hundreds of rows on one click with no undo.       |
 | Pair `onRowClick` with a link or a row action.               | Hide the only way to open a record behind a row click.   |
+| Pin the column that identifies a row (name, number).         | Pin so many columns that nothing is left to scroll.      |
+| Give `storageKey` a name unique to the screen.               | Share one key between tables with different columns.     |
 
 ## Related components
 

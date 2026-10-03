@@ -1,4 +1,5 @@
 import { defineEvents, payload, sourceField, type EventSource } from '../../events/define-events';
+import type { DataTableColumnPin } from './columns';
 import type { DataTableFilters } from './filtering';
 import type { DataTableSelection } from './selection';
 import type { DataTableSort } from './sorting';
@@ -146,6 +147,77 @@ export const dataTableEvents = defineEvents(
         allMatching: false,
         source: { id: 'users' },
       },
+    },
+    'state.onColumnResize': {
+      description:
+        'A column was resized: at the end of a drag, per arrow key on the handle, or reset by double-click.',
+      payload: payload<{
+        columnId: string;
+        width: number | null;
+        previousWidth: number | null;
+        source: EventSource;
+      }>(),
+      fields: {
+        columnId: 'string — the resized column',
+        width: 'number | null — the new width in pixels; null when reset to its default',
+        previousWidth: 'number | null — the width before; null when it shared the free space',
+        source: sourceField,
+      },
+      example: { columnId: 'email', width: 280, previousWidth: 200, source: { id: 'users' } },
+    },
+    'state.onColumnVisibilityChange': {
+      description: 'The user showed or hid a column in the column chooser.',
+      payload: payload<{ columnId: string; visible: boolean; source: EventSource }>(),
+      fields: {
+        columnId: 'string — the column',
+        visible: 'boolean — true when it was shown',
+        source: sourceField,
+      },
+      example: { columnId: 'createdAt', visible: false, source: { id: 'users' } },
+    },
+    'state.onColumnMove': {
+      description: 'The user moved a column: by dragging its header, or with the column chooser.',
+      payload: payload<{
+        columnId: string;
+        order: string[];
+        previousOrder: string[];
+        source: EventSource;
+      }>(),
+      fields: {
+        columnId: 'string — the moved column',
+        order: 'string[] — every column id in display order now, hidden ones included',
+        previousOrder: 'string[] — the order before',
+        source: sourceField,
+      },
+      example: {
+        columnId: 'role',
+        order: ['role', 'name', 'email'],
+        previousOrder: ['name', 'role', 'email'],
+        source: { id: 'users' },
+      },
+    },
+    'state.onColumnPin': {
+      description: 'The user pinned a column to the start or end side, or unpinned it.',
+      payload: payload<{
+        columnId: string;
+        pinned: DataTableColumnPin | null;
+        previousPinned: DataTableColumnPin | null;
+        source: EventSource;
+      }>(),
+      fields: {
+        columnId: 'string — the column',
+        pinned: "'start' | 'end' | null — the side it is pinned to now; null when unpinned",
+        previousPinned: "'start' | 'end' | null — the side before",
+        source: sourceField,
+      },
+      example: { columnId: 'name', pinned: 'start', previousPinned: null, source: { id: 'users' } },
+    },
+    'state.onColumnsReset': {
+      description:
+        'The user reset the columns: order, visibility, widths and pinning are back to the defaults.',
+      payload: payload<{ source: EventSource }>(),
+      fields: { source: sourceField },
+      example: { source: { id: 'users' } },
     },
   },
 );

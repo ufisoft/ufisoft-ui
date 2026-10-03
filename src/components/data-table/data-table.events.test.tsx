@@ -221,4 +221,55 @@ describe('DataTable events', () => {
       },
     ]);
   });
+
+  it('emits the column events, and nothing from the chooser’s parts', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    render(
+      <DataTable
+        caption="Items"
+        columnChooser
+        resizableColumns
+        columns={[
+          { id: 'name', header: 'Name', value: (row: { name: string }) => row.name, width: 200 },
+          { id: 'id', header: 'Id', value: (row: { id: number }) => row.id },
+        ]}
+        data={data}
+      />,
+    );
+
+    screen.getByRole('separator', { name: 'Resize Name' }).focus();
+    await user.keyboard('{ArrowRight}');
+    await user.click(screen.getByRole('button', { name: 'Columns' }));
+    const chooser = screen.getByRole('dialog', { name: 'Columns' });
+    await user.click(within(chooser).getByRole('checkbox', { name: 'Id' }));
+    await user.click(within(chooser).getByRole('button', { name: 'Move Name down' }));
+    await user.selectOptions(within(chooser).getByRole('combobox', { name: 'Pin Id' }), 'end');
+    await user.click(within(chooser).getByRole('button', { name: 'Reset columns' }));
+
+    expect(events).toEqual([
+      {
+        name: 'datatable.state.onColumnResize',
+        payload: { columnId: 'name', width: 210, previousWidth: 200, source: {} },
+      },
+      {
+        name: 'datatable.state.onColumnVisibilityChange',
+        payload: { columnId: 'id', visible: false, source: {} },
+      },
+      {
+        name: 'datatable.state.onColumnMove',
+        payload: {
+          columnId: 'name',
+          order: ['id', 'name'],
+          previousOrder: ['name', 'id'],
+          source: {},
+        },
+      },
+      {
+        name: 'datatable.state.onColumnPin',
+        payload: { columnId: 'id', pinned: 'end', previousPinned: null, source: {} },
+      },
+      { name: 'datatable.state.onColumnsReset', payload: { source: {} } },
+    ]);
+  });
 });

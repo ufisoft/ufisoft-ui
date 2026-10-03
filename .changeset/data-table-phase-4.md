@@ -1,0 +1,5 @@
+---
+'@ufisoft/ui': minor
+---
+
+`DataTable` phase 4: column management. `resizableColumns` adds a resize handle to each header (drag, or arrow keys / Home / End on the focused handle; double-click resets). `reorderableColumns` lets headers be dragged. `columnChooser` adds a “Columns” popover to show or hide, move and pin columns, and reset them. New column options `width`, `minWidth`, `maxWidth`, `resizable`, `hideable`, `hidden` and `pinned`; pinned columns stick to the start or end side while the table scrolls sideways. The column state (`{ order, hidden, widths, pinned }`, exported as `DataTableColumnState`) is controlled (`columnState` / `onColumnStateChange`) or uncontrolled (`defaultColumnState`), and `storageKey` keeps it in `localStorage`. Resizable or pinned columns switch the table to a fixed layout where long cell text is truncated. Column headers are now named by their label alone, without their filter button's name. Emits `datatable.state.onColumnResize`, `onColumnVisibilityChange`, `onColumnMove`, `onColumnPin` and `onColumnsReset`.

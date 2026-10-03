@@ -239,6 +239,8 @@ export {
   type DataTableBulkAction,
   type DataTableBulkContext,
   type DataTableActionTone,
+  type DataTableColumnState,
+  type DataTableColumnPin,
   type DataTableFilters,
   type DataTableFilter,
   type DataTableColumnFilter,

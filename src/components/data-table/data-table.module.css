@@ -1,4 +1,9 @@
 .dataTable {
+  /* Column management: the width of a selection, detail or action column, and the least width of
+     a column that shares the free space in fixed layout. */
+  --_control-size: calc(var(--ufi-control-height-sm) + 2 * var(--ufi-space-sm));
+  --_auto-min: 8rem;
+
   display: flex;
   flex-direction: column;
   gap: var(--ufi-space-sm);
@@ -225,16 +230,24 @@
 }
 
 /* A selected row is marked by colour and by its checked checkbox. */
+.selectedRow {
+  --_row-bg: var(--ufi-color-bg-subtle);
+}
+
 .selectedRow > * {
-  background-color: var(--ufi-color-bg-subtle);
+  background-color: var(--_row-bg);
 }
 
 .clickableRow {
   cursor: pointer;
 }
 
+.clickableRow:hover {
+  --_row-bg: var(--ufi-color-bg-muted);
+}
+
 .clickableRow:hover > * {
-  background-color: var(--ufi-color-bg-muted);
+  background-color: var(--_row-bg);
 }
 
 /* The open row and its detail read as one block: no line between them. */
@@ -277,4 +290,209 @@
   flex-wrap: wrap;
   gap: var(--ufi-space-xs);
   margin-inline-start: auto;
+}
+
+/* Toolbar row: the search field, and the column chooser at the end. */
+.toolbarRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-xs) var(--ufi-space-sm);
+  align-items: center;
+  justify-content: space-between;
+}
+
+/*
+ * Fixed layout (resizable or pinned columns): set widths hold whatever the content. The table is
+ * at least as wide as its set widths, a minimum per free column and the control columns.
+ */
+.table.fixedLayout {
+  inline-size: max(
+    100%,
+    calc(
+      var(--_table-px) + var(--_auto-count) * var(--_auto-min) + var(--_controls) *
+        var(--_control-size)
+    )
+  );
+  table-layout: fixed;
+}
+
+.table.fixedLayout .controlCell {
+  inline-size: var(--_control-size);
+}
+
+.table.fixedLayout td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.table.fixedLayout td.detail,
+.table.fixedLayout td.message {
+  white-space: normal;
+}
+
+.table.fixedLayout .sortButton {
+  min-inline-size: 0;
+}
+
+.sized {
+  inline-size: var(--_width);
+}
+
+.headerLabel {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pinned columns stick to their side; the offset adds the pinned columns before them. */
+.pinStart,
+.pinEnd {
+  position: sticky;
+  z-index: 1;
+  background-color: var(--_row-bg, var(--ufi-color-bg-surface));
+}
+
+.pinStart {
+  inset-inline-start: calc(var(--_pin-offset) + var(--_pin-controls) * var(--_control-size));
+}
+
+.pinEnd {
+  inset-inline-end: calc(var(--_pin-offset) + var(--_pin-controls) * var(--_control-size));
+}
+
+/* Pinned headers stay above pinned cells, also under a sticky header (maxHeight). */
+.dataTable .table thead th.pinStart,
+.dataTable .table thead th.pinEnd {
+  z-index: 2;
+}
+
+/* The edge between pinned and scrolling columns. */
+.pinEdge::after {
+  position: absolute;
+  inset-block: 0;
+  inline-size: var(--ufi-border-width);
+  pointer-events: none;
+  content: '';
+  background-color: var(--ufi-color-border-strong);
+}
+
+.pinStart.pinEdge::after {
+  inset-inline-end: 0;
+}
+
+.pinEnd.pinEdge::after {
+  inset-inline-start: 0;
+}
+
+/* Headers holding a resize handle or a drop marker are their containing block. */
+.resizable:not(.pinStart, .pinEnd),
+.table th[draggable='true']:not(.pinStart, .pinEnd) {
+  position: relative;
+}
+
+/* The resize handle: a thin line at the header's end edge, wider to grab. */
+.resizeHandle {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 1;
+  inline-size: var(--ufi-space-xs);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.resizeHandle::after {
+  position: absolute;
+  inset-block: var(--ufi-space-xs);
+  inset-inline-end: 0;
+  inline-size: calc(var(--ufi-border-width) * 2);
+  content: '';
+  background-color: var(--ufi-color-border-default);
+}
+
+.resizeHandle:hover::after,
+.resizeHandle:focus-visible::after {
+  background-color: var(--ufi-color-border-focus);
+}
+
+.resizeHandle:focus-visible {
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: calc(var(--ufi-focus-ring-width) * -1);
+}
+
+/* Header drag and drop: the dragged header fades; a line marks where it lands. */
+.table th[draggable='true'] {
+  cursor: grab;
+}
+
+.dragging {
+  opacity: var(--ufi-opacity-disabled);
+}
+
+.dropBefore::before,
+.dropAfter::before {
+  position: absolute;
+  inset-block: 0;
+  z-index: 1;
+  inline-size: calc(var(--ufi-border-width) * 2);
+  pointer-events: none;
+  content: '';
+  background-color: var(--ufi-color-border-focus);
+}
+
+.dropBefore::before {
+  inset-inline-start: 0;
+}
+
+.dropAfter::before {
+  inset-inline-end: 0;
+}
+
+/* Column chooser */
+.chooserIcon {
+  inline-size: 1em;
+  block-size: 1em;
+}
+
+.chooserPopover {
+  min-inline-size: 20rem;
+}
+
+.chooser {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-sm);
+  font-weight: var(--ufi-weight-regular);
+  color: var(--ufi-color-text-default);
+  text-align: start;
+  white-space: normal;
+}
+
+.chooserList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-2xs);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.chooserItem {
+  display: flex;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+}
+
+.chooserName {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.chooserPin {
+  inline-size: auto;
+}
+
+.arrowDown {
+  transform: rotate(180deg);
 }
