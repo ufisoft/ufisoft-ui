@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as DrawerStories from './drawer.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={DrawerStories} />
 
@@ -45,6 +46,10 @@ The body scrolls when the content is long; the header and footer stay in place.
 ## Examples
 
 <Canvas of={DrawerStories.Turkish} />
+
+## Events
+
+<ComponentEvents component="Drawer" />
 
 ## Accessibility
 

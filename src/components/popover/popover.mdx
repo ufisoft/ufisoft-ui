@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as PopoverStories from './popover.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={PopoverStories} />
 
@@ -43,6 +44,10 @@ Positioning, focus and dismissal come from [Radix Popover](https://www.radix-ui.
 
 <Canvas of={PopoverStories.ClosedFromContent} />
 <Canvas of={PopoverStories.InModal} />
+
+## Events
+
+<ComponentEvents component="Popover" />
 
 ## Accessibility
 

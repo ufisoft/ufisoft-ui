@@ -1,0 +1,19 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as PlaygroundStories from './event-playground.stories';
+
+<Meta of={PlaygroundStories} />
+
+# Event Playground
+
+Use the components on the left: every event they emit appears on the right as it happens — the same events your application receives with `eventBus.on(…)`, and the same ones logged to the browser console in development.
+
+<Canvas of={PlaygroundStories.Playground} />
+
+Try:
+
+- Type `03.10.2026` into _Publish date_ and press Tab: `datepicker.state.onChange` with `value`, `previousValue: null` and `source: { name: 'publishDate', data: { pageId: 42 } }`.
+- Open the calendar and pick a day: `onOpen`, `onChange`, `onClose` — and no `iconbutton` or `popover` events, because those are DatePicker's own parts.
+- Empty the field: `onChange` with `value: null`, then `onClear`.
+- Open the dialog and press _Publish_: `button.interaction.onClick`, `modal.state.onOpen`, the footer button's click, `modal.state.onClose`.
+
+The log is a docs-only helper: it listens with `eventBus.onAny`, and the components need nothing special to appear in it.

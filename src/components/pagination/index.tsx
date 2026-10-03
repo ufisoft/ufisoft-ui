@@ -1,5 +1,9 @@
+'use client';
+
 import { clsx } from 'clsx';
 import type { ComponentProps, ReactNode } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { EventScope, useEmit } from '../../events/react';
 import { Button } from '../button';
 import styles from './pagination.module.css';
 
@@ -19,7 +23,7 @@ function getPageItems(page: number, pageCount: number): PageItem[] {
   return [1, 'start-ellipsis', page - 1, page, page + 1, 'end-ellipsis', pageCount];
 }
 
-export interface PaginationProps extends Omit<ComponentProps<'nav'>, 'onChange'> {
+export interface PaginationProps extends Omit<ComponentProps<'nav'>, 'onChange'>, EventDataProps {
   /** Current page, starting at 1. */
   page: number;
   /** Total number of pages. Nothing is rendered when it is below 2. */
@@ -46,11 +50,22 @@ export function Pagination({
   previousLabel = 'Previous',
   nextLabel = 'Next',
   getPageLabel = (n) => `Page ${n}`,
+  eventData,
   className,
   ...props
 }: PaginationProps) {
+  const emit = useEmit();
   if (pageCount < 2) return null;
   const current = Math.min(Math.max(page, 1), pageCount);
+
+  function request(target: number) {
+    onPageChange?.(target);
+    emit('pagination.state.onChange', {
+      page: target,
+      previousPage: current,
+      source: eventSource(props.id, undefined, eventData),
+    });
+  }
 
   function control(
     target: number,
@@ -70,7 +85,7 @@ export function Pagination({
           {extra.disabled ? (
             <span aria-disabled="true">{content}</span>
           ) : (
-            <a href={getHref(target)} onClick={() => onPageChange?.(target)}>
+            <a href={getHref(target)} onClick={() => request(target)}>
               {content}
             </a>
           )}
@@ -81,7 +96,7 @@ export function Pagination({
       <Button
         {...shared}
         disabled={extra.disabled}
-        onClick={extra.isCurrent ? undefined : () => onPageChange?.(target)}
+        onClick={extra.isCurrent ? undefined : () => request(target)}
       >
         {content}
       </Button>
@@ -90,22 +105,25 @@ export function Pagination({
 
   return (
     <nav aria-label={ariaLabel} className={clsx(styles.pagination, className)} {...props}>
-      <ul className={styles.list}>
-        <li>{control(current - 1, previousLabel, { disabled: current === 1 })}</li>
-        {getPageItems(current, pageCount).map((item) =>
-          typeof item === 'number' ? (
-            <li key={item} className={styles.page}>
-              {control(item, item, { label: getPageLabel(item), isCurrent: item === current })}
-            </li>
-          ) : (
-            // The page labels already say which pages exist; the gap is visual only.
-            <li key={item} className={styles.ellipsis} aria-hidden="true">
-              …
-            </li>
-          ),
-        )}
-        <li>{control(current + 1, nextLabel, { disabled: current === pageCount })}</li>
-      </ul>
+      {/* The page buttons are part of Pagination: only pagination.state.onChange is emitted. */}
+      <EventScope silent>
+        <ul className={styles.list}>
+          <li>{control(current - 1, previousLabel, { disabled: current === 1 })}</li>
+          {getPageItems(current, pageCount).map((item) =>
+            typeof item === 'number' ? (
+              <li key={item} className={styles.page}>
+                {control(item, item, { label: getPageLabel(item), isCurrent: item === current })}
+              </li>
+            ) : (
+              // The page labels already say which pages exist; the gap is visual only.
+              <li key={item} className={styles.ellipsis} aria-hidden="true">
+                …
+              </li>
+            ),
+          )}
+          <li>{control(current + 1, nextLabel, { disabled: current === pageCount })}</li>
+        </ul>
+      </EventScope>
     </nav>
   );
 }

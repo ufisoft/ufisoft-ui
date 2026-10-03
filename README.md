@@ -72,13 +72,16 @@ ufisoft-ui/
 │   │       ├── button.module.css    styles (semantic tokens only)
 │   │       ├── button.test.tsx      behaviour tests
 │   │       ├── button.stories.tsx   stories: states, variants, edge cases
-│   │       └── button.mdx           documentation page
+│   │       ├── button.mdx           documentation page
+│   │       └── events.ts            event definitions (components that emit events)
 │   ├── tokens/
 │   │   ├── primitives.css   raw values  (--ufi-blue-600, --ufi-space-4)
 │   │   ├── semantic.css     roles       (--ufi-color-action-primary-bg, --ufi-space-md)
 │   │   └── index.ts         JS-side tokens (breakpoints, types)
 │   ├── styles/              global CSS: tokens + reset + base (→ dist/styles.css)
-│   ├── docs/                Storybook pages: Introduction, Tokens
+│   ├── state/               createStore + useStore (framework-independent core, React adapter)
+│   ├── events/              event bus, defineEvents, logger, registry (all component events), React adapter
+│   ├── docs/                Storybook pages: Introduction, Tokens, Architecture (+ docs-only blocks)
 │   ├── test/setup.ts        test environment setup
 │   └── index.ts             public API — the only supported entry point
 └── dist/                    build output (git-ignored)
@@ -95,6 +98,15 @@ Component folders are flat; categories (Foundations, Actions, Forms, Feedback, O
 | Forms       | `FormField`, `FormLabel`, `FormDescription`, `FormMessage`, `useFormField`, `Input`, `Checkbox` |
 | Feedback    | `Alert`, `Spinner`                                                                              |
 | Overlay     | `Modal`                                                                                         |
+
+## State and events
+
+Two small, framework-independent cores with a React adapter, documented in Storybook under _Architecture_:
+
+- **State** — `createStore` / `useStore`: an observable store with selector-based subscriptions. State is what _is_.
+- **Events** — `eventBus` / `createEventBus` / `useEventListener`: typed publish/subscribe. An event is what _happened_ (`datepicker.state.onChange`). Components emit them next to their callbacks, never instead of them.
+
+Every event is defined once (`src/components/<name>/events.ts`, combined in `src/events/registry.ts`); its TypeScript payload type, the development console log, Storybook's _Event Discovery_ and each component's _Events_ section come from that definition.
 
 ## Architecture principles
 

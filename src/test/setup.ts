@@ -1,9 +1,12 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
+import { eventBus } from '../events/registry';
 
 afterEach(() => {
   cleanup();
+  // The global bus is shared by every test: listeners from one test must not see the next one.
+  eventBus.clear();
 });
 
 // jsdom has no ResizeObserver; Radix positioning (Tooltip) needs one. Layout is verified in Storybook.

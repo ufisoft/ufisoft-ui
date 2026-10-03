@@ -3,11 +3,14 @@
 import * as RadixContextMenu from '@radix-ui/react-context-menu';
 import { clsx } from 'clsx';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import styles from './context-menu.module.css';
 
 export type ContextMenuItemTone = 'default' | 'danger';
 
-export interface ContextMenuProps extends Omit<ComponentProps<'div'>, 'content' | 'children'> {
+export interface ContextMenuProps
+  extends Omit<ComponentProps<'div'>, 'content' | 'children'>, EventDataProps {
   /** The menu: `ContextMenuItem`, `ContextMenuSeparator` and `ContextMenuLabel`. */
   content: ReactNode;
   /** The area that opens the menu: one element that accepts `ref` and spreads props. Make it focusable. */
@@ -26,12 +29,22 @@ export function ContextMenu({
   children,
   onOpenChange,
   disabled,
+  eventData,
   className,
   ...props
 }: ContextMenuProps) {
+  const emit = useEmit();
   return (
     // Non-modal: no scroll lock and no aria-hidden on the rest of the page, like DropdownMenu.
-    <RadixContextMenu.Root onOpenChange={onOpenChange} modal={false}>
+    <RadixContextMenu.Root
+      onOpenChange={(next) => {
+        onOpenChange?.(next);
+        emit(next ? 'contextmenu.state.onOpen' : 'contextmenu.state.onClose', {
+          source: eventSource(props.id, undefined, eventData),
+        });
+      }}
+      modal={false}
+    >
       <RadixContextMenu.Trigger asChild disabled={disabled}>
         {children}
       </RadixContextMenu.Trigger>
@@ -49,7 +62,8 @@ export function ContextMenu({
   );
 }
 
-export interface ContextMenuItemProps extends Omit<ComponentProps<'div'>, 'onSelect'> {
+export interface ContextMenuItemProps
+  extends Omit<ComponentProps<'div'>, 'onSelect'>, EventDataProps {
   /** Called when the item is chosen by click, Enter or Space. The menu then closes. */
   onSelect?: (event: Event) => void;
   disabled?: boolean;
@@ -60,10 +74,25 @@ export interface ContextMenuItemProps extends Omit<ComponentProps<'div'>, 'onSel
   textValue?: string;
 }
 
-export function ContextMenuItem({ tone = 'default', className, ...props }: ContextMenuItemProps) {
+export function ContextMenuItem({
+  tone = 'default',
+  onSelect,
+  eventData,
+  className,
+  ...props
+}: ContextMenuItemProps) {
+  const emit = useEmit();
   return (
     <RadixContextMenu.Item
       className={clsx(styles.item, tone === 'danger' && styles.danger, className)}
+      onSelect={(event) => {
+        onSelect?.(event);
+        emit('contextmenu.interaction.onSelect', {
+          label:
+            props.textValue ?? (typeof props.children === 'string' ? props.children : undefined),
+          source: eventSource(props.id, undefined, eventData),
+        });
+      }}
       {...props}
     />
   );

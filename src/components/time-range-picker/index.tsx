@@ -3,6 +3,8 @@
 import { clsx } from 'clsx';
 import type { Locale } from 'date-fns';
 import { useId, useState, type ComponentProps } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { EventScope, useEmit } from '../../events/react';
 import { useFormFieldContext } from '../form-field/use-form-field';
 import type { InputSize } from '../input';
 import { TimePicker } from '../time-picker';
@@ -16,10 +18,8 @@ export interface TimeRange {
   to: string | null;
 }
 
-export interface TimeRangePickerProps extends Omit<
-  ComponentProps<'div'>,
-  'defaultValue' | 'onChange'
-> {
+export interface TimeRangePickerProps
+  extends Omit<ComponentProps<'div'>, 'defaultValue' | 'onChange'>, EventDataProps {
   /** Selected range (controlled). */
   value?: TimeRange;
   /** Initially selected range (uncontrolled). */
@@ -80,6 +80,7 @@ export function TimeRangePicker({
   endLabel = 'End time',
   startName,
   endName,
+  eventData,
   className,
   ...props
 }: TimeRangePickerProps) {
@@ -89,15 +90,23 @@ export function TimeRangePicker({
   const [innerValue, setInnerValue] = useState(defaultValue);
   const { from, to } = value ?? innerValue;
 
+  const emit = useEmit();
+
   function change(next: TimeRange) {
     if (next.from === from && next.to === to) return;
     if (value === undefined) setInnerValue(next);
     onValueChange?.(next);
+    emit('timerangepicker.state.onChange', {
+      value: next,
+      previousValue: { from, to },
+      source: eventSource(props.id, undefined, eventData),
+    });
   }
 
   const fieldProps = { size, invalid, disabled, required, step, locale, timeFormat };
 
   // Both fields join a surrounding FormField; the start field takes its id, so the label focuses it.
+  // The two TimePickers are part of TimeRangePicker: only timerangepicker events are emitted.
   return (
     <div
       role="group"
@@ -105,32 +114,34 @@ export function TimeRangePicker({
       className={clsx(styles.timeRangePicker, className)}
       {...props}
     >
-      <TimePicker
-        {...fieldProps}
-        id={field?.controlId ?? `${generatedId}-start`}
-        aria-label={startLabel}
-        name={startName}
-        value={from}
-        // A start after the end is undone, like any time outside min/max.
-        min={min}
-        max={earlier(to, max)}
-        onValueChange={(time) => change({ from: time, to })}
-        className={styles.field}
-      />
-      <span className={styles.separator} aria-hidden="true">
-        –
-      </span>
-      <TimePicker
-        {...fieldProps}
-        id={`${generatedId}-end`}
-        aria-label={endLabel}
-        name={endName}
-        value={to}
-        min={later(from, min)}
-        max={max}
-        onValueChange={(time) => change({ from, to: time })}
-        className={styles.field}
-      />
+      <EventScope silent>
+        <TimePicker
+          {...fieldProps}
+          id={field?.controlId ?? `${generatedId}-start`}
+          aria-label={startLabel}
+          name={startName}
+          value={from}
+          // A start after the end is undone, like any time outside min/max.
+          min={min}
+          max={earlier(to, max)}
+          onValueChange={(time) => change({ from: time, to })}
+          className={styles.field}
+        />
+        <span className={styles.separator} aria-hidden="true">
+          –
+        </span>
+        <TimePicker
+          {...fieldProps}
+          id={`${generatedId}-end`}
+          aria-label={endLabel}
+          name={endName}
+          value={to}
+          min={later(from, min)}
+          max={max}
+          onValueChange={(time) => change({ from, to: time })}
+          className={styles.field}
+        />
+      </EventScope>
     </div>
   );
 }

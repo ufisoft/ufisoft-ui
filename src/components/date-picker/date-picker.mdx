@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as DatePickerStories from './date-picker.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={DatePickerStories} />
 
@@ -53,6 +54,10 @@ Typed text becomes the value on blur or Enter. Text that is not a valid date, or
 <Canvas of={DatePickerStories.Turkish} />
 <Canvas of={DatePickerStories.Controlled} />
 <Canvas of={DatePickerStories.InModal} />
+
+## Events
+
+<ComponentEvents component="DatePicker" />
 
 ## Accessibility
 

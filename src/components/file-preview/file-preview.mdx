@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as FilePreviewStories from './file-preview.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={FilePreviewStories} />
 
@@ -44,6 +45,10 @@ Native `div` props and `ref` go to the wrapper; `className` is merged.
 
 <Canvas of={FilePreviewStories.UploadList} />
 <Canvas of={FilePreviewStories.Turkish} />
+
+## Events
+
+<ComponentEvents component="FilePreview" />
 
 ## Accessibility
 

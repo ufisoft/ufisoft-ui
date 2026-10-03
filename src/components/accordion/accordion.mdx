@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as AccordionStories from './accordion.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={AccordionStories} />
 
@@ -42,6 +43,10 @@ Built on native `<details>` and `<summary>`: keyboard support and exclusive open
 
 <Canvas of={AccordionStories.Settings} />
 <Canvas of={AccordionStories.Controlled} />
+
+## Events
+
+<ComponentEvents component="Accordion" />
 
 ## Accessibility
 

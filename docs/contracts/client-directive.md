@@ -38,7 +38,7 @@ Each module's own first statement. The build (`vite.config.ts`, `preserveModules
 ## Caller rules
 
 - Put `'use client'` on the module that calls the hook — the directive does not propagate to modules that merely import it.
-- Modules without hooks (e.g. `button/index.tsx`, which only renders `Spinner`) stay without it so they remain usable in Server Components.
+- Modules without hooks (e.g. `alert/index.tsx`) stay without it so they remain usable in Server Components. A component that emits events calls `useEmit()`, so it is a client module.
 - Browser APIs without hooks are not detected; follow [CONTRIBUTING › API rules](../../CONTRIBUTING.md#api-rules) by hand.
 
 ## Don't

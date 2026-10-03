@@ -25,16 +25,17 @@ Enforced by `node scripts/ci/check_contracts.mjs` and `pnpm lint`. Details and e
 
 ## Router table
 
-| Area               | When you touch it                                                      | Read                                                                                                                         |
-| ------------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| New component      | Creating `src/components/<name>/`                                      | [CONTRIBUTING › Component workflow](./CONTRIBUTING.md#component-workflow) + [public-api](./docs/contracts/public-api.md)     |
-| Component API      | Props, `ref`, `className`, defaults, events, `asChild`, `'use client'` | [CONTRIBUTING › API rules](./CONTRIBUTING.md#api-rules) + [client-directive](./docs/contracts/client-directive.md)           |
-| Styles             | Any `*.module.css`                                                     | [CONTRIBUTING › Styling rules](./CONTRIBUTING.md#styling-rules) + [component-styling](./docs/contracts/component-styling.md) |
-| Tests              | Any `*.test.tsx`                                                       | [CONTRIBUTING › Testing rules](./CONTRIBUTING.md#testing-rules)                                                              |
-| Docs               | Any `*.mdx`                                                            | [CONTRIBUTING › Documentation template](./CONTRIBUTING.md#documentation-template)                                            |
-| Finishing a change | Before saying "done"                                                   | [CONTRIBUTING › Definition of Done](./CONTRIBUTING.md#definition-of-done)                                                    |
-| Versioning         | Anything consumers see (exports, props, defaults, tokens)              | [CONTRIBUTING › Versioning and releases](./CONTRIBUTING.md#versioning-and-releases)                                          |
-| Commits            | Committing                                                             | [CONTRIBUTING › Commits and hooks](./CONTRIBUTING.md#commits-and-hooks)                                                      |
+| Area               | When you touch it                                                      | Read                                                                                                                          |
+| ------------------ | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| New component      | Creating `src/components/<name>/`                                      | [CONTRIBUTING › Component workflow](./CONTRIBUTING.md#component-workflow) + [public-api](./docs/contracts/public-api.md)      |
+| Component API      | Props, `ref`, `className`, defaults, events, `asChild`, `'use client'` | [CONTRIBUTING › API rules](./CONTRIBUTING.md#api-rules) + [client-directive](./docs/contracts/client-directive.md)            |
+| Styles             | Any `*.module.css`                                                     | [CONTRIBUTING › Styling rules](./CONTRIBUTING.md#styling-rules) + [component-styling](./docs/contracts/component-styling.md)  |
+| Tests              | Any `*.test.tsx`                                                       | [CONTRIBUTING › Testing rules](./CONTRIBUTING.md#testing-rules)                                                               |
+| Docs               | Any `*.mdx`                                                            | [CONTRIBUTING › Documentation template](./CONTRIBUTING.md#documentation-template)                                             |
+| Finishing a change | Before saying "done"                                                   | [CONTRIBUTING › Definition of Done](./CONTRIBUTING.md#definition-of-done)                                                     |
+| Events and state   | A component's `events.ts`, `src/events/`, `src/state/`                 | [CONTRIBUTING › Component workflow](./CONTRIBUTING.md#component-workflow) (step 2) + [API rules](./CONTRIBUTING.md#api-rules) |
+| Versioning         | Anything consumers see (exports, props, defaults, tokens)              | [CONTRIBUTING › Versioning and releases](./CONTRIBUTING.md#versioning-and-releases)                                           |
+| Commits            | Committing                                                             | [CONTRIBUTING › Commits and hooks](./CONTRIBUTING.md#commits-and-hooks)                                                       |
 
 ## Team skills
 

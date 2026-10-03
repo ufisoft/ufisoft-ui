@@ -11,6 +11,8 @@ import {
   type DragEvent,
   type ReactNode,
 } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import { useFormField } from '../form-field';
 import styles from './file-upload.module.css';
 
@@ -20,10 +22,10 @@ export interface FileRejection {
   reason: 'type' | 'size';
 }
 
-export interface FileUploadProps extends Omit<
-  ComponentProps<'input'>,
-  'type' | 'value' | 'defaultValue' | 'size' | 'children'
-> {
+export interface FileUploadProps
+  extends
+    Omit<ComponentProps<'input'>, 'type' | 'value' | 'defaultValue' | 'size' | 'children'>,
+    EventDataProps {
   /** Called with the accepted files each time the user picks or drops files. */
   onFilesChange?: (files: File[]) => void;
   /** Called with the files that do not match `accept` or exceed `maxSize`. */
@@ -65,6 +67,7 @@ export function FileUpload({
   accept,
   multiple,
   onChange,
+  eventData,
   className,
   children = 'Drop files here or click to choose',
   ref,
@@ -81,6 +84,7 @@ export function FileUpload({
     'aria-describedby': clsx(promptId, props['aria-describedby']),
   });
   const disabled = fieldProps.disabled;
+  const emit = useEmit();
 
   function receive(list: FileList | null, fromDrop: boolean) {
     const picked = Array.from(list ?? []);
@@ -108,8 +112,13 @@ export function FileUpload({
       input.files = transfer.files;
     }
 
-    if (rejections.length > 0) onFilesReject?.(rejections);
+    const source = eventSource(props.id, props.name, eventData);
+    if (rejections.length > 0) {
+      onFilesReject?.(rejections);
+      emit('fileupload.interaction.onReject', { rejections, source });
+    }
     onFilesChange?.(files);
+    emit('fileupload.state.onChange', { files, source });
   }
 
   const dragProps = disabled

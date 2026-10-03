@@ -225,5 +225,52 @@ export {
 } from './components/table';
 export { FilePreview, type FilePreviewProps, type FileInfo } from './components/file-preview';
 
+// State & events
+export {
+  createStore,
+  shallowEqual,
+  type Store,
+  type StoreListener,
+  type StoreUpdate,
+} from './state/create-store';
+export { useStore } from './state/use-store';
+export {
+  createEventBus,
+  type EventBus,
+  type EventBusOptions,
+  type EventListener,
+  type EventMeta,
+  type AnyEvent,
+  type EventMap,
+  type Unsubscribe,
+} from './events/event-bus';
+export {
+  defineEvents,
+  payload,
+  type EventDefinition,
+  type EventEntry,
+  type EventGroup,
+  type EventRegistry,
+  type EventMapOf,
+  type EventKey,
+  type EventDomain,
+  type EventSource,
+  type EventDataProps,
+  type PayloadType,
+} from './events/define-events';
+export {
+  eventBus,
+  eventRegistry,
+  type UfiEventMap,
+  type UfiEventName,
+  type UfiEventPayload,
+} from './events/registry';
+export {
+  EventBusProvider,
+  useEventBus,
+  useEventListener,
+  type EventBusProviderProps,
+} from './events/react';
+
 // Tokens
 export { breakpoints, type Breakpoint, type SpaceToken } from './tokens';

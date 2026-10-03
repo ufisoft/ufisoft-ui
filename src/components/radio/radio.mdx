@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as RadioStories from './radio.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={RadioStories} />
 
@@ -46,6 +47,10 @@ Use `horizontal` only for two or three short options; longer lists are easier to
 <Canvas of={RadioStories.Controlled} />
 <Canvas of={RadioStories.InFormField} />
 <Canvas of={RadioStories.LongLabel} />
+
+## Events
+
+<ComponentEvents component="RadioGroup" />
 
 ## Accessibility
 

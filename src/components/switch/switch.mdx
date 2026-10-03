@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as SwitchStories from './switch.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={SwitchStories} />
 
@@ -40,6 +41,10 @@ When toggling starts a slow request, keep the switch in its new position and sho
 ## Edge cases
 
 <Canvas of={SwitchStories.LongLabel} />
+
+## Events
+
+<ComponentEvents component="Switch" />
 
 ## Accessibility
 

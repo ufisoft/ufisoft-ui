@@ -3,6 +3,8 @@
 import { clsx } from 'clsx';
 import { isAfter, isBefore } from 'date-fns';
 import { useId, useState, type ComponentProps } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { EventScope, useEmit } from '../../events/react';
 import { DayPicker, type DayPickerLocale } from 'react-day-picker';
 import {
   boundsMatchers,
@@ -30,10 +32,8 @@ export interface DateRange {
   to: Date | null;
 }
 
-export interface DateRangePickerProps extends Omit<
-  ComponentProps<'div'>,
-  'defaultValue' | 'onChange'
-> {
+export interface DateRangePickerProps
+  extends Omit<ComponentProps<'div'>, 'defaultValue' | 'onChange'>, EventDataProps {
   /** Selected range (controlled). */
   value?: DateRange;
   /** Initially selected range (uncontrolled). */
@@ -92,6 +92,7 @@ export function DateRangePicker({
   calendarLabel = 'Choose dates',
   startName,
   endName,
+  eventData,
   className,
   ...props
 }: DateRangePickerProps) {
@@ -104,11 +105,27 @@ export function DateRangePicker({
   const range = value ?? innerValue;
   const { from, to } = range;
   const [open, setOpen] = useState(false);
+  const emit = useEmit();
+  const source = () => eventSource(props.id, undefined, eventData);
 
   function change(next: DateRange) {
     if (sameDate(next.from, from) && sameDate(next.to, to)) return;
     if (value === undefined) setInnerValue(next);
     onValueChange?.(next);
+    emit('daterangepicker.state.onChange', {
+      value: next,
+      previousValue: { from, to },
+      source: source(),
+    });
+  }
+
+  function toggle(nextOpen: boolean, current: DateRange = { from, to }) {
+    if (nextOpen === open) return;
+    setOpen(nextOpen);
+    emit(nextOpen ? 'daterangepicker.state.onOpen' : 'daterangepicker.state.onClose', {
+      value: current,
+      source: source(),
+    });
   }
 
   // Both fields join a surrounding FormField; the start field takes its id, so the label focuses it.
@@ -145,42 +162,46 @@ export function DateRangePicker({
         <input type="hidden" name={startName} value={isoDate(from)} disabled={isDisabled} />
       )}
       {endName && <input type="hidden" name={endName} value={isoDate(to)} disabled={isDisabled} />}
-      <Popover
-        open={open}
-        onOpenChange={setOpen}
-        align="end"
-        aria-label={calendarLabel}
-        className={popoverClassName}
-        content={
-          <DayPicker
-            mode="range"
-            // A click on a complete range starts a new one, so two clicks always pick start and end.
-            resetOnSelect
-            selected={{ from: from ?? undefined, to: to ?? undefined }}
-            onSelect={(next) => {
-              change({ from: next?.from ?? null, to: next?.to ?? null });
-              if (next?.from && next.to) setOpen(false);
-            }}
-            defaultMonth={openingMonth(from ?? to, min, max)}
-            startMonth={min}
-            endMonth={max}
-            disabled={boundsMatchers(min, max)}
-            locale={locale}
-            classNames={calendarClassNames}
-            // The user opened the calendar dialog: focus goes to the selected day, not the nav buttons.
-            // eslint-disable-next-line jsx-a11y/no-autofocus
-            autoFocus
-          />
-        }
-      >
-        <IconButton
-          variant="secondary"
-          size={size}
-          icon={<CalendarIcon />}
+      {/* The calendar's Popover and button are part of DateRangePicker: only it emits. */}
+      <EventScope silent>
+        <Popover
+          open={open}
+          onOpenChange={(next) => toggle(next)}
+          align="end"
           aria-label={calendarLabel}
-          disabled={isDisabled || readOnly}
-        />
-      </Popover>
+          className={popoverClassName}
+          content={
+            <DayPicker
+              mode="range"
+              // A click on a complete range starts a new one, so two clicks always pick start and end.
+              resetOnSelect
+              selected={{ from: from ?? undefined, to: to ?? undefined }}
+              onSelect={(next) => {
+                const range = { from: next?.from ?? null, to: next?.to ?? null };
+                change(range);
+                if (range.from && range.to) toggle(false, range);
+              }}
+              defaultMonth={openingMonth(from ?? to, min, max)}
+              startMonth={min}
+              endMonth={max}
+              disabled={boundsMatchers(min, max)}
+              locale={locale}
+              classNames={calendarClassNames}
+              // The user opened the calendar dialog: focus goes to the selected day, not the nav buttons.
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
+            />
+          }
+        >
+          <IconButton
+            variant="secondary"
+            size={size}
+            icon={<CalendarIcon />}
+            aria-label={calendarLabel}
+            disabled={isDisabled || readOnly}
+          />
+        </Popover>
+      </EventScope>
     </div>
   );
 }

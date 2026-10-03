@@ -13,6 +13,8 @@ import {
   type Ref,
   type RefObject,
 } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import { useFormFieldContext } from '../form-field/use-form-field';
 import { Input, type InputSize } from '../input';
 import styles from './combobox.module.css';
@@ -25,10 +27,10 @@ export interface ComboboxItem {
   disabled?: boolean;
 }
 
-export interface ComboboxProps extends Omit<
-  ComponentProps<'input'>,
-  'size' | 'value' | 'defaultValue' | 'onChange' | 'type'
-> {
+export interface ComboboxProps
+  extends
+    Omit<ComponentProps<'input'>, 'size' | 'value' | 'defaultValue' | 'onChange' | 'type'>,
+    EventDataProps {
   items: ComboboxItem[];
   /** Selected value (controlled). `null` for no selection. */
   value?: string | null;
@@ -76,6 +78,7 @@ export function Combobox({
   filter = defaultFilter,
   getResultsMessage = (count) => `${count} ${count === 1 ? 'result' : 'results'} available`,
   id,
+  eventData,
   className,
   ref,
   ...props
@@ -87,6 +90,8 @@ export function Combobox({
   const [innerValue, setInnerValue] = useState(defaultValue);
   const selectedValue = value !== undefined ? value : innerValue;
   const selectedItem = items.find((item) => item.value === selectedValue) ?? null;
+  const emit = useEmit();
+  const source = () => eventSource(id, props.name, eventData);
 
   const [inputValue, setInputValue] = useState(selectedItem?.label ?? '');
   // Show every item while the input still shows the current selection.
@@ -106,7 +111,18 @@ export function Combobox({
         const nextValue = next?.value ?? null;
         if (value === undefined) setInnerValue(nextValue);
         onValueChange?.(nextValue);
+        emit('combobox.state.onChange', {
+          value: nextValue,
+          previousValue: selectedValue,
+          source: source(),
+        });
       },
+      // Downshift reports the close before the selection: take the value from the same change.
+      onIsOpenChange: ({ isOpen: open, selectedItem: item }) =>
+        emit(open ? 'combobox.state.onOpen' : 'combobox.state.onClose', {
+          value: item?.value ?? null,
+          source: source(),
+        }),
       isItemDisabled: (item) => Boolean(item.disabled),
       inputId,
       labelId: field?.labelId,

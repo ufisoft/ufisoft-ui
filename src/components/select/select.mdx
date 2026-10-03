@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as SelectStories from './select.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={SelectStories} />
 
@@ -48,6 +49,10 @@ A native `<select>` has no read-only state. To show a fixed value, use a read-on
 <Canvas of={SelectStories.Groups} />
 <Canvas of={SelectStories.InFormField} />
 <Canvas of={SelectStories.AlignedWithInput} />
+
+## Events
+
+<ComponentEvents component="Select" />
 
 ## Accessibility
 

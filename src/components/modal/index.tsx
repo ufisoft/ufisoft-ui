@@ -3,6 +3,7 @@
 import { clsx } from 'clsx';
 import {
   useEffect,
+  useEffectEvent,
   useId,
   useImperativeHandle,
   useRef,
@@ -11,12 +12,15 @@ import {
   type ReactNode,
   type SyntheticEvent,
 } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { EventScope, useEmit } from '../../events/react';
 import { IconButton } from '../icon-button';
 import styles from './modal.module.css';
 
 export type ModalSize = 'sm' | 'md' | 'lg';
 
-export interface ModalProps extends Omit<ComponentProps<'dialog'>, 'open' | 'title'> {
+export interface ModalProps
+  extends Omit<ComponentProps<'dialog'>, 'open' | 'title'>, EventDataProps {
   /** Controlled open state. */
   open: boolean;
   /** Called when the user asks to close (Escape, backdrop click, close button). */
@@ -49,6 +53,7 @@ export function Modal({
   onCancel,
   onClose,
   onClick,
+  eventData,
   ref,
   ...props
 }: ModalProps) {
@@ -57,11 +62,25 @@ export function Modal({
   const titleId = useId();
   const descriptionId = useId();
 
+  const emit = useEmit();
+  // Events follow the open prop, so a dialog closed natively (form method="dialog") is reported
+  // once the owner sets open to false; StrictMode's second effect run sees no change.
+  const wasOpen = useRef(false);
+  const reportOpenChange = useEffectEvent((isOpen: boolean) => {
+    emit(isOpen ? 'modal.state.onOpen' : 'modal.state.onClose', {
+      source: eventSource(props.id, undefined, eventData),
+    });
+  });
+
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
+    if (open !== wasOpen.current) {
+      wasOpen.current = open;
+      reportOpenChange(open);
+    }
   }, [open]);
 
   // Escape: keep the dialog controlled — ask the owner instead of closing natively.
@@ -96,29 +115,35 @@ export function Modal({
       onClick={handleClick}
       {...props}
     >
-      <div className={styles.panel}>
-        <header className={styles.header}>
-          <div className={styles.heading}>
-            <h2 id={titleId} className={styles.title}>
-              {title}
-            </h2>
-            {description != null && (
-              <p id={descriptionId} className={styles.description}>
-                {description}
-              </p>
-            )}
-          </div>
-          <IconButton
-            variant="ghost"
-            size="sm"
-            aria-label={closeLabel}
-            icon={<CloseIcon />}
-            onClick={() => onOpenChange(false)}
-          />
-        </header>
-        {children != null && <div className={styles.body}>{children}</div>}
-        {footer != null && <footer className={styles.footer}>{footer}</footer>}
-      </div>
+      {/* The content is the application's: its components emit even when a Drawer silences this Modal. */}
+      <EventScope silent={false}>
+        <div className={styles.panel}>
+          <header className={styles.header}>
+            <div className={styles.heading}>
+              <h2 id={titleId} className={styles.title}>
+                {title}
+              </h2>
+              {description != null && (
+                <p id={descriptionId} className={styles.description}>
+                  {description}
+                </p>
+              )}
+            </div>
+            {/* The close button is part of Modal: modal.state.onClose reports the result. */}
+            <EventScope silent>
+              <IconButton
+                variant="ghost"
+                size="sm"
+                aria-label={closeLabel}
+                icon={<CloseIcon />}
+                onClick={() => onOpenChange(false)}
+              />
+            </EventScope>
+          </header>
+          {children != null && <div className={styles.body}>{children}</div>}
+          {footer != null && <footer className={styles.footer}>{footer}</footer>}
+        </div>
+      </EventScope>
     </dialog>
   );
 }

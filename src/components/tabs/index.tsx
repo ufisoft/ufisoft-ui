@@ -2,12 +2,15 @@
 
 import * as RadixTabs from '@radix-ui/react-tabs';
 import { clsx } from 'clsx';
-import type { ComponentProps } from 'react';
+import { useRef, type ComponentProps } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import styles from './tabs.module.css';
 
 export type TabsOrientation = 'horizontal' | 'vertical';
 
-export interface TabsProps extends Omit<ComponentProps<'div'>, 'defaultValue' | 'dir'> {
+export interface TabsProps
+  extends Omit<ComponentProps<'div'>, 'defaultValue' | 'dir'>, EventDataProps {
   /** Selected tab (controlled). */
   value?: string;
   /** Initially selected tab (uncontrolled). */
@@ -21,9 +24,32 @@ export interface TabsProps extends Omit<ComponentProps<'div'>, 'defaultValue' | 
  * Switches between panels of related content in one place. ARIA wiring and
  * arrow-key navigation come from Radix Tabs.
  */
-export function Tabs({ orientation = 'horizontal', className, ...props }: TabsProps) {
+export function Tabs({
+  orientation = 'horizontal',
+  value,
+  defaultValue,
+  onValueChange,
+  eventData,
+  className,
+  ...props
+}: TabsProps) {
+  const emit = useEmit();
+  // The selected tab of uncontrolled Tabs, for previousValue.
+  const lastValue = useRef(defaultValue ?? null);
   return (
     <RadixTabs.Root
+      value={value}
+      defaultValue={defaultValue}
+      onValueChange={(next) => {
+        const previousValue = value !== undefined ? value : lastValue.current;
+        lastValue.current = next;
+        onValueChange?.(next);
+        emit('tabs.state.onChange', {
+          value: next,
+          previousValue,
+          source: eventSource(props.id, undefined, eventData),
+        });
+      }}
       orientation={orientation}
       className={clsx(styles.tabs, styles[orientation], className)}
       {...props}

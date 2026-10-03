@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as ToastStories from './toast.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={ToastStories} />
 
@@ -55,6 +56,10 @@ Translate the provider's `label`, `toastLabel` and `closeLabel`. Timing, pausing
 <Canvas of={ToastStories.Translated} />
 
 **With a Modal, close it first, then show the toast.** While a modal `<dialog>` is open, the browser makes everything outside it inert — toasts included. A toast shown then is drawn above the modal (the toast region is a popover in the top layer), but it cannot be clicked or focused, and screen readers may not announce it. Toasts that are still on screen become usable once the modal closes.
+
+## Events
+
+<ComponentEvents component="Toast" />
 
 ## Accessibility
 

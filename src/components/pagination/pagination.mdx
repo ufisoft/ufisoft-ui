@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as PaginationStories from './pagination.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={PaginationStories} />
 
@@ -46,6 +47,10 @@ On the first and last page, Previous and Next are disabled. In a narrow space th
 <Canvas of={PaginationStories.Links} />
 <Canvas of={PaginationStories.Translated} />
 <Canvas of={PaginationStories.WithSummary} />
+
+## Events
+
+<ComponentEvents component="Pagination" />
 
 ## Accessibility
 

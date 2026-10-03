@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as FileUploadStories from './file-upload.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={FileUploadStories} />
 
@@ -44,6 +45,10 @@ While files are dragged over it, the zone is highlighted.
 <Canvas of={FileUploadStories.InFormField} />
 <Canvas of={FileUploadStories.WithPreviews} />
 <Canvas of={FileUploadStories.Turkish} />
+
+## Events
+
+<ComponentEvents component="FileUpload" />
 
 ## Accessibility
 

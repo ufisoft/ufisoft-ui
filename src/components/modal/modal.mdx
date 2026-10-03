@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as ModalStories from './modal.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={ModalStories} />
 
@@ -50,6 +51,10 @@ const [open, setOpen] = useState(false);
 <Canvas of={ModalStories.LongContent} />
 
 The body scrolls; header and footer stay visible. The page behind does not scroll while the modal is open.
+
+## Events
+
+<ComponentEvents component="Modal" />
 
 ## Accessibility
 

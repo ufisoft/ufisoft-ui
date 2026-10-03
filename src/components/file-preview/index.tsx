@@ -2,6 +2,8 @@
 
 import { clsx } from 'clsx';
 import { useEffect, useId, useRef, type ComponentProps, type ReactNode } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { EventScope, useEmit } from '../../events/react';
 import { IconButton } from '../icon-button';
 import { Progress } from '../progress';
 import styles from './file-preview.module.css';
@@ -17,7 +19,7 @@ export interface FileInfo {
   url?: string;
 }
 
-export interface FilePreviewProps extends Omit<ComponentProps<'div'>, 'children'> {
+export interface FilePreviewProps extends Omit<ComponentProps<'div'>, 'children'>, EventDataProps {
   /** A `File` the user picked, or a stored file's details. */
   file: File | FileInfo;
   /** Shows a remove button; called when it is pressed. */
@@ -76,9 +78,11 @@ export function FilePreview({
   progress,
   error,
   locale,
+  eventData,
   className,
   ...props
 }: FilePreviewProps) {
+  const emit = useEmit();
   // A stored image needs a url; a picked image file always has a thumbnail.
   const hasThumbnail =
     (file.type?.startsWith('image/') ?? false) && (file instanceof File || Boolean(file.url));
@@ -111,13 +115,22 @@ export function FilePreview({
         {uploading && <Progress value={progress} size="sm" aria-labelledby={nameId} />}
       </span>
       {onRemove && (
-        <IconButton
-          variant="ghost"
-          size="sm"
-          icon={<CloseIcon />}
-          aria-label={removeLabel ?? `Remove ${file.name}`}
-          onClick={onRemove}
-        />
+        // The remove button is part of FilePreview: filepreview.interaction.onRemove reports it.
+        <EventScope silent>
+          <IconButton
+            variant="ghost"
+            size="sm"
+            icon={<CloseIcon />}
+            aria-label={removeLabel ?? `Remove ${file.name}`}
+            onClick={() => {
+              onRemove();
+              emit('filepreview.interaction.onRemove', {
+                file: { name: file.name, size: file.size, type: file.type },
+                source: eventSource(props.id, undefined, eventData),
+              });
+            }}
+          />
+        </EventScope>
       )}
     </div>
   );

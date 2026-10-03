@@ -1,7 +1,16 @@
 'use client';
 
 import { clsx } from 'clsx';
-import { createContext, useContext, useId, type ComponentProps, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useId,
+  useRef,
+  type ComponentProps,
+  type ReactNode,
+} from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import { useFormField, useFormFieldContext } from '../form-field/use-form-field';
 import styles from './radio.module.css';
 
@@ -11,17 +20,16 @@ interface RadioGroupContextValue {
   name: string;
   value?: string;
   defaultValue?: string;
-  onValueChange?: (value: string) => void;
+  /** Called by a radio when the user selects it. */
+  select: (value: string) => void;
   disabled?: boolean;
   required?: boolean;
 }
 
 const RadioGroupContext = createContext<RadioGroupContextValue | null>(null);
 
-export interface RadioGroupProps extends Omit<
-  ComponentProps<'div'>,
-  'onChange' | 'defaultValue' | 'role'
-> {
+export interface RadioGroupProps
+  extends Omit<ComponentProps<'div'>, 'onChange' | 'defaultValue' | 'role'>, EventDataProps {
   /** Shared `name` of the radios. Generated when omitted; set it for native form submission. */
   name?: string;
   /** Selected value (controlled). */
@@ -52,10 +60,25 @@ export function RadioGroup({
   disabled,
   required,
   invalid,
+  eventData,
   className,
   ...props
 }: RadioGroupProps) {
   const generatedName = useId();
+  const emit = useEmit();
+  // The value of an uncontrolled group, for previousValue (the browser owns the checked state).
+  const lastValue = useRef(defaultValue ?? null);
+
+  function select(next: string) {
+    const previousValue = value !== undefined ? value : lastValue.current;
+    lastValue.current = next;
+    onValueChange?.(next);
+    emit('radiogroup.state.onChange', {
+      value: next,
+      previousValue,
+      source: eventSource(props.id, name, eventData),
+    });
+  }
   const field = useFormFieldContext();
   const {
     disabled: groupDisabled,
@@ -78,7 +101,7 @@ export function RadioGroup({
         name: name ?? generatedName,
         value,
         defaultValue,
-        onValueChange,
+        select,
         disabled: groupDisabled,
         required: groupRequired,
       }}
@@ -122,7 +145,7 @@ export function Radio({ children, className, onChange, ...props }: RadioProps) {
         disabled={group?.disabled || props.disabled}
         onChange={(event) => {
           onChange?.(event);
-          group?.onValueChange?.(event.target.value);
+          group?.select(event.target.value);
         }}
       />
       {children != null && <span className={styles.label}>{children}</span>}

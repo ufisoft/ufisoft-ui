@@ -12,6 +12,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { eventSource } from '../../events/define-events';
+import { EventScope, useEmit } from '../../events/react';
 import { Button } from '../button';
 import { IconButton } from '../icon-button';
 import styles from './toast.module.css';
@@ -27,6 +29,8 @@ export interface ToastOptions {
   duration?: number;
   /** One optional action, e.g. Undo. `altText` tells screen-reader users how to do it otherwise. */
   action?: { label: string; onClick: () => void; altText?: string };
+  /** Passed to toast event listeners as `payload.source.data`. */
+  eventData?: unknown;
 }
 
 interface ToastItem extends ToastOptions {
@@ -83,17 +87,37 @@ export function ToastProvider({
   const nextId = useRef(0);
   const viewportRef = useRef<HTMLOListElement>(null);
   const shownCount = useRef(0);
+  const emit = useEmit();
+  // Toasts still shown, with their eventData: a close is reported once, whoever closes it.
+  const live = useRef(new Map<number, unknown>());
 
-  const toast = useCallback((options: ToastOptions) => {
-    nextId.current += 1;
-    const id = nextId.current;
-    setToasts((current) => [...current, { ...options, id }]);
-    return id;
-  }, []);
+  const toast = useCallback(
+    (options: ToastOptions) => {
+      nextId.current += 1;
+      const id = nextId.current;
+      setToasts((current) => [...current, { ...options, id }]);
+      live.current.set(id, options.eventData);
+      emit('toast.state.onOpen', {
+        id,
+        tone: options.tone ?? 'neutral',
+        title: typeof options.title === 'string' ? options.title : undefined,
+        source: eventSource(undefined, undefined, options.eventData),
+      });
+      return id;
+    },
+    [emit],
+  );
 
-  const dismiss = useCallback((id: number) => {
-    setToasts((current) => current.filter((item) => item.id !== id));
-  }, []);
+  const dismiss = useCallback(
+    (id: number) => {
+      setToasts((current) => current.filter((item) => item.id !== id));
+      if (!live.current.has(id)) return;
+      const data = live.current.get(id);
+      live.current.delete(id);
+      emit('toast.state.onClose', { id, source: eventSource(undefined, undefined, data) });
+    },
+    [emit],
+  );
 
   const value = useMemo(() => ({ toast, dismiss }), [toast, dismiss]);
 
@@ -136,16 +160,35 @@ export function ToastProvider({
                 </RadixToast.Description>
               )}
             </div>
-            {action && (
-              <RadixToast.Action altText={action.altText ?? action.label} asChild>
-                <Button size="sm" variant="secondary" onClick={action.onClick}>
-                  {action.label}
-                </Button>
-              </RadixToast.Action>
-            )}
-            <RadixToast.Close asChild>
-              <IconButton aria-label={closeLabel} size="sm" variant="ghost" icon={<CloseIcon />} />
-            </RadixToast.Close>
+            {/* The buttons are part of Toast: toast events report what they did. */}
+            <EventScope silent>
+              {action && (
+                <RadixToast.Action altText={action.altText ?? action.label} asChild>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      action.onClick();
+                      emit('toast.interaction.onAction', {
+                        id,
+                        label: action.label,
+                        source: eventSource(undefined, undefined, item.eventData),
+                      });
+                    }}
+                  >
+                    {action.label}
+                  </Button>
+                </RadixToast.Action>
+              )}
+              <RadixToast.Close asChild>
+                <IconButton
+                  aria-label={closeLabel}
+                  size="sm"
+                  variant="ghost"
+                  icon={<CloseIcon />}
+                />
+              </RadixToast.Close>
+            </EventScope>
           </RadixToast.Root>
         ))}
         <RadixToast.Viewport

@@ -5,10 +5,13 @@ import {
   createContext,
   useContext,
   useId,
+  useRef,
   useState,
   type ComponentProps,
   type ReactNode,
 } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import styles from './accordion.module.css';
 
 export type AccordionType = 'single' | 'multiple';
@@ -33,7 +36,8 @@ export function Accordion({ type = 'multiple', className, ...props }: AccordionP
   );
 }
 
-export interface AccordionItemProps extends Omit<ComponentProps<'details'>, 'title'> {
+export interface AccordionItemProps
+  extends Omit<ComponentProps<'details'>, 'title'>, EventDataProps {
   /** The always-visible header; it toggles the item. */
   title: ReactNode;
   /** Open on first render (uncontrolled). */
@@ -50,6 +54,7 @@ export function AccordionItem({
   open,
   onOpenChange,
   onToggle,
+  eventData,
   className,
   children,
   ...props
@@ -57,6 +62,9 @@ export function AccordionItem({
   const { name } = useContext(AccordionContext);
   // Uncontrolled: set the attribute once; afterwards the browser owns it.
   const [initialOpen] = useState(defaultOpen);
+  const emit = useEmit();
+  // The browser also fires toggle for an item rendered open: only real changes are events.
+  const wasOpen = useRef(open ?? initialOpen);
 
   return (
     <details
@@ -65,7 +73,13 @@ export function AccordionItem({
       className={clsx(styles.item, className)}
       onToggle={(event) => {
         onToggle?.(event);
-        onOpenChange?.(event.currentTarget.open);
+        const isOpen = event.currentTarget.open;
+        onOpenChange?.(isOpen);
+        if (isOpen === wasOpen.current) return;
+        wasOpen.current = isOpen;
+        emit(isOpen ? 'accordion.state.onOpen' : 'accordion.state.onClose', {
+          source: eventSource(props.id, undefined, eventData),
+        });
       }}
       {...props}
     >

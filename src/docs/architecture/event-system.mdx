@@ -1,0 +1,172 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as EventStories from './event-system.stories';
+
+<Meta of={EventStories} />
+
+# Event System
+
+An **event** reports something that happened: _the user picked a date_, _the dialog closed_. Components publish events on an **event bus**; any other part of the application can listen without a reference to the component — loose coupling between components that do not know each other.
+
+Events do not replace callbacks. `onValueChange`, `onOpenChange` and the rest keep working exactly as before; the event is emitted right after the callback, from the same place:
+
+```text
+DatePicker ─┬─ onValueChange(date)                   (your callback, as before)
+            └─ eventBus: datepicker.state.onChange   (anyone can listen)
+```
+
+And events are not state: a store is never updated by an event unless your listener does it (see _State Management_).
+
+## Listen
+
+```ts
+import { eventBus } from '@ufisoft/ui';
+
+const unsubscribe = eventBus.on('datepicker.state.onChange', (payload, meta) => {
+  payload.value; // Date | null — typed from the event name
+  payload.previousValue; // Date | null
+  payload.source; // { id?, name?, data? } — which DatePicker
+  meta.timestamp; // when it happened
+});
+
+unsubscribe();
+```
+
+In a React component, `useEventListener` subscribes while the component is mounted:
+
+```tsx
+import { useEventListener } from '@ufisoft/ui';
+
+function ScheduleSummary() {
+  const [date, setDate] = useState<Date | null>(null);
+  useEventListener('datepicker.state.onChange', ({ value }) => setDate(value));
+  return <p>{date?.toDateString()}</p>;
+}
+```
+
+<Canvas of={EventStories.EmitAndListen} />
+
+## Tell instances apart: source
+
+Every payload has `source`: the component's `id` and `name` props, and its `eventData` prop — any value you choose, for example the record the control edits:
+
+```tsx
+<DatePicker name="publishDate" eventData={{ pageId: 42 }} />;
+
+eventBus.on('datepicker.state.onChange', ({ value, source }) => {
+  if (source.name === 'publishDate') schedule(source.data, value);
+});
+```
+
+`source.data` is `unknown`: narrow it before use.
+
+## Once, off and unsubscribe
+
+```ts
+eventBus.once('modal.state.onClose', () => focusSearch()); // only the next emission
+eventBus.off('modal.state.onClose', handler); // remove a listener added with on
+eventBus.onAny(({ name, payload }) => track(name, payload)); // every event, e.g. analytics
+```
+
+<Canvas of={EventStories.Once} />
+<Canvas of={EventStories.Unsubscribe} />
+
+## Typed payloads
+
+The payload type follows the event name. A wrong payload, a missing field or an unknown name is a TypeScript error:
+
+```ts
+eventBus.emit('datepicker.state.onChange', { value: newDate, previousValue: oldDate, source: {} }); // ✓
+eventBus.emit('datepicker.state.onChange', { value: newDate }); // ✗ previousValue and source missing
+eventBus.on('datepicker.state.onChnage', handler); // ✗ no such event
+```
+
+The types come from the event registry (`UfiEventMap`, `UfiEventName`, `UfiEventPayload<'…'>`), the same definitions the console and these docs use. See _Event Discovery_.
+
+## Naming convention
+
+```text
+<component>.<domain>.on<Event>
+
+datepicker.state.onChange      button.interaction.onClick
+modal.state.onOpen             dropdownmenu.interaction.onSelect
+```
+
+- **component** — the component's name in lower case without separators: `datepicker`, `daterangepicker`, `dropdownmenu`.
+- **domain** — `state` when a value or open state changed; `interaction` when the user did something that does not change the component's state (clicked, chose a menu item, removed a file).
+- **event** — `on` + a verb: `onChange`, `onOpen`, `onClose`, `onClear`, `onSelect`.
+
+`defineEvents` enforces the shape at compile time. Only real behaviour becomes an event: a native `Select` has no `onOpen`, because the browser does not report it; `Table` has no `onSort` until it can sort.
+
+## Composite components
+
+A component built from others emits only its own events: DatePicker does not also emit its calendar button's `iconbutton.interaction.onClick` or its popover's `popover.state.onOpen`, a Drawer emits `drawer.*` instead of `modal.*`, and Pagination emits `pagination.state.onChange` instead of a button click per page. Content you put inside (a Modal's footer buttons) still emits its own events.
+
+## Your own events
+
+Applications define events the same way and get the same types and logging on their own bus:
+
+```ts
+import { createEventBus, defineEvents, payload } from '@ufisoft/ui';
+
+const cmsEvents = defineEvents(
+  { component: 'PageEditor', prefix: 'pageeditor' },
+  {
+    'interaction.onPublish': {
+      description: 'The editor published a page.',
+      payload: payload<{ pageId: number; title: string }>(),
+      fields: { pageId: 'number — the page', title: 'string — its title' },
+      example: { pageId: 42, title: 'Pricing' },
+    },
+  },
+);
+
+export const cmsBus = createEventBus({ registry: cmsEvents });
+```
+
+<Canvas of={EventStories.ApplicationEvents} />
+
+## Debug logging
+
+In development every event is logged to the browser console as one collapsed group:
+
+```text
+▸ [UfiSoft Event] datepicker.state.onChange
+    The date changed: picked in the calendar, typed and committed (blur or Enter), or cleared.
+    payload: { value: Fri Oct 03 2026 …, previousValue: null, source: { name: 'publishDate' } }
+    time:    12:41:07.123
+    listen:  eventBus.on('datepicker.state.onChange', (payload) => { … })
+```
+
+- On by default when `process.env.NODE_ENV === 'development'`; off in tests.
+- `eventBus.setDebug(false)` turns it off (e.g. in a noisy screen), `createEventBus({ debug })` sets it per bus.
+- **Never in production**: the logging code sits behind `process.env.NODE_ENV !== 'production'`, which your bundler replaces, so minifiers remove it.
+
+<Canvas of={EventStories.DebugLogging} />
+
+## Server rendering and isolation
+
+`eventBus` is one shared instance. Components emit only from event handlers and effects, so nothing is emitted while rendering on the server. Do not subscribe at module scope in server code — that listener would stay for every request. For isolation (per request, per test, several apps on one page) give a subtree its own bus:
+
+```tsx
+import { createEventBus, EventBusProvider, eventRegistry } from '@ufisoft/ui';
+
+const bus = createEventBus({ registry: eventRegistry });
+
+<EventBusProvider bus={bus}>{children}</EventBusProvider>;
+```
+
+Components inside emit on `bus`; `useEventListener` listens on it too. `eventBus.clear()` removes every listener (tests).
+
+## API
+
+| Function                                 | Description                                                                |
+| ---------------------------------------- | -------------------------------------------------------------------------- |
+| `eventBus.emit(name, payload)`           | calls the listeners of `name`; a throwing listener is reported and skipped |
+| `eventBus.on(name, listener)`            | listens; returns the unsubscribe function; `listener(payload, meta)`       |
+| `eventBus.once(name, listener)`          | listens to the next emission only                                          |
+| `eventBus.off(name, listener)`           | removes a listener added with `on`                                         |
+| `eventBus.onAny(listener)`               | every event as `{ name, payload, timestamp }`                              |
+| `eventBus.setDebug(enabled)` / `clear()` | console logging on/off · remove all listeners                              |
+| `createEventBus({ registry?, debug? })`  | a new bus, typed by the registry (or `createEventBus<Map>()`)              |
+| `EventBusProvider`, `useEventBus()`      | give a subtree its own bus · read the current one                          |
+| `useEventListener(name, listener)`       | listen while a component is mounted                                        |

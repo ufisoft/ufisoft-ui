@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as TimePickerStories from './time-picker.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={TimePickerStories} />
 
@@ -51,6 +52,10 @@ Typed text becomes the value on blur or Enter. Common spellings work: `9:05`, `2
 <Canvas of={TimePickerStories.Turkish} />
 <Canvas of={TimePickerStories.WithDatePicker} />
 <Canvas of={TimePickerStories.InModal} />
+
+## Events
+
+<ComponentEvents component="TimePicker" />
 
 ## Accessibility
 

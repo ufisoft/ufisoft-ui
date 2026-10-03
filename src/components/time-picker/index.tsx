@@ -14,16 +14,21 @@ import {
   type Ref,
   type RefObject,
 } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import { useFormFieldContext } from '../form-field/use-form-field';
 import { Input, type InputSize } from '../input';
 import styles from './time-picker.module.css';
 
 export type TimePickerSize = InputSize;
 
-export interface TimePickerProps extends Omit<
-  ComponentProps<'input'>,
-  'size' | 'value' | 'defaultValue' | 'onChange' | 'type' | 'min' | 'max' | 'step'
-> {
+export interface TimePickerProps
+  extends
+    Omit<
+      ComponentProps<'input'>,
+      'size' | 'value' | 'defaultValue' | 'onChange' | 'type' | 'min' | 'max' | 'step'
+    >,
+    EventDataProps {
   /** Selected time as `HH:mm` (24-hour, like a native time input). `null` for no time. */
   value?: string | null;
   /** Initially selected time (uncontrolled), `HH:mm`. */
@@ -99,6 +104,7 @@ export function TimePicker({
   timeFormat,
   name,
   id,
+  eventData,
   className,
   ref,
   ...props
@@ -144,10 +150,17 @@ export function TimePicker({
       : options.filter((option) => simplify(option.label).startsWith(simplify(text)));
   const filtered = visible(inputValue);
 
+  const emit = useEmit();
+  const source = () => eventSource(id, name, eventData);
+
   function change(next: string | null) {
     if (next === selected) return;
     if (value === undefined) setInnerValue(next);
     onValueChange?.(next);
+    emit('timepicker.state.onChange', { value: next, previousValue: selected, source: source() });
+    if (next === null && selected !== null) {
+      emit('timepicker.state.onClear', { previousValue: selected, source: source() });
+    }
   }
 
   // Typed text becomes the value on blur or Enter; text that is not a time in range is undone.
@@ -176,6 +189,12 @@ export function TimePicker({
       onSelectedItemChange: ({ selectedItem: option }) => {
         if (option) change(option.value);
       },
+      // Downshift reports the close before the selection: take a picked option from the same change.
+      onIsOpenChange: ({ isOpen: open, selectedItem: option }) =>
+        emit(open ? 'timepicker.state.onOpen' : 'timepicker.state.onClose', {
+          value: option?.value ?? selected,
+          source: source(),
+        }),
       inputId,
       labelId: field?.labelId,
       stateReducer: (_state, { type, changes }) => {

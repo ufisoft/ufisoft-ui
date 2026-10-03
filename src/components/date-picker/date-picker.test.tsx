@@ -4,6 +4,7 @@ import { createRef, useState } from 'react';
 import { tr } from 'react-day-picker/locale';
 import { describe, expect, it, vi } from 'vitest';
 import { DatePicker, type DatePickerProps } from '.';
+import { eventBus } from '../../events/registry';
 import { FormDescription, FormField, FormLabel, FormMessage } from '../form-field';
 
 function Due(props: Partial<DatePickerProps>) {
@@ -189,5 +190,122 @@ describe('DatePicker', () => {
     const ref = createRef<HTMLInputElement>();
     render(<Due ref={ref} />);
     expect(ref.current).toBe(input());
+  });
+});
+
+describe('DatePicker events', () => {
+  function record() {
+    const events: { name: string; payload: unknown }[] = [];
+    eventBus.onAny(({ name, payload }) => events.push({ name, payload }));
+    return events;
+  }
+
+  it('emits datepicker.state.onChange with the value, previous value and source', async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    const listener = vi.fn();
+    eventBus.on('datepicker.state.onChange', listener);
+    render(
+      <Due
+        locale={tr}
+        name="due"
+        eventData={{ taskId: 7 }}
+        defaultValue={new Date(2026, 9, 3)}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    await user.clear(input());
+    await user.type(input(), '05.10.2026');
+    await user.tab();
+    // The existing callback keeps working next to the event.
+    expect(onValueChange).toHaveBeenLastCalledWith(new Date(2026, 9, 5));
+    expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith(
+      {
+        value: new Date(2026, 9, 5),
+        previousValue: new Date(2026, 9, 3),
+        source: { name: 'due', data: { taskId: 7 } },
+      },
+      { name: 'datepicker.state.onChange', timestamp: expect.any(Number) },
+    );
+  });
+
+  it('emits open, change and close for a calendar pick, and nothing from its inner parts', async () => {
+    const user = userEvent.setup();
+    const events = record();
+    render(<Due id="due" defaultValue={new Date(2026, 9, 3)} />);
+
+    await user.click(calendarButton());
+    await user.click(day(/October 10th, 2026/));
+    expect(events.map((event) => event.name)).toEqual([
+      'datepicker.state.onOpen',
+      'datepicker.state.onChange',
+      'datepicker.state.onClose',
+    ]);
+    expect(events[0]?.payload).toEqual({ value: new Date(2026, 9, 3), source: { id: 'due' } });
+    expect(events[2]?.payload).toEqual({ value: new Date(2026, 9, 10), source: { id: 'due' } });
+  });
+
+  it('emits onClose when the calendar is dismissed', async () => {
+    const user = userEvent.setup();
+    const events = record();
+    render(<Due />);
+
+    await user.click(calendarButton());
+    await user.keyboard('{Escape}');
+    expect(events.map((event) => event.name)).toEqual([
+      'datepicker.state.onOpen',
+      'datepicker.state.onClose',
+    ]);
+  });
+
+  it('emits onChange then onClear when the field is emptied', async () => {
+    const user = userEvent.setup();
+    const events = record();
+    render(<Due defaultValue={new Date(2026, 9, 3)} />);
+
+    await user.clear(input());
+    await user.tab();
+    expect(events).toEqual([
+      {
+        name: 'datepicker.state.onChange',
+        payload: { value: null, previousValue: new Date(2026, 9, 3), source: {} },
+      },
+      {
+        name: 'datepicker.state.onClear',
+        payload: { previousValue: new Date(2026, 9, 3), source: {} },
+      },
+    ]);
+  });
+
+  it('emits nothing when the value does not change', async () => {
+    const user = userEvent.setup();
+    const events = record();
+    render(<Due locale={tr} defaultValue={new Date(2026, 9, 3)} />);
+
+    await user.click(input());
+    await user.tab();
+    expect(events).toEqual([]);
+  });
+
+  it('reports the controlled value as previousValue', async () => {
+    const user = userEvent.setup();
+    const listener = vi.fn();
+    eventBus.on('datepicker.state.onChange', listener);
+    function Controlled() {
+      const [date, setDate] = useState<Date | null>(new Date(2026, 9, 1));
+      return <Due locale={tr} value={date} onValueChange={setDate} />;
+    }
+    render(<Controlled />);
+
+    await user.clear(input());
+    await user.type(input(), '02.10.2026{Enter}');
+    await user.clear(input());
+    await user.type(input(), '04.10.2026{Enter}');
+    expect(listener.mock.calls.map(([payload]) => payload.previousValue)).toEqual([
+      new Date(2026, 9, 1),
+      new Date(2026, 9, 2),
+    ]);
   });
 });

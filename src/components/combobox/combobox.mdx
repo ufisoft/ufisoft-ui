@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as ComboboxStories from './combobox.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={ComboboxStories} />
 
@@ -51,6 +52,10 @@ Leaving the field with half-typed text shows the current selection again. To cle
 <Canvas of={ComboboxStories.Controlled} />
 <Canvas of={ComboboxStories.Translated} />
 <Canvas of={ComboboxStories.InModal} />
+
+## Events
+
+<ComponentEvents component="Combobox" />
 
 ## Accessibility
 

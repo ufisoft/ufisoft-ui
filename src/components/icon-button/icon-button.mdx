@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as IconButtonStories from './icon-button.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={IconButtonStories} />
 
@@ -37,6 +38,10 @@ A square button that shows only an icon. Built on `Button`, so it shares its var
 ## States
 
 <Canvas of={IconButtonStories.Loading} />
+
+## Events
+
+<ComponentEvents component="IconButton" />
 
 ## Accessibility
 

@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as CheckboxStories from './checkbox.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={CheckboxStories} />
 
@@ -38,6 +39,10 @@ Toggles a single option on or off, or selects any number of options from a set.
 ## Edge cases
 
 <Canvas of={CheckboxStories.LongLabel} />
+
+## Events
+
+<ComponentEvents component="Checkbox" />
 
 ## Accessibility
 

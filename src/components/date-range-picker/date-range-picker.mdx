@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as DateRangePickerStories from './date-range-picker.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={DateRangePickerStories} />
 
@@ -53,6 +54,10 @@ In the calendar, the first click starts a new range and the second click ends it
 <Canvas of={DateRangePickerStories.Turkish} />
 <Canvas of={DateRangePickerStories.Controlled} />
 <Canvas of={DateRangePickerStories.InModal} />
+
+## Events
+
+<ComponentEvents component="DateRangePicker" />
 
 ## Accessibility
 

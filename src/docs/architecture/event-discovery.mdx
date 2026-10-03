@@ -1,0 +1,52 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { EventCatalog } from '../blocks/event-docs';
+
+<Meta title="Architecture/Event Discovery" />
+
+# Event Discovery
+
+Which events can you listen to? Two ways to find out, both fed by the same **event registry**:
+
+- **At runtime — the browser console.** Use a component in development and its events appear as `[UfiSoft Event] <name>`, with the payload and the `eventBus.on(…)` line to listen to it.
+- **In the docs — this page.** Every event of every component, below; each component page lists its own under _Events_. In any story, the _Actions_ panel shows the events it emits.
+
+## Event registry
+
+Each component that emits events defines them next to its code, in `src/components/<name>/events.ts`:
+
+```ts
+export const datePickerEvents = defineEvents(
+  { component: 'DatePicker', prefix: 'datepicker' },
+  {
+    'state.onChange': {
+      description: 'The date changed: picked in the calendar, typed and committed, or cleared.',
+      payload: payload<{ value: Date | null; previousValue: Date | null; source: EventSource }>(),
+      fields: { value: 'Date | null — the new date…', previousValue: '…', source: sourceField },
+      example: {
+        value: new Date(2026, 9, 3),
+        previousValue: null,
+        source: { name: 'publishDate' },
+      },
+    },
+  },
+);
+```
+
+`src/events/registry.ts` combines them into `eventRegistry`. From that one definition come:
+
+```text
+Event registry
+  ├── Types           UfiEventMap: payload type per event name (emit / on are checked)
+  ├── Console logger  description shown with every logged event
+  ├── Event Discovery this catalog
+  ├── Playground      live log of the same events
+  └── Component docs  the Events section of each component page
+```
+
+`fields` must list exactly the payload's keys and `example` must match the payload type — the compiler checks both, so the docs cannot drift from the code. The registry is exported (`eventRegistry`) for your own tooling, e.g. an analytics allow-list.
+
+**Adding events to a component:** define them in its `events.ts`, add one spread line in `src/events/registry.ts`, emit with the internal `useEmit()` hook where the callback is called, add a `## Events` section with `<ComponentEvents component="…" />` to its docs, and test the emitted names and payloads.
+
+## All events
+
+<EventCatalog />

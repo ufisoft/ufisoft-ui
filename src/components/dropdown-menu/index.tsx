@@ -3,13 +3,16 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
 import { clsx } from 'clsx';
 import type { ComponentProps, ReactElement, ReactNode } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import styles from './dropdown-menu.module.css';
 
 export type DropdownMenuSide = 'top' | 'right' | 'bottom' | 'left';
 export type DropdownMenuAlign = 'start' | 'center' | 'end';
 export type DropdownMenuItemTone = 'default' | 'danger';
 
-export interface DropdownMenuProps extends Omit<ComponentProps<'div'>, 'content' | 'children'> {
+export interface DropdownMenuProps
+  extends Omit<ComponentProps<'div'>, 'content' | 'children'>, EventDataProps {
   /** The menu: `DropdownMenuItem`, `DropdownMenuSeparator` and `DropdownMenuLabel`. */
   content: ReactNode;
   /** The trigger: one button-like element that accepts `ref` and spreads props, e.g. `Button`. */
@@ -34,12 +37,24 @@ export function DropdownMenu({
   open,
   defaultOpen,
   onOpenChange,
+  eventData,
   className,
   ...props
 }: DropdownMenuProps) {
+  const emit = useEmit();
   return (
     // Non-modal: no scroll lock and no aria-hidden on the rest of the page, like Popover.
-    <RadixMenu.Root open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange} modal={false}>
+    <RadixMenu.Root
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={(next) => {
+        onOpenChange?.(next);
+        emit(next ? 'dropdownmenu.state.onOpen' : 'dropdownmenu.state.onClose', {
+          source: eventSource(props.id, undefined, eventData),
+        });
+      }}
+      modal={false}
+    >
       <RadixMenu.Trigger asChild>{children}</RadixMenu.Trigger>
       {/* No portal: a portal to <body> would sit behind a modal <dialog> in the top layer. */}
       <RadixMenu.Content
@@ -59,7 +74,8 @@ export function DropdownMenu({
   );
 }
 
-export interface DropdownMenuItemProps extends Omit<ComponentProps<'div'>, 'onSelect'> {
+export interface DropdownMenuItemProps
+  extends Omit<ComponentProps<'div'>, 'onSelect'>, EventDataProps {
   /** Called when the item is chosen by click, Enter or Space. The menu then closes. */
   onSelect?: (event: Event) => void;
   disabled?: boolean;
@@ -70,10 +86,25 @@ export interface DropdownMenuItemProps extends Omit<ComponentProps<'div'>, 'onSe
   textValue?: string;
 }
 
-export function DropdownMenuItem({ tone = 'default', className, ...props }: DropdownMenuItemProps) {
+export function DropdownMenuItem({
+  tone = 'default',
+  onSelect,
+  eventData,
+  className,
+  ...props
+}: DropdownMenuItemProps) {
+  const emit = useEmit();
   return (
     <RadixMenu.Item
       className={clsx(styles.item, tone === 'danger' && styles.danger, className)}
+      onSelect={(event) => {
+        onSelect?.(event);
+        emit('dropdownmenu.interaction.onSelect', {
+          label:
+            props.textValue ?? (typeof props.children === 'string' ? props.children : undefined),
+          source: eventSource(props.id, undefined, eventData),
+        });
+      }}
       {...props}
     />
   );

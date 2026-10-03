@@ -1,0 +1,104 @@
+import { Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as StateStories from './state-management.stories';
+
+<Meta of={StateStories} />
+
+# State Management
+
+A **store** holds application state — values that _are_ true right now, like the selected publish date or the current page of a list — and tells subscribers when they change. Components read it through `useStore`; anything else (plain functions, tests, other frameworks) through `subscribe`.
+
+State is not an event. `selectedDate = 2026-10-03` is a state; `datepicker.state.onChange` is an event — something that _happened_. A store never emits events on its own, and events never change a store unless your code does it. See _Event System_.
+
+The core (`createStore`) does not depend on React; `useStore` is the React adapter.
+
+## Create a store
+
+```ts
+import { createStore } from '@ufisoft/ui';
+
+interface PageFilters {
+  category: string;
+  page: number;
+  publishDate: Date | null;
+}
+
+export const filters = createStore<PageFilters>({ category: 'all', page: 1, publishDate: null });
+```
+
+The type comes from the initial state or the type argument. Create stores in your application — the library ships none. On the server (Next.js), create a store per request (e.g. in a provider component), never one shared module instance for user data.
+
+## Read and update
+
+```ts
+filters.getState(); // { category: 'all', page: 1, publishDate: null }
+
+filters.setState({ category: 'news' }); // merge keys
+filters.setState((state) => ({ page: state.page + 1 })); // from the current state
+filters.setState({ unknown: true }); // TypeScript error: not a key of PageFilters
+```
+
+`setState` makes a new state object and leaves the previous one untouched. If no value changed (`Object.is`), nothing happens: no new object and no notification.
+
+<Canvas of={StateStories.ReadAndUpdate} />
+
+## Subscribe and unsubscribe
+
+```ts
+const unsubscribe = filters.subscribe((state, previousState) => {
+  if (state.page !== previousState.page) loadPage(state.page);
+});
+
+unsubscribe(); // stop listening
+```
+
+Subscribers run after each change, in the order they subscribed. In React, subscribe in an effect and return the unsubscribe function as its cleanup — or use `useStore`, which does that for you.
+
+<Canvas of={StateStories.Subscribe} />
+
+## React: useStore and selectors
+
+```tsx
+import { shallowEqual, useStore } from '@ufisoft/ui';
+
+const state = useStore(filters); // whole state: renders after every change
+const category = useStore(filters, (s) => s.category); // renders only when category changes
+const { page, category } = useStore(
+  filters,
+  (s) => ({ page: s.page, category: s.category }),
+  shallowEqual, // the selector builds a new object each time: compare its fields
+);
+```
+
+`useStore` is built on React's `useSyncExternalStore`, so it is safe with concurrent rendering and renders the same state on the server and the first client render. With a selector, the component renders only when the selected value changes — in the example, _Next page_ renders the left box only.
+
+<Canvas of={StateStories.Selectors} />
+
+Use a selector whenever a component needs part of the state. Selectors may depend on props (`(s) => s.items[index]`).
+
+## Controlled and uncontrolled components
+
+UfiSoft UI form components work both ways:
+
+- **Uncontrolled** (`defaultValue`): the component keeps its own state. Use it when nothing else on the page needs the value until submit.
+- **Controlled** (`value` + `onValueChange`): the value lives outside — in `useState` or in a store. Use a store when several distant components share the value.
+
+```tsx
+const date = useStore(filters, (s) => s.publishDate);
+
+<DatePicker value={date} onValueChange={(publishDate) => filters.setState({ publishDate })} />;
+```
+
+<Canvas of={StateStories.ControlledComponents} />
+
+## API
+
+| Function                              | Returns                                                      |
+| ------------------------------------- | ------------------------------------------------------------ |
+| `createStore(initialState)`           | `{ getState, setState, subscribe }`                          |
+| `store.setState(partial \| updater)`  | nothing; notifies subscribers when a value changed           |
+| `store.subscribe(listener)`           | the unsubscribe function; `listener(state, previousState)`   |
+| `useStore(store)`                     | the whole state                                              |
+| `useStore(store, selector, isEqual?)` | the selected value; `isEqual` defaults to `Object.is`        |
+| `shallowEqual(a, b)`                  | one-level comparison for selectors that build objects/arrays |
+
+There is deliberately no middleware, no actions/reducers layer and no global store: a store is a value with three functions.

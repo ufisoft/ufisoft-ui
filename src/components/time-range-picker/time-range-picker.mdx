@@ -1,5 +1,6 @@
 import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
 import * as TimeRangePickerStories from './time-range-picker.stories';
+import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 <Meta of={TimeRangePickerStories} />
 
@@ -50,6 +51,10 @@ Each end bounds the other: the start's latest time is the end, and the end's lis
 <Canvas of={TimeRangePickerStories.Turkish} />
 <Canvas of={TimeRangePickerStories.Controlled} />
 <Canvas of={TimeRangePickerStories.InModal} />
+
+## Events
+
+<ComponentEvents component="TimeRangePicker" />
 
 ## Accessibility
 

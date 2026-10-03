@@ -21,10 +21,12 @@ Thanks for helping build the UfiSoft UI Kit. This guide covers how to add or cha
    | `<name>.test.tsx`    | Behaviour tests                 |
    | `<name>.stories.tsx` | Stories                         |
    | `<name>.mdx`         | Documentation page              |
+   | `events.ts`          | Event definitions (if it emits) |
 
    Add `use-<name>.ts`, `<name>.types.ts` etc. only when they clearly help. Closely related parts of one component family (e.g. `FormField`, `FormLabel`, `FormMessage`) share one folder.
 
 2. **Implement** following the API rules below.
+   - **Events**, only for real state changes or user actions: define them in `events.ts` with `defineEvents`, add one spread line to `src/events/registry.ts`, emit with the internal `useEmit()` right after the matching callback, and wrap UfiSoft components used inside (a calendar button, an inner Modal) in `<EventScope silent>` so only this component emits. Test them in `<name>.events.test.tsx`. See Storybook _Architecture › Event System_.
 3. **Style** with semantic tokens only.
 4. **Write tests** for user-visible behaviour.
 5. **Write stories**: default, variants, sizes, states, edge cases, accessibility.
@@ -46,6 +48,7 @@ Thanks for helping build the UfiSoft UI Kit. This guide covers how to add or cha
 - Form controls call `useFormField(props)` to join a `FormField`.
 - Add `'use client'` at the top of modules that use hooks, context or browser APIs.
 - No domain names, no app-specific props, no dependency on form libraries or routers.
+- Events never replace callbacks: emit next to them, from the same place. Name them `<component>.<state|interaction>.on<Event>`; every payload has `source` (`id`, `name` and the `eventData` prop — components that emit take `EventDataProps`). No events for keystroke-level input or values that may be sensitive (`Input`, `Textarea`), and none invented to fill the pattern.
 
 ## Styling rules
 
@@ -95,6 +98,8 @@ One sentence: what it does.
 
 ## Examples (real-world compositions)
 
+## Events (<ComponentEvents component="Name" /> — only for components that emit events)
+
 ## Accessibility (semantics, keyboard, ARIA, pitfalls)
 
 ## Do / Don't (table)
@@ -113,6 +118,7 @@ A component change is done when:
 - [ ] Styles use semantic tokens only; focus, hover, disabled and other states are styled.
 - [ ] It works with keyboard only, and the Storybook Accessibility panel shows no violations.
 - [ ] Tests cover its behaviour and pass.
+- [ ] Its events, if it has any, are in the registry, emitted next to the callbacks and tested.
 - [ ] Stories show default, variants, sizes, states and edge cases.
 - [ ] The MDX page follows the template.
 - [ ] `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build` pass.

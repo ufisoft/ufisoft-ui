@@ -1,13 +1,17 @@
+'use client';
+
 import { Slot } from '@radix-ui/react-slot';
 import { clsx } from 'clsx';
 import type { ComponentProps, MouseEvent } from 'react';
+import { eventSource, type EventDataProps } from '../../events/define-events';
+import { useEmit } from '../../events/react';
 import { Spinner } from '../spinner';
 import styles from './button.module.css';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-export interface ButtonProps extends ComponentProps<'button'> {
+export interface ButtonProps extends ComponentProps<'button'>, EventDataProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   /**
@@ -31,13 +35,24 @@ export function Button({
   className,
   children,
   onClick,
+  eventData,
   ...props
 }: ButtonProps) {
   const classes = clsx(styles.button, styles[variant], styles[size], className);
+  const emit = useEmit();
+  const emitClick = () =>
+    emit('button.interaction.onClick', { source: eventSource(props.id, props.name, eventData) });
 
   if (asChild) {
     return (
-      <Slot className={classes} onClick={onClick} {...props}>
+      <Slot
+        className={classes}
+        onClick={(event: MouseEvent<HTMLButtonElement>) => {
+          onClick?.(event);
+          if (!event.currentTarget.matches('[aria-disabled="true"]')) emitClick();
+        }}
+        {...props}
+      >
         {children}
       </Slot>
     );
@@ -51,6 +66,7 @@ export function Button({
       return;
     }
     onClick?.(event);
+    emitClick();
   };
 
   return (
