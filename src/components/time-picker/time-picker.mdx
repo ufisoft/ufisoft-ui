@@ -1,0 +1,73 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as TimePickerStories from './time-picker.stories';
+
+<Meta of={TimePickerStories} />
+
+# TimePicker
+
+A time field: type any time or pick one from a list of suggested times.
+
+<Canvas of={TimePickerStories.Default} />
+
+## When to use
+
+- Choosing a time of day: meeting start, opening hours, reminders. Pair it with `DatePicker` for a date and time.
+
+## When not to use
+
+- A duration (“1 h 30 min”) — use `Input` with a clear unit, or `Select` for fixed durations.
+- A handful of fixed slots that must not be changed (“Morning / Afternoon”) — use `Radio` or `Select`.
+- A full timestamp from another system — show it as text, don't make it editable.
+
+## Props
+
+<ArgTypes of={TimePickerStories} />
+
+The value is a `HH:mm` string in 24-hour time, like a native `<input type="time">`, or `null` when empty. `min` and `max` use the same format. Use `value` + `onValueChange` (controlled) or `defaultValue` (uncontrolled). Native input props and `ref` go to the input; `className` goes to the wrapper. With `name`, a hidden input submits the `HH:mm` value.
+
+The shown format is the locale's short time: `h:mm a` by default, `HH:mm` for `tr` (from `date-fns/locale` or `react-day-picker/locale`). `timeFormat` takes any [date-fns pattern](https://date-fns.org/docs/format).
+
+`step` (minutes, default 30) only sets the suggested times; users can still type any time inside `min`/`max`.
+
+Behaviour and ARIA come from [Downshift](https://www.downshift-js.com/use-combobox); the list is positioned with [Floating UI](https://floating-ui.com) like `Combobox`'s.
+
+## Sizes
+
+<Canvas of={TimePickerStories.Sizes} />
+
+## States
+
+<Canvas of={TimePickerStories.WithValue} />
+<Canvas of={TimePickerStories.BusinessHours} />
+<Canvas of={TimePickerStories.Invalid} />
+<Canvas of={TimePickerStories.Disabled} />
+
+Typed text becomes the value on blur or Enter. Common spellings work: `9:05`, `21.45`, `0815`, `7 pm`. Text that is not a time, or falls outside `min`/`max`, is replaced by the current value again; an empty field clears it. Typing narrows the list (“9” shows 9:00, 9:30…); when nothing matches, the list closes and the typed time still counts.
+
+## Examples
+
+<Canvas of={TimePickerStories.InFormField} />
+<Canvas of={TimePickerStories.Turkish} />
+<Canvas of={TimePickerStories.WithDatePicker} />
+<Canvas of={TimePickerStories.InModal} />
+
+## Accessibility
+
+- The input has `role="combobox"` with `aria-expanded`, `aria-controls` and `aria-activedescendant`; the list is a `listbox` of `option`s.
+- ArrowDown/ArrowUp open the list and move through times, starting at the current value; Home/End jump; Enter picks the highlighted time, or takes the typed text when nothing is highlighted.
+- Escape closes the list and keeps the value. On a closed list Escape is left to the surroundings, so a `Modal` closes as usual.
+- Every TimePicker needs a label: a `FormField` + `FormLabel`, or `aria-label`.
+
+## Do / Don't
+
+| Do                                                            | Don't                                                          |
+| ------------------------------------------------------------- | -------------------------------------------------------------- |
+| Set `locale` so users see 24-hour or AM/PM as they expect.    | Mix a Turkish UI with the default `h:mm a`.                    |
+| Choose a `step` that fits the task (15 min for appointments). | Use `step={1}`: a list of 1,440 times helps nobody.            |
+| Use `min`/`max` for opening hours.                            | Treat `step` as validation — typed off-step times are allowed. |
+
+## Related components
+
+- `DatePicker` — the date part of a date and time.
+- `Combobox` — choose one of many listed values.
+- `FormField` — label, description and validation wiring.
