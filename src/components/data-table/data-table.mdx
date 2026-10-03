@@ -6,7 +6,7 @@ import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 # DataTable
 
-A data table for admin screens: sorting, search, column filters, pages, row selection and actions, column management, row reordering and virtualization, on the client or the server.
+A data table for admin screens: sorting, search, column filters, pages, row selection and actions, column management, row reordering, virtualization and inline editing, on the client or the server.
 
 <Canvas of={DataTableStories.Default} />
 
@@ -104,6 +104,20 @@ Rows move among the rows shown (this page, these filter results). The handles ar
 
 **Loading more.** Without paging, `hasMore` with `onLoadMore` adds a “Load more” button, and with `maxHeight` or `virtualized` asks again by itself when the view comes within one screen of the end (once per batch). Set `loading` while fetching and append the rows to `data`.
 
+**Inline editing.** A column with `editor` becomes editable when the table has `onCellEdit`. The editor's `type` decides the control and the value: `text` (a string; `maxLength`), `number` (a number or null; `min`, `max`, a decimal comma is fine), `select` (an option's value or null; `options`) and `date` (a Date or null; `min`, `max`, `dateLocale`). Each takes `required` and `validate(value, row)`, which returns an error message. `editable(row)` turns editing off for some rows.
+
+Enter, F2, typing or a double-click opens the editor in the cell; Enter saves, Tab saves and moves to the next cell, leaving the cell saves, Escape cancels. A value that did not change is not saved. `onCellEdit` receives `{ row, rowId, columnId, value, previousValue }` — update `data` to show the new value. Return or resolve with a message to keep the editor open with it (“That name is taken”); a rejected promise shows “Could not save”. While the promise runs, the editor is read-only and shows a spinner.
+
+```tsx
+onCellEdit={async ({ rowId, columnId, value }) => {
+  const result = await api.updateUser(rowId, { [columnId]: value });
+  if (!result.ok) return result.message;
+  setUsers((users) => users.map((u) => (String(u.id) === rowId ? result.user : u)));
+}}
+```
+
+**Keyboard grid.** With an editable column — or `cellNavigation` without one — the table follows the ARIA grid pattern: it is one tab stop, and the arrow keys, Home / End, Ctrl+Home / Ctrl+End and PageUp / PageDown move between cells, headers included. A cell whose only control is a button, link or checkbox gets focus on that control (Space toggles a checkbox, Enter opens a menu); a cell with several controls or a field gets focus itself, Enter or F2 moves into its controls, Tab cycles them and Escape returns to the cell.
+
 **State.** Sort, filters, search, page and page size each work controlled (`sort` + `onSortChange`, `filters` + `onFiltersChange`, `search` + `onSearchChange`) or uncontrolled (`defaultSort`, `defaultFilters`, `defaultSearch`). A new sort, filter, search or page size goes back to page 1. Keep the query in the URL or a store (`createStore`) to restore a view.
 
 **Labels.** `labels` translates every text, including the range (“1–10 of 245”) and the sort description; `locale` sets text sorting and number formatting.
@@ -118,6 +132,8 @@ Rows move among the rows shown (this page, these filter results). The handles ar
 <Canvas of={DataTableStories.RowReorder} />
 <Canvas of={DataTableStories.Virtualized} />
 <Canvas of={DataTableStories.InfiniteLoading} />
+<Canvas of={DataTableStories.InlineEditing} />
+<Canvas of={DataTableStories.KeyboardGrid} />
 <Canvas of={DataTableStories.MultiSort} />
 <Canvas of={DataTableStories.Compact} />
 <Canvas of={DataTableStories.StickyHeader} />
@@ -161,25 +177,30 @@ While `loading`, the table is marked busy and the footer says “Loading…”. 
 - Each row's drag handle is a button named “Reorder Ayşe Kaya” and described by the keyboard instructions. Picking up, each move (“Ayşe Kaya: position 3 of 10.”), the drop and a cancel are announced in a status region; leaving the handle cancels.
 - Virtualized, the table has `aria-rowcount` (all rows plus the header) and each rendered row its `aria-rowindex`, so screen readers report positions in the whole table. Spacer rows are hidden from them. Rows that are not rendered cannot be reached with Tab — use search and filters to find a row, and paging when every row must be reachable by keyboard.
 - “Load more” is a real button, so loading never depends on scrolling.
+- With editing or `cellNavigation`, the table has `role="grid"` and its data cells `role="gridcell"`. Only one cell is in the Tab order; focus stays visible on the cell. A grid without editors is `aria-readonly`; in an editable grid, cells that cannot be edited are `aria-readonly`, and editable cells are described as “Press Enter to edit.”
+- The editor is named after the column and row (“Edit Email for Ayşe Kaya”). A validation or save error is announced (`role="alert"`), marks the field invalid and describes it. While saving, the editor is busy and read-only, so focus stays in it. After saving or cancelling, focus returns to the cell.
+- Popups opened from a cell (filter, menus, calendar) keep their own keys; the grid's arrow keys do not reach them.
 - `onRowClick` is a pointer shortcut only: rows are not focusable, so keep a link or a row action that does the same.
 - When filters or search leave no rows, the empty message says so and offers a button that clears them.
 - Shift+click has no keyboard equivalent beyond Shift+Enter in most browsers — offer a preset view (as in the controlled example) when a multi-column order matters.
 
 ## Do / Don't
 
-| Do                                                           | Don't                                                    |
-| ------------------------------------------------------------ | -------------------------------------------------------- |
-| Set `getRowId` to the record id.                             | Rely on the index when rows sort, page or get removed.   |
-| Use `mode="server"` for large or remote data.                | Load 10,000 rows into the browser to sort them.          |
-| Give actions columns a visible label and real buttons/links. | Make the whole row clickable as the only way to open it. |
-| Keep the query in the URL for shareable views.               | Reset the user's sort on every data refresh.             |
-| Add filters to the columns users actually narrow by.         | Put a filter on every column.                            |
-| Confirm destructive bulk actions, then `clearSelection()`.   | Delete hundreds of rows on one click with no undo.       |
-| Pair `onRowClick` with a link or a row action.               | Hide the only way to open a record behind a row click.   |
-| Pin the column that identifies a row (name, number).         | Pin so many columns that nothing is left to scroll.      |
-| Give `storageKey` a name unique to the screen.               | Share one key between tables with different columns.     |
-| Save the new order in `onRowReorder`, then update `data`.    | Offer reordering on a sorted view.                       |
-| Virtualize long lists without paging; keep search at hand.   | Virtualize a 20-row page.                                |
+| Do                                                                  | Don't                                                           |
+| ------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Set `getRowId` to the record id.                                    | Rely on the index when rows sort, page or get removed.          |
+| Use `mode="server"` for large or remote data.                       | Load 10,000 rows into the browser to sort them.                 |
+| Give actions columns a visible label and real buttons/links.        | Make the whole row clickable as the only way to open it.        |
+| Keep the query in the URL for shareable views.                      | Reset the user's sort on every data refresh.                    |
+| Add filters to the columns users actually narrow by.                | Put a filter on every column.                                   |
+| Confirm destructive bulk actions, then `clearSelection()`.          | Delete hundreds of rows on one click with no undo.              |
+| Pair `onRowClick` with a link or a row action.                      | Hide the only way to open a record behind a row click.          |
+| Pin the column that identifies a row (name, number).                | Pin so many columns that nothing is left to scroll.             |
+| Give `storageKey` a name unique to the screen.                      | Share one key between tables with different columns.            |
+| Save the new order in `onRowReorder`, then update `data`.           | Offer reordering on a sorted view.                              |
+| Virtualize long lists without paging; keep search at hand.          | Virtualize a 20-row page.                                       |
+| Validate in `validate`, and return server errors from `onCellEdit`. | Accept any value and fail silently on the server.               |
+| Make only the fields users really change editable.                  | Combine double-click editing with `onRowClick` on the same row. |
 
 ## Related components
 

@@ -83,11 +83,15 @@ import {
 import { useRowDrag, type RowDropTarget } from './use-row-drag';
 import { useRowHeights, useVirtualRows } from './use-virtual-rows';
 import { dropIndex, renderedRows, type DataTableDropPosition } from './virtual';
+import { CellEditor } from './cell-editor';
+import { draftOf, parseEdit, sameValue, type DataTableCellEditor, type EditDraft } from './editing';
+import { headerRow, useGridNavigation, type GridCell } from './use-grid-navigation';
 
 export type { DataTableSort, DataTableSortDirection } from './sorting';
 export type { DataTableSelection } from './selection';
 export type { DataTableColumnPin, DataTableColumnState } from './columns';
 export type { DataTableDropPosition } from './virtual';
+export type { DataTableCellEditor } from './editing';
 export type {
   DataTableColumnFilter,
   DataTableFilter,
@@ -136,6 +140,10 @@ export interface DataTableColumn<T> {
   hidden?: boolean;
   /** Starts pinned to the table's start or end side. */
   pinned?: DataTableColumnPin;
+  /** Makes the column's cells editable inline (with `onCellEdit`); the type decides the control. */
+  editor?: DataTableCellEditor<T>;
+  /** With `editor`: whether a row's cell can be edited. Defaults to true. */
+  editable?: (row: T) => boolean;
 }
 
 /** Everything a server needs to fetch one page: sorting, filters, search and pagination. */
@@ -194,6 +202,20 @@ export interface DataTableRowReorder<T> {
   fromIndex: number;
   toIndex: number;
 }
+
+/** What `onCellEdit` receives. `value` is a string, number, Date or null, by editor type. */
+export interface DataTableCellEdit<T> {
+  row: T;
+  rowId: string;
+  columnId: string;
+  value: unknown;
+  previousValue: unknown;
+}
+
+/** `onCellEdit`'s answer: nothing when saved, or an error message to show in the cell. */
+// void: a handler that only updates state returns nothing, and that means "saved".
+// eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+export type DataTableCellEditResult = void | string | null | undefined;
 
 export interface DataTableLabels {
   /** Announced while `loading`. */
@@ -274,6 +296,15 @@ export interface DataTableLabels {
   rowDragCancelled: (row: string) => string;
   /** Infinite loading. */
   loadMore: string;
+  /** Inline editing. */
+  editCell: (column: string, row: string) => string;
+  editHint: string;
+  required: string;
+  invalidNumber: string;
+  numberMin: (min: number) => string;
+  numberMax: (max: number) => string;
+  saving: string;
+  saveFailed: string;
 }
 
 export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children'>, EventDataProps {
@@ -381,6 +412,19 @@ export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children
   hasMore?: boolean;
   onLoadMore?: () => void;
 
+  /**
+   * Saves an inline edit. Return (or resolve with) an error message to keep the editor open with
+   * it; a rejected promise shows `labels.saveFailed`. Update `data` to show the new value.
+   */
+  onCellEdit?: (
+    change: DataTableCellEdit<T>,
+  ) => DataTableCellEditResult | Promise<DataTableCellEditResult>;
+  /**
+   * Arrow keys move between cells (the ARIA grid pattern) and the table is one tab stop. On by
+   * default when a column has an `editor`.
+   */
+  cellNavigation?: boolean;
+
   /** Adds a handle to each header's edge: drag it, or focus it and use the arrow keys. */
   resizableColumns?: boolean;
   /** Headers can be dragged to reorder columns. The column chooser does the same by keyboard. */
@@ -476,6 +520,14 @@ function defaultLabels(locale: string | undefined): DataTableLabels {
     rowDropped: (row, position, count) => `Dropped ${row} at position ${position} of ${count}.`,
     rowDragCancelled: (row) => `Reordering cancelled. ${row} is back in its place.`,
     loadMore: 'Load more',
+    editCell: (column, row) => `Edit ${column} for ${row}`,
+    editHint: 'Press Enter to edit.',
+    required: 'Required',
+    invalidNumber: 'Enter a number',
+    numberMin: (min) => `Enter ${number.format(min)} or more`,
+    numberMax: (max) => `Enter ${number.format(max)} or less`,
+    saving: 'Saving…',
+    saveFailed: 'Could not save. Try again.',
   };
 }
 
@@ -536,6 +588,8 @@ export function DataTable<T>({
   estimatedRowHeight,
   overscan = 8,
   hasMore = false,
+  onCellEdit,
+  cellNavigation,
   onLoadMore,
   resizableColumns = false,
   reorderableColumns = false,
@@ -766,9 +820,92 @@ export function DataTable<T>({
 
   // A focused or dragged row stays rendered when it scrolls out of view.
   const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
-  const keep = [focusedRowId, rowDrag.drag?.id, rowDrag.drag?.target?.id].flatMap((id) =>
-    id ? [visibleIds.indexOf(id)] : [],
-  );
+  // Inline editing and the grid keyboard model.
+  const canEdit = onCellEdit !== undefined && columns.some((column) => column.editor);
+  const grid = cellNavigation ?? canEdit;
+  const gridCols = [
+    ...(reorderableRows ? ['__reorder'] : []),
+    ...(selectable ? ['__select'] : []),
+    ...(renderDetail !== undefined ? ['__detail'] : []),
+    ...shown.map(({ column }) => column.id),
+    ...(rowActions.length > 0 ? ['__actions'] : []),
+  ];
+  const [editing, setEditing] = useState<{
+    rowId: string;
+    columnId: string;
+    typed: string | null;
+    error: string | null;
+    saving: boolean;
+  } | null>(null);
+  const editableCell = (row: T, column: DataTableColumn<T>) =>
+    canEdit && column.editor !== undefined && (column.editable?.(row) ?? true);
+  const rowById = (id: string) => {
+    const index = visibleIds.indexOf(id);
+    return index < 0 ? undefined : (visible[index] as T);
+  };
+
+  const gridNavigation = useGridNavigation({
+    enabled: grid,
+    tableRef,
+    rows: [headerRow, ...visibleIds],
+    cols: gridCols,
+    onEdit: (cell, typed) => startEdit(cell, typed),
+  });
+
+  function startEdit(cell: GridCell, typed: string | null) {
+    const row = rowById(cell.row);
+    const column = columnById.get(cell.col);
+    if (!row || !column || !editableCell(row, column)) return;
+    setEditing({ rowId: cell.row, columnId: cell.col, typed, error: null, saving: false });
+  }
+
+  function endEdit(cell: GridCell, move: -1 | 0 | 1) {
+    setEditing(null);
+    const index = gridCols.indexOf(cell.col) + move;
+    const col = gridCols[Math.min(Math.max(index, 0), gridCols.length - 1)] ?? cell.col;
+    gridNavigation.focusCell({ row: cell.row, col });
+  }
+
+  async function commitEdit(draft: EditDraft, move: -1 | 0 | 1) {
+    if (!editing || editing.saving) return;
+    const cell = { row: editing.rowId, col: editing.columnId };
+    const row = rowById(cell.row);
+    const column = columnById.get(cell.col);
+    if (!row || !column?.editor) return setEditing(null);
+    const parsed = parseEdit(column.editor, draft, row, labels);
+    if ('error' in parsed) return setEditing({ ...editing, error: parsed.error });
+    const previousValue = column.value?.(row);
+    if (sameValue(parsed.value, previousValue)) return endEdit(cell, move);
+    setEditing({ ...editing, error: null, saving: true });
+    let error: string | null = null;
+    try {
+      error =
+        (await onCellEdit?.({
+          row,
+          rowId: cell.row,
+          columnId: cell.col,
+          value: parsed.value,
+          previousValue,
+        })) || null;
+    } catch {
+      error = labels.saveFailed;
+    }
+    if (error) return setEditing({ ...editing, error, saving: false });
+    emit('datatable.interaction.onCellEdit', {
+      rowId: cell.row,
+      columnId: cell.col,
+      source: source(),
+    });
+    endEdit(cell, move);
+  }
+
+  const keep = [
+    focusedRowId,
+    rowDrag.drag?.id,
+    rowDrag.drag?.target?.id,
+    gridNavigation.active?.row,
+    editing?.rowId,
+  ].flatMap((id) => (id ? [visibleIds.indexOf(id)] : []));
   const renderIndexes = virtualized
     ? renderedRows(visible.length, virtual.range, keep)
     : visible.map((_, index) => index);
@@ -1383,6 +1520,7 @@ export function DataTable<T>({
                           aria-label={labels.reorderRow(label)}
                           aria-describedby={`${descriptionId}-reorder-help`}
                           disabled={!dragEnabled}
+                          data-grid-keys={rowDrag.drag?.id === id ? 'own' : undefined}
                           className={styles.dragHandle}
                           icon={<GripIcon />}
                           {...rowDrag.handleProps(id)}
@@ -1434,19 +1572,60 @@ export function DataTable<T>({
                       )}
                     </TableCell>
                   )}
-                  {shown.map(({ column, slot }) => (
-                    <TableCell
-                      key={column.id}
-                      align={column.align}
-                      className={clsx(column.cellClassName, pinClass(slot))}
-                      style={{
-                        '--_pin-offset': pinOffset(slot),
-                        '--_pin-controls': pinControls(slot),
-                      }}
-                    >
-                      {column.cell ? column.cell(row) : formatValue(column.value?.(row), locale)}
-                    </TableCell>
-                  ))}
+                  {shown.map(({ column, slot }) => {
+                    const editable = editableCell(row, column);
+                    const edited =
+                      editing?.rowId === id && editing.columnId === column.id && column.editor;
+                    return (
+                      <TableCell
+                        key={column.id}
+                        align={column.align}
+                        className={clsx(
+                          column.cellClassName,
+                          pinClass(slot),
+                          editable && styles.editableCell,
+                          edited && styles.editingCell,
+                        )}
+                        style={{
+                          '--_pin-offset': pinOffset(slot),
+                          '--_pin-controls': pinControls(slot),
+                        }}
+                        data-editable={editable || undefined}
+                        aria-readonly={canEdit && !editable ? true : undefined}
+                        aria-describedby={
+                          editable && !edited ? `${descriptionId}-edit-hint` : undefined
+                        }
+                        onDoubleClick={
+                          editable ? () => startEdit({ row: id, col: column.id }, null) : undefined
+                        }
+                      >
+                        {edited ? (
+                          <CellEditor
+                            editor={column.editor as DataTableCellEditor<never>}
+                            initial={
+                              editing.typed ??
+                              draftOf(
+                                column.editor as DataTableCellEditor<unknown>,
+                                column.value?.(row),
+                              )
+                            }
+                            typed={editing.typed !== null}
+                            label={labels.editCell(columnLabel(column), label)}
+                            error={editing.error}
+                            saving={editing.saving}
+                            savingLabel={labels.saving}
+                            dateLocale={dateLocale}
+                            onCommit={(draft, move) => void commitEdit(draft, move)}
+                            onCancel={() => endEdit({ row: id, col: column.id }, 0)}
+                          />
+                        ) : column.cell ? (
+                          column.cell(row)
+                        ) : (
+                          formatValue(column.value?.(row), locale)
+                        )}
+                      </TableCell>
+                    );
+                  })}
                   {hasRowActions && (
                     <TableCell
                       align="end"
@@ -1503,6 +1682,10 @@ export function DataTable<T>({
       caption={caption}
       // Virtualized: the rows in the DOM are a part; say how many there are.
       aria-rowcount={virtualized ? rowCount : undefined}
+      role={grid ? 'grid' : undefined}
+      aria-readonly={grid && !canEdit ? true : undefined}
+      onKeyDownCapture={gridNavigation.handlers.onKeyDownCapture}
+      onKeyDown={gridNavigation.handlers.onKeyDown}
       aria-busy={loading || undefined}
       className={clsx(styles.table, fixedLayout && styles.fixedLayout)}
       // Fixed layout: the table is at least as wide as the set widths, plus a minimum for each
@@ -1515,7 +1698,10 @@ export function DataTable<T>({
         '--_controls': fixedLayout ? controlsStart + controlsEnd : undefined,
       }}
       onPointerOver={hasRowActions ? trackMenuRow : undefined}
-      onFocus={hasRowActions ? trackMenuRow : undefined}
+      onFocus={(event) => {
+        if (hasRowActions) trackMenuRow(event);
+        gridNavigation.handlers.onFocus?.(event);
+      }}
     >
       {hasRowActions ? (
         // The context menu around the table is silenced; the table's own content is not.
@@ -1620,6 +1806,12 @@ export function DataTable<T>({
             {rowDrag.announcement}
           </p>
         </>
+      )}
+
+      {canEdit && (
+        <span id={`${descriptionId}-edit-hint`} hidden>
+          {labels.editHint}
+        </span>
       )}
 
       <div className={styles.footer}>

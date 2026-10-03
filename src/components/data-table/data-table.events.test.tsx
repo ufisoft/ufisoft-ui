@@ -310,4 +310,33 @@ describe('DataTable events', () => {
       },
     ]);
   });
+  it('emits datatable.interaction.onCellEdit once a cell edit is saved, and nothing from the editor', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    render(
+      <DataTable
+        caption="Items"
+        onCellEdit={() => {}}
+        getRowId={(row) => String(row.id)}
+        columns={[
+          {
+            id: 'name',
+            header: 'Name',
+            value: (row: { name: string }) => row.name,
+            editor: { type: 'text' },
+          },
+        ]}
+        data={data.slice(0, 2)}
+      />,
+    );
+
+    screen.getByRole('gridcell', { name: 'Item 1' }).focus();
+    await user.keyboard('{Enter}Renamed{Enter}');
+    expect(events).toEqual([
+      {
+        name: 'datatable.interaction.onCellEdit',
+        payload: { rowId: '1', columnId: 'name', source: {} },
+      },
+    ]);
+  });
 });

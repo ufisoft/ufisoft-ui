@@ -344,6 +344,97 @@ export const InfiniteLoading: Story = {
   },
 };
 
+export const InlineEditing: Story = {
+  name: 'Inline editing and keyboard grid',
+  render: function Render(args) {
+    const [rows, setRows] = useState(() => users.slice(0, 8));
+    const [message, setMessage] = useState('Focus a cell and press Enter, or double-click it.');
+    return (
+      <Stack gap="sm">
+        <DataTable
+          {...args}
+          caption="Users (editable)"
+          data={rows}
+          paginated={false}
+          columns={
+            [
+              {
+                id: 'name',
+                header: 'Name',
+                value: (u) => u.name,
+                editor: { type: 'text', required: true, maxLength: 60 },
+              },
+              {
+                id: 'email',
+                header: 'Email',
+                value: (u) => u.email,
+                editor: {
+                  type: 'text',
+                  required: true,
+                  validate: (value) => (value.includes('@') ? null : 'Enter an email address'),
+                },
+              },
+              {
+                id: 'role',
+                header: 'Role',
+                value: (u) => u.role,
+                editor: {
+                  type: 'select',
+                  required: true,
+                  options: roles.map((role) => ({ value: role, label: role })),
+                },
+                // Admins cannot be demoted here.
+                editable: (u) => u.role !== 'Admin',
+              },
+              {
+                id: 'orders',
+                header: 'Orders',
+                value: (u) => u.orders,
+                align: 'end',
+                editor: { type: 'number', min: 0 },
+              },
+              {
+                id: 'createdAt',
+                header: 'Created',
+                value: (u) => u.createdAt,
+                align: 'end',
+                editor: { type: 'date' },
+              },
+            ] satisfies DataTableColumn<User>[] as DataTableColumn<unknown>[]
+          }
+          onCellEdit={({ row, columnId, value }) =>
+            new Promise<string | undefined>((resolve) => {
+              // A fake save: names starting with "x" are "taken" on the server.
+              setTimeout(() => {
+                if (columnId === 'name' && String(value).toLowerCase().startsWith('x')) {
+                  return resolve('That name is taken');
+                }
+                setRows((current) =>
+                  current.map((u) => (u === row ? { ...u, [columnId]: value } : u)),
+                );
+                setMessage(`Saved ${columnId} of ${(row as User).name}`);
+                resolve(undefined);
+              }, 400);
+            })
+          }
+        />
+        <Text size="sm" tone="muted" role="log">
+          {message}
+        </Text>
+      </Stack>
+    );
+  },
+};
+
+export const KeyboardGrid: Story = {
+  name: 'Keyboard grid without editing',
+  args: {
+    cellNavigation: true,
+    selectable: true,
+    rowActions: userActions(() => {}) as DataTableRowAction<unknown>[],
+  },
+};
+
 export const Loading: Story = {
   args: { data: [], loading: true },
 };

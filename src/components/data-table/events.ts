@@ -259,5 +259,16 @@ export const dataTableEvents = defineEvents(
       },
       example: { loaded: 50, trigger: 'scroll', source: { id: 'users' } },
     },
+    'interaction.onCellEdit': {
+      description:
+        'The user saved an inline cell edit (onCellEdit accepted it). The value is not included: it may be sensitive.',
+      payload: payload<{ rowId: string; columnId: string; source: EventSource }>(),
+      fields: {
+        rowId: 'string — the edited row',
+        columnId: 'string — the edited column',
+        source: sourceField,
+      },
+      example: { rowId: '42', columnId: 'email', source: { id: 'users' } },
+    },
   },
 );
