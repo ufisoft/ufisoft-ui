@@ -1,0 +1,59 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as GridStories from './grid.stories';
+
+<Meta of={GridStories} />
+
+# Grid
+
+Lays out children in equal columns that wrap onto new lines; the column count can change per breakpoint.
+
+<Canvas of={GridStories.Default} />
+
+## When to use
+
+- Many items of the same kind, all the same width: product cards, image galleries, dashboard tiles, a list of settings.
+- When the column count should follow the screen (`{ base: 1, sm: 2, lg: 4 }`) and the children should stay plain elements, without a wrapper each.
+
+## When not to use
+
+- Items of different widths (content and sidebar, a 3 + 9 split) or items placed at a column — use `Row` and `Col`.
+- Items in one direction (a button bar, form fields under each other) — use `Stack`.
+- Tabular data that users compare across rows — use `Table`.
+
+## Props
+
+<ArgTypes of={GridStories} />
+
+`columns` is the number of equal columns, 1–12 (default 1). Pass one number, or counts from a breakpoint up: `columns={{ base: 1, sm: 2, lg: 4 }}` is one column on phones, two from 640px and four from 1024px. Breakpoints are mobile-first and match the `breakpoints` export: `sm` 640px, `md` 768px, `lg` 1024px, `xl` 1280px.
+
+`gap` (spacing scale, default `md`) separates items in both directions; `align` sets their vertical alignment in a line (default `stretch`, so cards in a line are the same height).
+
+`as` renders a `section`, `ul` or `ol` instead of the default `div`. Native props and `ref` go to that element, and `className` is merged.
+
+## Examples
+
+<Canvas of={GridStories.ColumnCounts} />
+<Canvas of={GridStories.Responsive} />
+<Canvas of={GridStories.Gaps} />
+<Canvas of={GridStories.Align} />
+<Canvas of={GridStories.ProductList} />
+
+## Accessibility
+
+- Grid adds no role and no ARIA — it is not an ARIA `grid` (that is an interactive widget with arrow-key navigation). For a list of items use `as="ul"` with `li` children, so screen readers announce the count.
+- Items appear in DOM order, left to right and line by line, so reading and Tab order follow the source.
+- Start with one column on phones; four columns at 320px or at 400% zoom make content unreadable.
+
+## Do / Don't
+
+| Do                                              | Don't                                                    |
+| ----------------------------------------------- | -------------------------------------------------------- |
+| Use `{ base: 1, sm: 2, lg: 3 }` for card lists. | Use a fixed `columns={4}` that squeezes cards on phones. |
+| Render a list of cards as `ul` / `li`.          | Build a list from `div`s.                                |
+| Use `Row` / `Col` when one item must be wider.  | Nest Grids to fake a wider item.                         |
+
+## Related components
+
+- `Row` / `Col` (see `Container`) — 12-column layouts with items of different widths.
+- `Stack` — one-direction layout with consistent spacing.
+- `Card` — the usual item of a grid.

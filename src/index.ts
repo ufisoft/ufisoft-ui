@@ -46,6 +46,14 @@ export {
   type ColSpan,
   type ColValue,
 } from './components/container';
+export {
+  Grid,
+  type GridProps,
+  type GridElement,
+  type GridAlign,
+  type GridColumnCount,
+  type GridColumns,
+} from './components/grid';
 export { Card, type CardProps, type CardVariant, type CardPadding } from './components/card';
 export { Avatar, type AvatarProps, type AvatarSize } from './components/avatar';
 

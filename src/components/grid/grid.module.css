@@ -1,0 +1,317 @@
+/*
+ * Equal columns. The default is set here, not inherited, so a nested Grid never picks up its
+ * parent's column count. Column classes below only change --_columns, from small to large screens.
+ */
+.grid {
+  --_columns: 1;
+
+  display: grid;
+  grid-template-columns: repeat(var(--_columns), minmax(0, 1fr));
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border: 0;
+}
+
+/* Gap */
+.gap-none {
+  gap: var(--ufi-space-none);
+}
+
+.gap-2xs {
+  gap: var(--ufi-space-2xs);
+}
+
+.gap-xs {
+  gap: var(--ufi-space-xs);
+}
+
+.gap-sm {
+  gap: var(--ufi-space-sm);
+}
+
+.gap-md {
+  gap: var(--ufi-space-md);
+}
+
+.gap-lg {
+  gap: var(--ufi-space-lg);
+}
+
+.gap-xl {
+  gap: var(--ufi-space-xl);
+}
+
+.gap-2xl {
+  gap: var(--ufi-space-2xl);
+}
+
+/* Cross axis */
+.align-start {
+  align-items: start;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-end {
+  align-items: end;
+}
+
+.align-stretch {
+  align-items: stretch;
+}
+
+.columns-1 {
+  --_columns: 1;
+}
+
+.columns-2 {
+  --_columns: 2;
+}
+
+.columns-3 {
+  --_columns: 3;
+}
+
+.columns-4 {
+  --_columns: 4;
+}
+
+.columns-5 {
+  --_columns: 5;
+}
+
+.columns-6 {
+  --_columns: 6;
+}
+
+.columns-7 {
+  --_columns: 7;
+}
+
+.columns-8 {
+  --_columns: 8;
+}
+
+.columns-9 {
+  --_columns: 9;
+}
+
+.columns-10 {
+  --_columns: 10;
+}
+
+.columns-11 {
+  --_columns: 11;
+}
+
+.columns-12 {
+  --_columns: 12;
+}
+
+/* sm: 640px and up. CSS variables cannot be used in @media; mirrors --ufi-breakpoint-sm. */
+@media (min-width: 40em) {
+  .sm-columns-1 {
+    --_columns: 1;
+  }
+
+  .sm-columns-2 {
+    --_columns: 2;
+  }
+
+  .sm-columns-3 {
+    --_columns: 3;
+  }
+
+  .sm-columns-4 {
+    --_columns: 4;
+  }
+
+  .sm-columns-5 {
+    --_columns: 5;
+  }
+
+  .sm-columns-6 {
+    --_columns: 6;
+  }
+
+  .sm-columns-7 {
+    --_columns: 7;
+  }
+
+  .sm-columns-8 {
+    --_columns: 8;
+  }
+
+  .sm-columns-9 {
+    --_columns: 9;
+  }
+
+  .sm-columns-10 {
+    --_columns: 10;
+  }
+
+  .sm-columns-11 {
+    --_columns: 11;
+  }
+
+  .sm-columns-12 {
+    --_columns: 12;
+  }
+}
+
+/* md: 768px and up. CSS variables cannot be used in @media; mirrors --ufi-breakpoint-md. */
+@media (min-width: 48em) {
+  .md-columns-1 {
+    --_columns: 1;
+  }
+
+  .md-columns-2 {
+    --_columns: 2;
+  }
+
+  .md-columns-3 {
+    --_columns: 3;
+  }
+
+  .md-columns-4 {
+    --_columns: 4;
+  }
+
+  .md-columns-5 {
+    --_columns: 5;
+  }
+
+  .md-columns-6 {
+    --_columns: 6;
+  }
+
+  .md-columns-7 {
+    --_columns: 7;
+  }
+
+  .md-columns-8 {
+    --_columns: 8;
+  }
+
+  .md-columns-9 {
+    --_columns: 9;
+  }
+
+  .md-columns-10 {
+    --_columns: 10;
+  }
+
+  .md-columns-11 {
+    --_columns: 11;
+  }
+
+  .md-columns-12 {
+    --_columns: 12;
+  }
+}
+
+/* lg: 1024px and up. CSS variables cannot be used in @media; mirrors --ufi-breakpoint-lg. */
+@media (min-width: 64em) {
+  .lg-columns-1 {
+    --_columns: 1;
+  }
+
+  .lg-columns-2 {
+    --_columns: 2;
+  }
+
+  .lg-columns-3 {
+    --_columns: 3;
+  }
+
+  .lg-columns-4 {
+    --_columns: 4;
+  }
+
+  .lg-columns-5 {
+    --_columns: 5;
+  }
+
+  .lg-columns-6 {
+    --_columns: 6;
+  }
+
+  .lg-columns-7 {
+    --_columns: 7;
+  }
+
+  .lg-columns-8 {
+    --_columns: 8;
+  }
+
+  .lg-columns-9 {
+    --_columns: 9;
+  }
+
+  .lg-columns-10 {
+    --_columns: 10;
+  }
+
+  .lg-columns-11 {
+    --_columns: 11;
+  }
+
+  .lg-columns-12 {
+    --_columns: 12;
+  }
+}
+
+/* xl: 1280px and up. CSS variables cannot be used in @media; mirrors --ufi-breakpoint-xl. */
+@media (min-width: 80em) {
+  .xl-columns-1 {
+    --_columns: 1;
+  }
+
+  .xl-columns-2 {
+    --_columns: 2;
+  }
+
+  .xl-columns-3 {
+    --_columns: 3;
+  }
+
+  .xl-columns-4 {
+    --_columns: 4;
+  }
+
+  .xl-columns-5 {
+    --_columns: 5;
+  }
+
+  .xl-columns-6 {
+    --_columns: 6;
+  }
+
+  .xl-columns-7 {
+    --_columns: 7;
+  }
+
+  .xl-columns-8 {
+    --_columns: 8;
+  }
+
+  .xl-columns-9 {
+    --_columns: 9;
+  }
+
+  .xl-columns-10 {
+    --_columns: 10;
+  }
+
+  .xl-columns-11 {
+    --_columns: 11;
+  }
+
+  .xl-columns-12 {
+    --_columns: 12;
+  }
+}

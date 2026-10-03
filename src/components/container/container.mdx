@@ -18,6 +18,7 @@ Centres page content at a maximum width; `Row` and `Col` lay it out on a 12-colu
 
 - Items in one direction with even spacing (a button bar, form fields under each other) — use `Stack`.
 - A layout that depends on its own width rather than the screen's (a card in a narrow sidebar) — use your own CSS with container queries.
+- Many items of the same width (a card list, a gallery) — use `Grid`, which needs no `Col` per item.
 - Tabular data — use `Table`.
 
 ## Props
@@ -64,4 +65,5 @@ When the spans in a row add up to more than 12, the next `Col` wraps onto a new 
 ## Related components
 
 - `Stack` — one-direction layout with consistent spacing.
+- `Grid` — equal columns without a `Col` per item.
 - `Card` — the usual content of a column.
