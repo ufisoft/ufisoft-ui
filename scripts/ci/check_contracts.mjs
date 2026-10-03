@@ -253,7 +253,79 @@ function exportedNames(source) {
   return names;
 }
 
+// A component's events.ts: the exported defineEvents result, its group and event keys.
+function parseEventsFile(source) {
+  const lineOf = (index) => source.slice(0, index).split('\n').length;
+  const exported = /export const (\w+)\s*=\s*defineEvents\(/.exec(source);
+  const group = /defineEvents\(\s*\{\s*component:\s*'([^']+)',\s*prefix:\s*'([^']+)'/.exec(source);
+  const events = [...source.matchAll(/^\s*'((?:state|interaction)\.on[A-Z]\w*)':\s*\{/gm)].map(
+    (m) => ({ key: m[1], line: lineOf(m.index) }),
+  );
+  return {
+    exportName: exported?.[1],
+    line: exported ? lineOf(exported.index) : 1,
+    component: group?.[1],
+    prefix: group?.[2],
+    events,
+  };
+}
+
+// Checks for component events (docs/contracts/component-events.md). Each finding is reported on
+// the events.ts file it is about.
+function runEventsCheck(rule, params, files) {
+  const findings = [];
+  const tests =
+    params.check === 'events-tested'
+      ? globSync(params.tests, { cwd: root })
+          .map((f) => read(toPosix(f)))
+          .join('\n')
+      : '';
+  const registry = params.check === 'events-registered' ? read(params.registry) : '';
+  for (const file of files) {
+    const parsed = parseEventsFile(read(file));
+    if (!parsed.exportName || !parsed.component || !parsed.prefix) {
+      findings.push({
+        file,
+        line: 1,
+        detail: "no `export const <name> = defineEvents({ component: '…', prefix: '…' }, …)`",
+      });
+      continue;
+    }
+    if (params.check === 'events-registered') {
+      if (!new RegExp(`\\.\\.\\.${parsed.exportName}\\b`).test(registry)) {
+        findings.push({
+          file,
+          line: parsed.line,
+          detail: `"${parsed.exportName}" is not spread into eventRegistry in ${params.registry}`,
+        });
+      }
+    } else if (params.check === 'events-documented') {
+      const dir = file.slice(0, file.lastIndexOf('/'));
+      const docs = globSync(`${dir}/*.mdx`, { cwd: root }).map((f) => read(toPosix(f)));
+      const block = `<ComponentEvents component="${parsed.component}"`;
+      if (!docs.some((doc) => doc.includes(block))) {
+        findings.push({
+          file,
+          line: parsed.line,
+          detail: `no ${block} /> in ${dir}/*.mdx`,
+        });
+      }
+    } else if (params.check === 'events-tested') {
+      for (const { key, line } of parsed.events) {
+        const name = `${parsed.prefix}.${key}`;
+        if (!tests.includes(`'${name}'`) && !tests.includes(`"${name}"`)) {
+          findings.push({ file, line, detail: `"${name}" appears in no ${params.tests} file` });
+        }
+      }
+    } else {
+      throw new Error(`[${rule.id}] unknown structure check "${params.check}"`);
+    }
+  }
+  return findings;
+}
+
 function runStructure(rule, params, files) {
+  if (params?.check?.startsWith('events-')) return runEventsCheck(rule, params, files);
   if (params?.check !== 'public-exports') {
     throw new Error(`[${rule.id}] unknown structure check "${params?.check}"`);
   }

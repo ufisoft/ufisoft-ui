@@ -23,11 +23,24 @@ export default tseslint.config(
     },
   },
   // Contracts: docs/contracts/component-styling.md#no-inline-style,
-  // docs/contracts/client-directive.md#use-client-for-hooks
+  // docs/contracts/client-directive.md#use-client-for-hooks,
+  // docs/contracts/component-events.md#emit-through-use-emit
   {
     files: ['src/components/**/*.{ts,tsx}'],
     ignores: ['src/components/**/*.stories.tsx', 'src/components/**/*.test.tsx'],
     rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/events/registry'],
+              message:
+                'Emit with useEmit() from events/react, not the global eventBus — see docs/contracts/component-events.md#emit-through-use-emit',
+            },
+          ],
+        },
+      ],
       'no-restricted-syntax': [
         'error',
         {

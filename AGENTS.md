@@ -22,6 +22,7 @@ Enforced by `node scripts/ci/check_contracts.mjs` and `pnpm lint`. Details and e
 - Component CSS takes values only from `src/tokens/semantic.css` → [component-styling](./docs/contracts/component-styling.md)
 - Every component export is also exported from `src/index.ts` → [public-api](./docs/contracts/public-api.md)
 - A component module that calls a hook starts with `'use client'` → [client-directive](./docs/contracts/client-directive.md)
+- A component's events are registered, documented, tested and emitted through `useEmit` → [component-events](./docs/contracts/component-events.md)
 
 ## Router table
 

@@ -44,6 +44,7 @@ try {
   mkdirSync(tempDir);
   copyFileSync(resolve(fixtures, 'violations.tsx'), resolve(tempDir, 'index.tsx'));
   copyFileSync(resolve(fixtures, 'violations.module.css'), resolve(tempDir, `${name}.module.css`));
+  copyFileSync(resolve(fixtures, 'violations.events.ts'), resolve(tempDir, 'events.ts'));
 
   // css-regex and structure rules: findings are printed as "<file>:<line>  [<rule-id>]".
   for (const line of run('node scripts/ci/check_contracts.mjs').stdout.split('\n')) {

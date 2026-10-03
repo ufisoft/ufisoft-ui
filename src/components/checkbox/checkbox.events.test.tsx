@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Checkbox } from '.';
-import { recordEvents } from '../../test/record-events';
+import { names, recordEvents } from '../../test/record-events';
 import { RadioGroup, Radio } from '../radio';
 import { Select } from '../select';
 import { Switch } from '../switch';
@@ -67,6 +67,7 @@ describe('form control events', () => {
     await user.click(screen.getByRole('radio', { name: 'Express' }));
     await user.click(screen.getByRole('radio', { name: 'Standard' }));
     expect(onValueChange).toHaveBeenCalledTimes(2);
+    expect(names(events)).toEqual(['radiogroup.state.onChange', 'radiogroup.state.onChange']);
     expect(events.map((event) => event.payload)).toEqual([
       { value: 'express', previousValue: 'standard', source: { name: 'shipping' } },
       { value: 'standard', previousValue: 'express', source: { name: 'shipping' } },
