@@ -116,6 +116,12 @@
   --ufi-control-height-sm: var(--ufi-space-8);
   --ufi-control-height-md: var(--ufi-space-10);
   --ufi-control-height-lg: var(--ufi-space-12);
+
+  /* Page content widths (Container), one per breakpoint */
+  --ufi-container-sm: var(--ufi-breakpoint-sm);
+  --ufi-container-md: var(--ufi-breakpoint-md);
+  --ufi-container-lg: var(--ufi-breakpoint-lg);
+  --ufi-container-xl: var(--ufi-breakpoint-xl);
   --ufi-border-width: 1px;
   --ufi-opacity-disabled: 0.5;
 

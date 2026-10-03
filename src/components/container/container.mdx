@@ -1,0 +1,67 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ContainerStories from './container.stories';
+
+<Meta of={ContainerStories} />
+
+# Container
+
+Centres page content at a maximum width; `Row` and `Col` lay it out on a 12-column grid.
+
+<Canvas of={ContainerStories.Default} />
+
+## When to use
+
+- `Container`: the outer frame of a page or a page section, so lines do not grow too long on wide screens.
+- `Row` + `Col`: two-dimensional page layouts — a content area with a sidebar, a row of stat cards, a form in two columns — that change with the screen width.
+
+## When not to use
+
+- Items in one direction with even spacing (a button bar, form fields under each other) — use `Stack`.
+- A layout that depends on its own width rather than the screen's (a card in a narrow sidebar) — use your own CSS with container queries.
+- Tabular data — use `Table`.
+
+## Props
+
+<ArgTypes of={ContainerStories} />
+
+**Container** — `size` sets the maximum width, one per breakpoint: `sm` 640px, `md` 768px, `lg` 1024px, `xl` 1280px (default); `full` spans the whole parent. The side padding is `--ufi-space-md`. The widths are the `--ufi-container-{sm|md|lg|xl}` tokens, so a theme can change them.
+
+**Row** — a CSS grid of 12 equal columns. `gap` (spacing scale, default `md`) separates columns and wrapped lines; `align` sets the columns' vertical alignment (default `stretch`).
+
+**Col** — `span` is how many of the 12 columns it covers (default 12, the whole row); `start` is the column line it starts at (default: the next free place). Both take one number, or values from a breakpoint up: `span={{ base: 12, md: 6 }}` is full width on phones and half from 768px. Breakpoints are mobile-first and match the `breakpoints` export: `sm` 640px, `md` 768px, `lg` 1024px, `xl` 1280px.
+
+All three render a `div` by default; `as` picks a semantic element instead (`main`, `section`, `ul` / `li`, `aside` …). Native props and `ref` go to that element, and `className` is merged.
+
+## Sizes
+
+<Canvas of={ContainerStories.Sizes} />
+
+## Examples
+
+<Canvas of={ContainerStories.Columns} />
+<Canvas of={ContainerStories.Responsive} />
+<Canvas of={ContainerStories.Start} />
+<Canvas of={ContainerStories.Gaps} />
+<Canvas of={ContainerStories.Dashboard} />
+
+When the spans in a row add up to more than 12, the next `Col` wraps onto a new line, so one `Row` can hold a whole responsive list.
+
+## Accessibility
+
+- Layout components add no roles and no ARIA. Pick the element with `as` so the page has landmarks and lists: `Container as="main"`, `Row as="ul"` with `Col as="li"`, `Col as="aside"`.
+- Columns change where things appear, never the DOM order, so reading and Tab order follow the source. Keep the source in a sensible reading order on every screen size; there is deliberately no `order` prop.
+- Content reflows into one column on narrow screens when you use `base: 12`, which keeps pages usable at 320px and at 400% zoom.
+
+## Do / Don't
+
+| Do                                                         | Don't                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------- |
+| Start with `base: 12` and split columns from `sm`/`md` up. | Put fixed `span={3}` columns on phones — they get too narrow. |
+| Use `Stack` inside a `Col` for vertical spacing.           | Nest a `Row` just to space items in one direction.            |
+| Give lists and landmarks their element with `as`.          | Build a list of cards from `div`s.                            |
+| Use one `Container` per page frame.                        | Nest `Container`s — the padding doubles.                      |
+
+## Related components
+
+- `Stack` — one-direction layout with consistent spacing.
+- `Card` — the usual content of a column.

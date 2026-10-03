@@ -31,6 +31,21 @@ export {
   type StackAlign,
   type StackJustify,
 } from './components/stack';
+export {
+  Container,
+  Row,
+  Col,
+  type ContainerProps,
+  type ContainerElement,
+  type ContainerSize,
+  type RowProps,
+  type RowElement,
+  type RowAlign,
+  type ColProps,
+  type ColElement,
+  type ColSpan,
+  type ColValue,
+} from './components/container';
 export { Card, type CardProps, type CardVariant, type CardPadding } from './components/card';
 export { Avatar, type AvatarProps, type AvatarSize } from './components/avatar';
 

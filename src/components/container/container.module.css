@@ -1,0 +1,593 @@
+.container {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: var(--_max-size);
+  padding-inline: var(--ufi-space-md);
+  margin-inline: auto;
+}
+
+/* Sizes */
+.size-sm {
+  --_max-size: var(--ufi-container-sm);
+}
+
+.size-md {
+  --_max-size: var(--ufi-container-md);
+}
+
+.size-lg {
+  --_max-size: var(--ufi-container-lg);
+}
+
+.size-xl {
+  --_max-size: var(--ufi-container-xl);
+}
+
+.size-full {
+  --_max-size: none;
+}
+
+/* A 12-column grid; Col places itself with --_start and --_span. */
+.row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  min-inline-size: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border: 0;
+}
+
+/* Gap */
+.gap-none {
+  gap: var(--ufi-space-none);
+}
+
+.gap-2xs {
+  gap: var(--ufi-space-2xs);
+}
+
+.gap-xs {
+  gap: var(--ufi-space-xs);
+}
+
+.gap-sm {
+  gap: var(--ufi-space-sm);
+}
+
+.gap-md {
+  gap: var(--ufi-space-md);
+}
+
+.gap-lg {
+  gap: var(--ufi-space-lg);
+}
+
+.gap-xl {
+  gap: var(--ufi-space-xl);
+}
+
+.gap-2xl {
+  gap: var(--ufi-space-2xl);
+}
+
+/* Cross axis */
+.align-start {
+  align-items: start;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-end {
+  align-items: end;
+}
+
+.align-stretch {
+  align-items: stretch;
+}
+
+/*
+ * Defaults are set here, not inherited, so a Col in a nested Row never picks up its parent's span.
+ * Breakpoint classes below only change the local properties, from small to large screens.
+ */
+.col {
+  --_start: auto;
+  --_span: 12;
+
+  grid-column: var(--_start) / span var(--_span);
+  min-inline-size: 0;
+}
+
+.span-1 {
+  --_span: 1;
+}
+
+.span-2 {
+  --_span: 2;
+}
+
+.span-3 {
+  --_span: 3;
+}
+
+.span-4 {
+  --_span: 4;
+}
+
+.span-5 {
+  --_span: 5;
+}
+
+.span-6 {
+  --_span: 6;
+}
+
+.span-7 {
+  --_span: 7;
+}
+
+.span-8 {
+  --_span: 8;
+}
+
+.span-9 {
+  --_span: 9;
+}
+
+.span-10 {
+  --_span: 10;
+}
+
+.span-11 {
+  --_span: 11;
+}
+
+.span-12 {
+  --_span: 12;
+}
+
+.start-1 {
+  --_start: 1;
+}
+
+.start-2 {
+  --_start: 2;
+}
+
+.start-3 {
+  --_start: 3;
+}
+
+.start-4 {
+  --_start: 4;
+}
+
+.start-5 {
+  --_start: 5;
+}
+
+.start-6 {
+  --_start: 6;
+}
+
+.start-7 {
+  --_start: 7;
+}
+
+.start-8 {
+  --_start: 8;
+}
+
+.start-9 {
+  --_start: 9;
+}
+
+.start-10 {
+  --_start: 10;
+}
+
+.start-11 {
+  --_start: 11;
+}
+
+.start-12 {
+  --_start: 12;
+}
+
+/* sm: 640px and up. CSS variables cannot be used in @media; mirrors --ufi-breakpoint-sm. */
+@media (min-width: 40em) {
+  .sm-span-1 {
+    --_span: 1;
+  }
+
+  .sm-span-2 {
+    --_span: 2;
+  }
+
+  .sm-span-3 {
+    --_span: 3;
+  }
+
+  .sm-span-4 {
+    --_span: 4;
+  }
+
+  .sm-span-5 {
+    --_span: 5;
+  }
+
+  .sm-span-6 {
+    --_span: 6;
+  }
+
+  .sm-span-7 {
+    --_span: 7;
+  }
+
+  .sm-span-8 {
+    --_span: 8;
+  }
+
+  .sm-span-9 {
+    --_span: 9;
+  }
+
+  .sm-span-10 {
+    --_span: 10;
+  }
+
+  .sm-span-11 {
+    --_span: 11;
+  }
+
+  .sm-span-12 {
+    --_span: 12;
+  }
+
+  .sm-start-1 {
+    --_start: 1;
+  }
+
+  .sm-start-2 {
+    --_start: 2;
+  }
+
+  .sm-start-3 {
+    --_start: 3;
+  }
+
+  .sm-start-4 {
+    --_start: 4;
+  }
+
+  .sm-start-5 {
+    --_start: 5;
+  }
+
+  .sm-start-6 {
+    --_start: 6;
+  }
+
+  .sm-start-7 {
+    --_start: 7;
+  }
+
+  .sm-start-8 {
+    --_start: 8;
+  }
+
+  .sm-start-9 {
+    --_start: 9;
+  }
+
+  .sm-start-10 {
+    --_start: 10;
+  }
+
+  .sm-start-11 {
+    --_start: 11;
+  }
+
+  .sm-start-12 {
+    --_start: 12;
+  }
+}
+
+/* md: 768px and up. CSS variables cannot be used in @media; mirrors --ufi-breakpoint-md. */
+@media (min-width: 48em) {
+  .md-span-1 {
+    --_span: 1;
+  }
+
+  .md-span-2 {
+    --_span: 2;
+  }
+
+  .md-span-3 {
+    --_span: 3;
+  }
+
+  .md-span-4 {
+    --_span: 4;
+  }
+
+  .md-span-5 {
+    --_span: 5;
+  }
+
+  .md-span-6 {
+    --_span: 6;
+  }
+
+  .md-span-7 {
+    --_span: 7;
+  }
+
+  .md-span-8 {
+    --_span: 8;
+  }
+
+  .md-span-9 {
+    --_span: 9;
+  }
+
+  .md-span-10 {
+    --_span: 10;
+  }
+
+  .md-span-11 {
+    --_span: 11;
+  }
+
+  .md-span-12 {
+    --_span: 12;
+  }
+
+  .md-start-1 {
+    --_start: 1;
+  }
+
+  .md-start-2 {
+    --_start: 2;
+  }
+
+  .md-start-3 {
+    --_start: 3;
+  }
+
+  .md-start-4 {
+    --_start: 4;
+  }
+
+  .md-start-5 {
+    --_start: 5;
+  }
+
+  .md-start-6 {
+    --_start: 6;
+  }
+
+  .md-start-7 {
+    --_start: 7;
+  }
+
+  .md-start-8 {
+    --_start: 8;
+  }
+
+  .md-start-9 {
+    --_start: 9;
+  }
+
+  .md-start-10 {
+    --_start: 10;
+  }
+
+  .md-start-11 {
+    --_start: 11;
+  }
+
+  .md-start-12 {
+    --_start: 12;
+  }
+}
+
+/* lg: 1024px and up. CSS variables cannot be used in @media; mirrors --ufi-breakpoint-lg. */
+@media (min-width: 64em) {
+  .lg-span-1 {
+    --_span: 1;
+  }
+
+  .lg-span-2 {
+    --_span: 2;
+  }
+
+  .lg-span-3 {
+    --_span: 3;
+  }
+
+  .lg-span-4 {
+    --_span: 4;
+  }
+
+  .lg-span-5 {
+    --_span: 5;
+  }
+
+  .lg-span-6 {
+    --_span: 6;
+  }
+
+  .lg-span-7 {
+    --_span: 7;
+  }
+
+  .lg-span-8 {
+    --_span: 8;
+  }
+
+  .lg-span-9 {
+    --_span: 9;
+  }
+
+  .lg-span-10 {
+    --_span: 10;
+  }
+
+  .lg-span-11 {
+    --_span: 11;
+  }
+
+  .lg-span-12 {
+    --_span: 12;
+  }
+
+  .lg-start-1 {
+    --_start: 1;
+  }
+
+  .lg-start-2 {
+    --_start: 2;
+  }
+
+  .lg-start-3 {
+    --_start: 3;
+  }
+
+  .lg-start-4 {
+    --_start: 4;
+  }
+
+  .lg-start-5 {
+    --_start: 5;
+  }
+
+  .lg-start-6 {
+    --_start: 6;
+  }
+
+  .lg-start-7 {
+    --_start: 7;
+  }
+
+  .lg-start-8 {
+    --_start: 8;
+  }
+
+  .lg-start-9 {
+    --_start: 9;
+  }
+
+  .lg-start-10 {
+    --_start: 10;
+  }
+
+  .lg-start-11 {
+    --_start: 11;
+  }
+
+  .lg-start-12 {
+    --_start: 12;
+  }
+}
+
+/* xl: 1280px and up. CSS variables cannot be used in @media; mirrors --ufi-breakpoint-xl. */
+@media (min-width: 80em) {
+  .xl-span-1 {
+    --_span: 1;
+  }
+
+  .xl-span-2 {
+    --_span: 2;
+  }
+
+  .xl-span-3 {
+    --_span: 3;
+  }
+
+  .xl-span-4 {
+    --_span: 4;
+  }
+
+  .xl-span-5 {
+    --_span: 5;
+  }
+
+  .xl-span-6 {
+    --_span: 6;
+  }
+
+  .xl-span-7 {
+    --_span: 7;
+  }
+
+  .xl-span-8 {
+    --_span: 8;
+  }
+
+  .xl-span-9 {
+    --_span: 9;
+  }
+
+  .xl-span-10 {
+    --_span: 10;
+  }
+
+  .xl-span-11 {
+    --_span: 11;
+  }
+
+  .xl-span-12 {
+    --_span: 12;
+  }
+
+  .xl-start-1 {
+    --_start: 1;
+  }
+
+  .xl-start-2 {
+    --_start: 2;
+  }
+
+  .xl-start-3 {
+    --_start: 3;
+  }
+
+  .xl-start-4 {
+    --_start: 4;
+  }
+
+  .xl-start-5 {
+    --_start: 5;
+  }
+
+  .xl-start-6 {
+    --_start: 6;
+  }
+
+  .xl-start-7 {
+    --_start: 7;
+  }
+
+  .xl-start-8 {
+    --_start: 8;
+  }
+
+  .xl-start-9 {
+    --_start: 9;
+  }
+
+  .xl-start-10 {
+    --_start: 10;
+  }
+
+  .xl-start-11 {
+    --_start: 11;
+  }
+
+  .xl-start-12 {
+    --_start: 12;
+  }
+}
