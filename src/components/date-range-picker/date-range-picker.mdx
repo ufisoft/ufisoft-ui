@@ -1,0 +1,77 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as DateRangePickerStories from './date-range-picker.stories';
+
+<Meta of={DateRangePickerStories} />
+
+# DateRangePicker
+
+Two date fields for a start and an end date, typed or picked from one calendar.
+
+<Canvas of={DateRangePickerStories.Default} />
+
+## When to use
+
+- A period with a start and an end: hotel stays, leave requests, campaign runs, report filters.
+
+## When not to use
+
+- One date — use `DatePicker`.
+- Preset periods such as “Last 7 days / This month” — use `Select` or `Radio`; add a DateRangePicker only for a custom period.
+- Two unrelated dates (e.g. order date and delivery date) — use two `DatePicker`s with their own labels.
+
+## Props
+
+<ArgTypes of={DateRangePickerStories} />
+
+The value is `{ from, to }`: each a `Date` at local midnight, or `null` while not chosen. Use `value` + `onValueChange` (controlled) or `defaultValue` (uncontrolled). Remaining props and `ref` go to the wrapper, which has `role="group"`.
+
+`startLabel` and `endLabel` name the two fields; the group is named by `aria-label` or by a surrounding `FormField`'s `FormLabel`. With `startName` / `endName`, hidden inputs submit the dates as `yyyy-MM-dd`.
+
+`locale`, `dateFormat`, `min` and `max` work as in `DatePicker`. Inside a `FormField`, the description, message, `required`, `disabled` and `invalid` apply to both fields.
+
+Built from the same parts as `DatePicker`: react-day-picker in range mode, date-fns, `Popover`.
+
+## Sizes
+
+<Canvas of={DateRangePickerStories.Sizes} />
+
+## States
+
+<Canvas of={DateRangePickerStories.WithValue} />
+<Canvas of={DateRangePickerStories.MinMax} />
+<Canvas of={DateRangePickerStories.Invalid} />
+<Canvas of={DateRangePickerStories.Disabled} />
+<Canvas of={DateRangePickerStories.ReadOnly} />
+
+Typed text becomes the value on blur or Enter. Text that is not a valid date, falls outside `min`/`max`, or would put the start after the end is replaced by the current value again; an empty field clears that end. To move a whole range later by typing, change the end first — or use the calendar.
+
+In the calendar, the first click starts a new range and the second click ends it (a second click before the start swaps them); the calendar closes when both ends are chosen.
+
+## Examples
+
+<Canvas of={DateRangePickerStories.InFormField} />
+<Canvas of={DateRangePickerStories.Turkish} />
+<Canvas of={DateRangePickerStories.Controlled} />
+<Canvas of={DateRangePickerStories.InModal} />
+
+## Accessibility
+
+- The wrapper is a `group` named by its label; each field is a plain text input named by `startLabel` / `endLabel`, so screen readers announce “Stay, group — Start date”.
+- Clicking the `FormLabel` focuses the start field.
+- The calendar button is named by `calendarLabel` and opens a dialog with the same name. Focus moves to the start date (or today) and returns to the button on close.
+- In the calendar, arrow keys move by day and week, PageUp/PageDown by month; Enter or Space picks a day; Escape closes without changing the value. Day buttons are announced with the full date and “selected” for every day in the range.
+- Every DateRangePicker needs a group label: a `FormField` + `FormLabel`, or `aria-label`.
+
+## Do / Don't
+
+| Do                                                            | Don't                                                        |
+| ------------------------------------------------------------- | ------------------------------------------------------------ |
+| Name the ends for the task: “Check-in” / “Check-out”.         | Leave the default “Start date” / “End date” in a Turkish UI. |
+| Use `min`/`max` for the bookable period.                      | Accept a range and reject it only after submit.              |
+| Handle `to: null` — the user may stop after choosing a start. | Assume both ends are set whenever `onValueChange` is called. |
+
+## Related components
+
+- `DatePicker` — a single date.
+- `Popover` — the calendar's container.
+- `FormField` — label, description and validation wiring.

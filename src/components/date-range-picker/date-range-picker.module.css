@@ -1,0 +1,10 @@
+.dateRangePicker {
+  display: flex;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+  min-inline-size: 0;
+}
+
+.separator {
+  color: var(--ufi-color-text-muted);
+}

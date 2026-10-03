@@ -61,6 +61,12 @@ export {
   type ComboboxSize,
 } from './components/combobox';
 export { DatePicker, type DatePickerProps, type DatePickerSize } from './components/date-picker';
+export {
+  DateRangePicker,
+  type DateRangePickerProps,
+  type DateRangePickerSize,
+  type DateRange,
+} from './components/date-range-picker';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 export {
   Radio,

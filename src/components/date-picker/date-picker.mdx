@@ -15,7 +15,7 @@ A date field: type the date or pick it from a calendar.
 
 ## When not to use
 
-- A date range — use two DatePickers (start and end) until a range picker exists.
+- Related start and end dates (a stay, a leave request) — use `DateRangePicker`.
 - Date and time together — pair a DatePicker with an `Input type="time"`.
 - A few fixed choices such as “Today / Tomorrow / Next week” — use `Radio` or `Select`.
 
@@ -72,6 +72,7 @@ Typed text becomes the value on blur or Enter. Text that is not a valid date, or
 
 ## Related components
 
+- `DateRangePicker` — a start and an end date.
 - `Input` — the text field it builds on.
 - `Popover` — the calendar's container.
 - `FormField` — label, description and validation wiring.
