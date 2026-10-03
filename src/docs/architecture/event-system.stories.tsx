@@ -166,6 +166,107 @@ export const ApplicationEvents: Story = {
   },
 };
 
+/** A custom event an application emits from a button click. */
+const checkoutEvents = defineEvents(
+  { component: 'Checkout', prefix: 'checkout' },
+  {
+    'interaction.onOrderSubmit': {
+      description: 'The user submitted the order.',
+      payload: payload<{ orderId: string; total: number }>(),
+      fields: { orderId: 'string — the order', total: 'number — the order total' },
+      example: { orderId: 'A-1001', total: 249.9 },
+    },
+  },
+);
+const checkoutBus = createEventBus({ registry: checkoutEvents });
+
+const order = { id: 'A-1001', total: 249.9 };
+
+function ReceivedList({ label, lines }: { label: string; lines: string[] }) {
+  return (
+    <div style={box}>
+      <Text weight="semibold">{label}</Text>
+      {lines.length === 0 ? (
+        <Text size="sm" tone="muted">
+          Nothing yet — press the button.
+        </Text>
+      ) : (
+        <ul aria-label={label} style={{ margin: 0 }}>
+          {lines.map((line, index) => (
+            <li key={`${index}-${line}`}>
+              <Text as="span" size="sm">
+                {line}
+              </Text>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+export const CustomEventOnClick: Story = {
+  name: 'Custom event on a button click',
+  render: function Render() {
+    const [typed, setTyped] = useState<string[]>([]);
+    const [viaClick, setViaClick] = useState<string[]>([]);
+
+    // 1. A typed event of your own, on your own bus.
+    useEffect(
+      () =>
+        checkoutBus.on('checkout.interaction.onOrderSubmit', ({ orderId, total }) =>
+          setTyped((lines) => [`order ${orderId}, total ${total}`, ...lines]),
+        ),
+      [],
+    );
+
+    // 2. No new event: the button's own click event, recognised by its eventData.
+    useEffect(
+      () =>
+        eventBus.on('button.interaction.onClick', ({ source }) => {
+          // source.data is `unknown`: narrow it before use.
+          const data = source.data as { action?: string; orderId?: string } | undefined;
+          if (data?.action === 'submit-order') {
+            setViaClick((lines) => [`order ${data.orderId ?? '?'}`, ...lines]);
+          }
+        }),
+      [],
+    );
+
+    return (
+      <Stack gap="lg" style={{ maxWidth: 560 }}>
+        <Stack gap="sm">
+          <Text weight="semibold">1. Your own event (typed, documented)</Text>
+          <Button
+            onClick={() =>
+              checkoutBus.emit('checkout.interaction.onOrderSubmit', {
+                orderId: order.id,
+                total: order.total,
+              })
+            }
+          >
+            Submit order
+          </Button>
+          <ReceivedList label="checkout.interaction.onOrderSubmit received" lines={typed} />
+        </Stack>
+        <Stack gap="sm">
+          <Text weight="semibold">2. The button’s own click event with eventData</Text>
+          <Button variant="secondary" eventData={{ action: 'submit-order', orderId: order.id }}>
+            Submit order (eventData)
+          </Button>
+          <ReceivedList
+            label="button.interaction.onClick with action submit-order"
+            lines={viaClick}
+          />
+        </Stack>
+        <Text size="sm" tone="muted">
+          Open the browser console: both buttons also log their events in development.
+        </Text>
+      </Stack>
+    );
+  },
+};
+
 export const DebugLogging: Story = {
   name: 'Debug logging',
   render: function Render() {

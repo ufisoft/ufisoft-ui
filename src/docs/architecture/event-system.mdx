@@ -125,6 +125,61 @@ export const cmsBus = createEventBus({ registry: cmsEvents });
 
 <Canvas of={EventStories.ApplicationEvents} />
 
+## A custom event on a button click
+
+To announce something of your own when a button is clicked, emit it in the button's `onClick` — define it once and emit it on your bus:
+
+```ts
+// app-events.ts
+export const checkoutEvents = defineEvents(
+  { component: 'Checkout', prefix: 'checkout' },
+  {
+    'interaction.onOrderSubmit': {
+      description: 'The user submitted the order.',
+      payload: payload<{ orderId: string; total: number }>(),
+      fields: { orderId: 'string — the order', total: 'number — the order total' },
+      example: { orderId: 'A-1001', total: 249.9 },
+    },
+  },
+);
+
+export const checkoutBus = createEventBus({ registry: checkoutEvents });
+```
+
+```tsx
+<Button
+  onClick={() =>
+    checkoutBus.emit('checkout.interaction.onOrderSubmit', {
+      orderId: order.id,
+      total: order.total,
+    })
+  }
+>
+  Submit order
+</Button>;
+
+checkoutBus.on('checkout.interaction.onOrderSubmit', ({ orderId, total }) => {
+  analytics.track('order_submit', { orderId, total });
+});
+```
+
+The payload is typed (a missing `total` or a misspelt name is a TypeScript error) and logged in development. The global `eventBus` accepts only UfiSoft UI's own events, so application events live on their own bus.
+
+When you only need to react to _that_ button, a new event is not required: every `Button` already emits `button.interaction.onClick`. Give it `eventData` and recognise it — quicker, but untyped (`source.data` is `unknown`):
+
+```tsx
+<Button eventData={{ action: 'submit-order', orderId: order.id }}>Submit order</Button>;
+
+eventBus.on('button.interaction.onClick', ({ source }) => {
+  const data = source.data as { action?: string; orderId?: string } | undefined;
+  if (data?.action === 'submit-order') analytics.track('order_submit', data);
+});
+```
+
+Prefer your own event for anything with a business meaning (an order was submitted): it has a name, a type and docs.
+
+<Canvas of={EventStories.CustomEventOnClick} />
+
 ## Debug logging
 
 In development every event is logged to the browser console as one collapsed group:
