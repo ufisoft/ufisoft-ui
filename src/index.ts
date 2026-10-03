@@ -223,6 +223,18 @@ export {
   type TableCellProps,
   type TableCellAlign,
 } from './components/table';
+export {
+  DataTable,
+  type DataTableProps,
+  type DataTableColumn,
+  type DataTableQuery,
+  type DataTableLabels,
+  type DataTableMode,
+  type DataTableDensity,
+  type DataTableMaxHeight,
+  type DataTableSort,
+  type DataTableSortDirection,
+} from './components/data-table';
 export { FilePreview, type FilePreviewProps, type FileInfo } from './components/file-preview';
 
 // State & events

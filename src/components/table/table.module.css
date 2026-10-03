@@ -1,5 +1,7 @@
+/* --_scroll-max-block-size: set by DataTable (maxHeight) so the rows scroll under a sticky header. */
 .scroll {
   max-inline-size: 100%;
+  max-block-size: var(--_scroll-max-block-size, none);
   overflow-x: auto;
   border-radius: var(--ufi-radius-md);
 }

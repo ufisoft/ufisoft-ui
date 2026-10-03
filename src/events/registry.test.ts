@@ -49,6 +49,7 @@ describe('eventRegistry', () => {
       'Tabs',
       'Accordion',
       'Pagination',
+      'DataTable',
       'FilePreview',
     ]);
   });

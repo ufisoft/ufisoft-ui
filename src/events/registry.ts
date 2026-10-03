@@ -8,6 +8,7 @@ import { buttonEvents } from '../components/button/events';
 import { checkboxEvents } from '../components/checkbox/events';
 import { comboboxEvents } from '../components/combobox/events';
 import { contextMenuEvents } from '../components/context-menu/events';
+import { dataTableEvents } from '../components/data-table/events';
 import { datePickerEvents } from '../components/date-picker/events';
 import { dateRangePickerEvents } from '../components/date-range-picker/events';
 import { drawerEvents } from '../components/drawer/events';
@@ -51,6 +52,7 @@ export const eventRegistry = {
   ...tabsEvents,
   ...accordionEvents,
   ...paginationEvents,
+  ...dataTableEvents,
   ...filePreviewEvents,
 };
 
