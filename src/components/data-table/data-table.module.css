@@ -106,3 +106,106 @@
 .pageSize {
   inline-size: auto;
 }
+
+/* Toolbar: global search, then the active filters. */
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-xs);
+}
+
+.search {
+  max-inline-size: 20rem;
+}
+
+/* A header holds the sort button and, for filterable columns, the filter button. */
+.headerContent {
+  display: flex;
+  gap: var(--ufi-space-2xs);
+  align-items: center;
+  justify-content: var(--_align);
+}
+
+.filterButton {
+  flex-shrink: 0;
+}
+
+/* An active filter is marked by colour and by its button's name ("Filter Role (active)"). */
+.filterActive {
+  color: var(--ufi-color-action-primary-bg);
+}
+
+.filterPopover {
+  min-inline-size: 16rem;
+}
+
+.filterForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-sm);
+  font-weight: var(--ufi-weight-regular);
+  color: var(--ufi-color-text-default);
+  text-align: start;
+  white-space: normal;
+}
+
+.filterTitle {
+  font-weight: var(--ufi-weight-semibold);
+}
+
+.filterRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ufi-space-xs);
+}
+
+.filterOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-xs);
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.filterLegend {
+  padding: 0;
+  margin-block-end: var(--ufi-space-2xs);
+  font-weight: var(--ufi-weight-medium);
+}
+
+.filterActions {
+  display: flex;
+  gap: var(--ufi-space-xs);
+  justify-content: flex-end;
+}
+
+/* Active filters as removable chips. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  gap: var(--ufi-space-2xs);
+  align-items: center;
+  padding-inline-start: var(--ufi-space-sm);
+  font-size: var(--ufi-text-sm);
+  color: var(--ufi-color-text-default);
+  background-color: var(--ufi-color-bg-subtle);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-default);
+  border-radius: var(--ufi-radius-full);
+}
+
+.noMatches {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ufi-space-sm);
+  align-items: center;
+}

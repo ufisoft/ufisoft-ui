@@ -61,4 +61,70 @@ describe('DataTable events', () => {
       { name: 'datatable.state.onPageChange', payload: { page: 1, previousPage: 2, source } },
     ]);
   });
+
+  it('emits datatable.state.onFilter from the header editor, and nothing from its parts', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    render(
+      <DataTable
+        id="items"
+        caption="Items"
+        columns={[
+          {
+            id: 'name',
+            header: 'Name',
+            value: (row: { name: string }) => row.name,
+            filter: {
+              type: 'select',
+              multiple: true,
+              options: [{ value: 'Item 1', label: 'Item 1' }],
+            },
+          },
+        ]}
+        data={data}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Filter Name' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('checkbox', { name: 'Item 1' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Apply' }));
+    await user.click(screen.getByRole('button', { name: 'Remove filter: Name: Item 1' }));
+
+    const filters = { name: { type: 'select', values: ['Item 1'] } };
+    expect(events).toEqual([
+      {
+        name: 'datatable.state.onFilter',
+        payload: { filters, previousFilters: {}, source: { id: 'items' } },
+      },
+      {
+        name: 'datatable.state.onFilter',
+        payload: { filters: {}, previousFilters: filters, source: { id: 'items' } },
+      },
+    ]);
+  });
+
+  it('emits datatable.state.onSearch once typing pauses', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    render(
+      <DataTable
+        caption="Items"
+        globalSearch
+        searchDebounce={0}
+        columns={[{ id: 'name', header: 'Name', value: (row: { name: string }) => row.name }]}
+        data={data}
+      />,
+    );
+
+    await user.type(screen.getByRole('searchbox', { name: 'Search' }), '12');
+    expect(
+      events
+        .filter((event) => event.name === 'datatable.state.onSearch')
+        .map((event) => event.payload),
+    ).toEqual([
+      { search: '1', previousSearch: '', source: {} },
+      { search: '12', previousSearch: '1', source: {} },
+    ]);
+    expect(names(events).every((name) => name.startsWith('datatable.'))).toBe(true);
+  });
 });

@@ -1,9 +1,12 @@
 'use client';
 
 import { clsx } from 'clsx';
-import { useId, useState, type ComponentProps, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from 'react';
+import type { DayPickerLocale } from 'react-day-picker';
 import { eventSource, type EventDataProps } from '../../events/define-events';
 import { EventScope, useEmit } from '../../events/react';
+import { Button } from '../button';
+import { Input } from '../input';
 import { Pagination } from '../pagination';
 import { Select } from '../select';
 import { Skeleton } from '../skeleton';
@@ -18,6 +21,16 @@ import {
 } from '../table';
 import styles from './data-table.module.css';
 import {
+  filterRows,
+  sameFilters,
+  withFilter,
+  type DataTableColumnFilter,
+  type DataTableFilter,
+  type DataTableFilters,
+  type DataTableTextOperator,
+} from './filtering';
+import { ActiveFilters, FilterButton, type FilterColumn } from './filters';
+import {
   nextSort,
   sameSort,
   sortRows,
@@ -26,6 +39,13 @@ import {
 } from './sorting';
 
 export type { DataTableSort, DataTableSortDirection } from './sorting';
+export type {
+  DataTableColumnFilter,
+  DataTableFilter,
+  DataTableFilterOption,
+  DataTableFilters,
+  DataTableTextOperator,
+} from './filtering';
 
 export type DataTableMode = 'client' | 'server';
 export type DataTableDensity = 'compact' | 'normal';
@@ -46,11 +66,21 @@ export interface DataTableColumn<T> {
   align?: TableCellAlign;
   headerClassName?: string;
   cellClassName?: string;
+  /** Plain-text name for labels (“Filter Name”, filter chips) when `header` is not plain text. */
+  label?: string;
+  /** Adds a filter to the header; the type decides the editor. */
+  filter?: DataTableColumnFilter;
+  /** The value filters and search compare, when it differs from `value`. */
+  filterValue?: (row: T) => unknown;
+  /** Whether global search looks at this column. Defaults to true when it has a value. */
+  searchable?: boolean;
 }
 
-/** Everything a server needs to fetch one page: sorting and pagination. */
+/** Everything a server needs to fetch one page: sorting, filters, search and pagination. */
 export interface DataTableQuery {
   sort: DataTableSort[];
+  filters: DataTableFilters;
+  search: string;
   page: number;
   pageSize: number;
 }
@@ -71,6 +101,31 @@ export interface DataTableLabels {
   previous: string;
   next: string;
   page: (page: number) => string;
+  /** Global search field. */
+  search: string;
+  searchPlaceholder: string;
+  /** Shown when filters or search leave no rows, with a button to clear them. */
+  noMatches: string;
+  clearFilters: string;
+  /** Filter button and editor. `active` is true when the column has a filter. */
+  filter: (column: string, active: boolean) => string;
+  condition: string;
+  value: string;
+  operators: Record<DataTableTextOperator, string>;
+  min: string;
+  max: string;
+  from: string;
+  to: string;
+  chooseDates: string;
+  any: string;
+  yes: string;
+  no: string;
+  apply: string;
+  clear: string;
+  /** The list of active filters, and removing one or all. */
+  activeFilters: string;
+  removeFilter: (summary: string) => string;
+  clearAll: string;
 }
 
 export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children'>, EventDataProps {
@@ -108,7 +163,23 @@ export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children
   /** Choices in the rows-per-page select; an empty array hides it. */
   pageSizeOptions?: number[];
 
-  /** Called with the whole query after every sort, page or page size change. */
+  /** Shows a search field above the table that looks in every searchable column. */
+  globalSearch?: boolean;
+  /** Search text (controlled). */
+  search?: string;
+  defaultSearch?: string;
+  onSearchChange?: (search: string) => void;
+  /** Milliseconds after the last keystroke before the search applies. Defaults to 300. */
+  searchDebounce?: number;
+
+  /** Column filters by column id (controlled). */
+  filters?: DataTableFilters;
+  defaultFilters?: DataTableFilters;
+  onFiltersChange?: (filters: DataTableFilters) => void;
+  /** Month names and week start for date filters, e.g. `tr` from `react-day-picker/locale`. */
+  dateLocale?: DayPickerLocale;
+
+  /** Called with the whole query after every sort, filter, search, page or page size change. */
   onQueryChange?: (query: DataTableQuery) => void;
 
   /** Shows skeleton rows when there are none yet, and marks the table busy. */
@@ -142,14 +213,39 @@ function defaultLabels(locale: string | undefined): DataTableLabels {
     previous: 'Previous',
     next: 'Next',
     page: (page) => `Page ${page}`,
+    search: 'Search',
+    searchPlaceholder: 'Search…',
+    noMatches: 'No results match the filters.',
+    clearFilters: 'Clear filters and search',
+    filter: (column, active) => `Filter ${column}${active ? ' (active)' : ''}`,
+    condition: 'Condition',
+    value: 'Value',
+    operators: { contains: 'contains', equals: 'is', startsWith: 'starts with' },
+    min: 'Min',
+    max: 'Max',
+    from: 'From',
+    to: 'To',
+    chooseDates: 'Choose dates',
+    any: 'Any',
+    yes: 'Yes',
+    no: 'No',
+    apply: 'Apply',
+    clear: 'Clear',
+    activeFilters: 'Active filters',
+    removeFilter: (summary) => `Remove filter: ${summary}`,
+    clearAll: 'Clear all filters',
   };
+}
+
+function columnLabel<T>(column: DataTableColumn<T>): string {
+  return column.label ?? (typeof column.header === 'string' ? column.header : column.id);
 }
 
 const ariaSort = { asc: 'ascending', desc: 'descending' } as const;
 
 /**
- * A data table for admin screens: sortable columns and pages, on the client or the server.
- * Built on `Table`, `Pagination`, `Select` and `Skeleton`.
+ * A data table for admin screens: sorting, search, column filters and pages, on the client or the
+ * server. Built on the kit's own components.
  */
 export function DataTable<T>({
   caption,
@@ -169,6 +265,15 @@ export function DataTable<T>({
   defaultPageSize = 10,
   onPageSizeChange,
   pageSizeOptions = [10, 25, 50, 100],
+  globalSearch = false,
+  search: searchProp,
+  defaultSearch = '',
+  onSearchChange,
+  searchDebounce = 300,
+  filters: filtersProp,
+  defaultFilters = {},
+  onFiltersChange,
+  dateLocale,
   onQueryChange,
   loading = false,
   error,
@@ -189,13 +294,33 @@ export function DataTable<T>({
   const [innerSort, setInnerSort] = useState(defaultSort);
   const [innerPage, setInnerPage] = useState(defaultPage);
   const [innerPageSize, setInnerPageSize] = useState(defaultPageSize);
+  const [innerSearch, setInnerSearch] = useState(defaultSearch);
+  const [innerFilters, setInnerFilters] = useState(defaultFilters);
   const sort = sortProp ?? innerSort;
+  const search = searchProp ?? innerSearch;
+  const filters = filtersProp ?? innerFilters;
+
+  // The search field updates at once; the search applies after a pause in typing.
+  const [searchInput, setSearchInput] = useState(search);
+  const [shownSearch, setShownSearch] = useState(search);
+  if (shownSearch !== search) {
+    // A search set from outside (controlled, or cleared) replaces the field's text.
+    setShownSearch(search);
+    setSearchInput(search);
+  }
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(searchTimer.current), []);
   const pageSize = paginated ? (pageSizeProp ?? innerPageSize) : Number.POSITIVE_INFINITY;
 
   const isServer = mode === 'server';
   const rows = isServer
     ? data
-    : sortRows(data, sort, columns, new Intl.Collator(locale, { numeric: true }));
+    : sortRows(
+        filterRows(data, columns, filters, search, locale),
+        sort,
+        columns,
+        new Intl.Collator(locale, { numeric: true }),
+      );
   const total = isServer ? (totalCount ?? data.length) : rows.length;
   const pageCount = paginated ? Math.max(1, Math.ceil(total / pageSize)) : 1;
   // A page beyond the last (rows were removed) shows the last page.
@@ -211,6 +336,15 @@ export function DataTable<T>({
     emit('datatable.state.onPageChange', { page: next, previousPage: page, source: source() });
   }
 
+  const query = (changes: Partial<DataTableQuery>): DataTableQuery => ({
+    sort,
+    filters,
+    search,
+    page,
+    pageSize,
+    ...changes,
+  });
+
   function changeSort(columnId: string, multi: boolean) {
     const next = nextSort(sort, columnId, multi);
     if (sameSort(next, sort)) return;
@@ -219,12 +353,56 @@ export function DataTable<T>({
     emit('datatable.state.onSort', { sort: next, previousSort: sort, source: source() });
     // A new order starts at the first page.
     applyPage(1);
-    onQueryChange?.({ sort: next, page: 1, pageSize });
+    onQueryChange?.(query({ sort: next, page: 1 }));
   }
 
   function changePage(next: number) {
     applyPage(next);
-    onQueryChange?.({ sort, page: next, pageSize });
+    onQueryChange?.(query({ page: next }));
+  }
+
+  function changeFilters(next: DataTableFilters, nextSearch = search) {
+    const filtersChanged = !sameFilters(next, filters);
+    const searchChanged = nextSearch !== search;
+    if (!filtersChanged && !searchChanged) return;
+    if (filtersChanged) {
+      if (filtersProp === undefined) setInnerFilters(next);
+      onFiltersChange?.(next);
+      emit('datatable.state.onFilter', {
+        filters: next,
+        previousFilters: filters,
+        source: source(),
+      });
+    }
+    if (searchChanged) {
+      if (searchProp === undefined) setInnerSearch(nextSearch);
+      onSearchChange?.(nextSearch);
+      emit('datatable.state.onSearch', {
+        search: nextSearch,
+        previousSearch: search,
+        source: source(),
+      });
+    }
+    // Fewer or other rows: start at the first page.
+    applyPage(1);
+    onQueryChange?.(query({ filters: next, search: nextSearch, page: 1 }));
+  }
+
+  function changeColumnFilter(columnId: string, filter: DataTableFilter | null) {
+    changeFilters(withFilter(filters, columnId, filter));
+  }
+
+  function typeSearch(text: string) {
+    setSearchInput(text);
+    clearTimeout(searchTimer.current);
+    if (searchDebounce <= 0) changeFilters(filters, text);
+    else searchTimer.current = setTimeout(() => changeFilters(filters, text), searchDebounce);
+  }
+
+  function clearAll() {
+    clearTimeout(searchTimer.current);
+    setSearchInput('');
+    changeFilters({}, '');
   }
 
   function changePageSize(next: number) {
@@ -237,13 +415,17 @@ export function DataTable<T>({
       source: source(),
     });
     applyPage(1);
-    onQueryChange?.({ sort, page: 1, pageSize: next });
+    onQueryChange?.(query({ page: 1, pageSize: next }));
   }
 
   const from = total === 0 ? 0 : paginated ? (page - 1) * pageSize + 1 : 1;
   const to = paginated ? Math.min(page * pageSize, total) : total;
   const multiSort = sort.length > 1;
   const showSkeleton = loading && visible.length === 0 && !error;
+  const filtering = Object.keys(filters).length > 0 || search.trim() !== '';
+  const filterColumns: FilterColumn[] = columns.flatMap((column) =>
+    column.filter ? [{ id: column.id, label: columnLabel(column), filter: column.filter }] : [],
+  );
 
   return (
     <div
@@ -255,6 +437,30 @@ export function DataTable<T>({
       )}
       {...props}
     >
+      {(globalSearch || filtering) && (
+        <div className={styles.toolbar}>
+          {globalSearch && (
+            <Input
+              type="search"
+              size="sm"
+              aria-label={labels.search}
+              placeholder={labels.searchPlaceholder}
+              value={searchInput}
+              onChange={(event) => typeSearch(event.target.value)}
+              className={styles.search}
+            />
+          )}
+          <ActiveFilters
+            columns={filterColumns}
+            filters={filters}
+            onRemove={(columnId) => changeColumnFilter(columnId, null)}
+            onClearAll={() => changeFilters({})}
+            labels={labels}
+            locale={locale}
+          />
+        </div>
+      )}
+
       <Table caption={caption} aria-busy={loading || undefined} className={styles.table}>
         <TableHeader>
           <TableRow>
@@ -262,6 +468,7 @@ export function DataTable<T>({
               const sortable = column.sortable ?? Boolean(column.value || column.compare);
               const index = sort.findIndex((entry) => entry.columnId === column.id);
               const entry = index >= 0 ? sort[index] : undefined;
+              const filterColumn = filterColumns.find((candidate) => candidate.id === column.id);
               return (
                 <TableHead
                   key={column.id}
@@ -270,29 +477,40 @@ export function DataTable<T>({
                   aria-sort={entry && index === 0 ? ariaSort[entry.direction] : undefined}
                   className={column.headerClassName}
                 >
-                  {sortable ? (
-                    <button
-                      type="button"
-                      className={clsx(styles.sortButton, entry && styles.sorted)}
-                      aria-describedby={entry ? `${descriptionId}-${column.id}` : undefined}
-                      onClick={(event) => changeSort(column.id, event.shiftKey)}
-                    >
-                      <span>{column.header}</span>
-                      <SortIcon direction={entry?.direction} />
-                      {entry && multiSort && (
-                        <span className={styles.priority} aria-hidden="true">
-                          {index + 1}
-                        </span>
-                      )}
-                      {entry && (
-                        <span id={`${descriptionId}-${column.id}`} hidden>
-                          {labels.sorted(entry.direction, multiSort ? index + 1 : null)}
-                        </span>
-                      )}
-                    </button>
-                  ) : (
-                    column.header
-                  )}
+                  <div className={styles.headerContent}>
+                    {sortable ? (
+                      <button
+                        type="button"
+                        className={clsx(styles.sortButton, entry && styles.sorted)}
+                        aria-describedby={entry ? `${descriptionId}-${column.id}` : undefined}
+                        onClick={(event) => changeSort(column.id, event.shiftKey)}
+                      >
+                        <span>{column.header}</span>
+                        <SortIcon direction={entry?.direction} />
+                        {entry && multiSort && (
+                          <span className={styles.priority} aria-hidden="true">
+                            {index + 1}
+                          </span>
+                        )}
+                        {entry && (
+                          <span id={`${descriptionId}-${column.id}`} hidden>
+                            {labels.sorted(entry.direction, multiSort ? index + 1 : null)}
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      column.header
+                    )}
+                    {filterColumn && (
+                      <FilterButton
+                        column={filterColumn}
+                        value={filters[column.id]}
+                        onChange={(filter) => changeColumnFilter(column.id, filter)}
+                        labels={labels}
+                        dateLocale={dateLocale}
+                      />
+                    )}
+                  </div>
                 </TableHead>
               );
             })}
@@ -318,7 +536,18 @@ export function DataTable<T>({
           ) : visible.length === 0 ? (
             <TableRow>
               <TableCell colSpan={columns.length} className={styles.message}>
-                {emptyMessage ?? labels.empty}
+                {filtering ? (
+                  <div className={styles.noMatches}>
+                    <span>{labels.noMatches}</span>
+                    <EventScope silent>
+                      <Button size="sm" variant="secondary" onClick={clearAll}>
+                        {labels.clearFilters}
+                      </Button>
+                    </EventScope>
+                  </div>
+                ) : (
+                  (emptyMessage ?? labels.empty)
+                )}
               </TableCell>
             </TableRow>
           ) : (

@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useState } from 'react';
+import { tr } from 'react-day-picker/locale';
 import { fn } from 'storybook/test';
 import { DataTable, type DataTableColumn, type DataTableQuery } from '.';
 import { Badge } from '../badge';
 import { Button } from '../button';
 import { Stack } from '../stack';
 import { Text } from '../text';
+import { filterRows } from './filtering';
 import { sortRows } from './sorting';
 
 interface User {
@@ -16,6 +18,7 @@ interface User {
   status: 'Active' | 'Invited' | 'Suspended';
   orders: number;
   createdAt: Date;
+  verified: boolean;
 }
 
 const firstNames = [
@@ -46,6 +49,7 @@ function makeUsers(count: number): User[] {
       status: statuses[(i * 7) % statuses.length] as User['status'],
       orders: (i * 37) % 120,
       createdAt: new Date(2026, (i * 5) % 12, ((i * 11) % 27) + 1),
+      verified: i % 4 !== 1,
     };
   });
 }
@@ -55,17 +59,53 @@ const users = makeUsers(57);
 const statusTone = { Active: 'success', Invited: 'info', Suspended: 'danger' } as const;
 
 const columns: DataTableColumn<User>[] = [
-  { id: 'name', header: 'Name', value: (u) => u.name },
-  { id: 'email', header: 'Email', value: (u) => u.email },
-  { id: 'role', header: 'Role', value: (u) => u.role },
+  { id: 'name', header: 'Name', value: (u) => u.name, filter: { type: 'text' } },
+  { id: 'email', header: 'Email', value: (u) => u.email, filter: { type: 'text' } },
+  {
+    id: 'role',
+    header: 'Role',
+    value: (u) => u.role,
+    filter: {
+      type: 'select',
+      multiple: true,
+      options: roles.map((role) => ({ value: role, label: role })),
+    },
+  },
   {
     id: 'status',
     header: 'Status',
     value: (u) => u.status,
     cell: (u) => <Badge tone={statusTone[u.status]}>{u.status}</Badge>,
+    filter: {
+      type: 'select',
+      options: ['Active', 'Invited', 'Suspended'].map((status) => ({
+        value: status,
+        label: status,
+      })),
+    },
   },
-  { id: 'orders', header: 'Orders', value: (u) => u.orders, align: 'end' },
-  { id: 'createdAt', header: 'Created', value: (u) => u.createdAt, align: 'end' },
+  {
+    id: 'orders',
+    header: 'Orders',
+    value: (u) => u.orders,
+    align: 'end',
+    filter: { type: 'number' },
+  },
+  {
+    id: 'createdAt',
+    header: 'Created',
+    value: (u) => u.createdAt,
+    align: 'end',
+    filter: { type: 'date' },
+  },
+  {
+    id: 'verified',
+    header: 'Verified',
+    value: (u) => u.verified,
+    cell: (u) => (u.verified ? 'Yes' : 'No'),
+    searchable: false,
+    filter: { type: 'boolean', trueLabel: 'Verified', falseLabel: 'Not verified' },
+  },
 ];
 
 const meta = {
@@ -94,6 +134,27 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const SearchAndFilters: Story = {
+  name: 'Search and column filters',
+  args: { globalSearch: true },
+};
+
+export const PresetFilters: Story = {
+  name: 'Preset filters',
+  args: {
+    globalSearch: true,
+    defaultFilters: {
+      role: { type: 'select', values: ['Admin', 'Editor'] },
+      orders: { type: 'number', min: 50, max: null },
+    },
+  },
+};
+
+export const NoMatches: Story = {
+  name: 'Filters with no matches',
+  args: { globalSearch: true, defaultSearch: 'nobody-matches-this' },
+};
 
 export const MultiSort: Story = {
   name: 'Sorted by several columns',
@@ -153,11 +214,12 @@ export const Turkish: Story = {
   },
 };
 
-/** A fake API: sorts and pages on the "server" after a delay, like a real request. */
+/** A fake API: filters, sorts and pages on the "server" after a delay, like a real request. */
+const serverUsers = makeUsers(1250);
 function fetchUsers(query: DataTableQuery) {
   return new Promise<{ rows: User[]; total: number }>((resolve) => {
     setTimeout(() => {
-      const all = makeUsers(1250);
+      const all = filterRows(serverUsers, columns, query.filters, query.search);
       const sorted = sortRows(
         all,
         query.sort,
@@ -173,7 +235,13 @@ function fetchUsers(query: DataTableQuery) {
 export const ServerMode: Story = {
   name: 'Example: server-side sorting and paging',
   render: function Render(args) {
-    const [query, setQuery] = useState<DataTableQuery>({ sort: [], page: 1, pageSize: 10 });
+    const [query, setQuery] = useState<DataTableQuery>({
+      sort: [],
+      filters: {},
+      search: '',
+      page: 1,
+      pageSize: 10,
+    });
     const [result, setResult] = useState<{ rows: User[]; total: number }>({ rows: [], total: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -196,10 +264,14 @@ export const ServerMode: Story = {
           {...args}
           caption="Users (1,250 on the server)"
           mode="server"
+          globalSearch
+          dateLocale={tr}
           data={result.rows}
           totalCount={result.total}
           loading={loading}
           sort={query.sort}
+          filters={query.filters}
+          search={query.search}
           page={query.page}
           pageSize={query.pageSize}
           onQueryChange={setQuery}
@@ -217,6 +289,8 @@ export const Controlled: Story = {
   render: function Render(args) {
     const [query, setQuery] = useState<DataTableQuery>({
       sort: [{ columnId: 'createdAt', direction: 'desc' }],
+      filters: {},
+      search: '',
       page: 1,
       pageSize: 10,
     });
@@ -224,7 +298,10 @@ export const Controlled: Story = {
       <Stack gap="sm">
         <DataTable
           {...args}
+          globalSearch
           sort={query.sort}
+          filters={query.filters}
+          search={query.search}
           page={query.page}
           pageSize={query.pageSize}
           onQueryChange={setQuery}
@@ -233,10 +310,16 @@ export const Controlled: Story = {
           <Button
             variant="secondary"
             onClick={() =>
-              setQuery({ sort: [{ columnId: 'orders', direction: 'desc' }], page: 1, pageSize: 10 })
+              setQuery({
+                sort: [{ columnId: 'orders', direction: 'desc' }],
+                filters: { status: { type: 'select', values: ['Active'] } },
+                search: '',
+                page: 1,
+                pageSize: 10,
+              })
             }
           >
-            Top customers
+            Top active customers
           </Button>
           <Text size="sm" tone="muted">
             Keep the query in the URL or a store to restore the view.

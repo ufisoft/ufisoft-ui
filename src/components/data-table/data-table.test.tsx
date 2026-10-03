@@ -169,6 +169,8 @@ describe('DataTable', () => {
     expect(firstCells()[0]).toBe('User 01');
     expect(onQueryChange).toHaveBeenLastCalledWith({
       sort: [{ columnId: 'age', direction: 'asc' }],
+      filters: {},
+      search: '',
       page: 1,
       pageSize: 10,
     });
@@ -176,6 +178,8 @@ describe('DataTable', () => {
     await user.click(screen.getByRole('button', { name: 'Page 2' }));
     expect(onQueryChange).toHaveBeenLastCalledWith({
       sort: [{ columnId: 'age', direction: 'asc' }],
+      filters: {},
+      search: '',
       page: 2,
       pageSize: 10,
     });

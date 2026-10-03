@@ -6,7 +6,7 @@ import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 # DataTable
 
-A data table for admin screens: sortable columns and pages, on the client or the server.
+A data table for admin screens: sorting, search, column filters and pages, on the client or the server.
 
 <Canvas of={DataTableStories.Default} />
 
@@ -32,7 +32,13 @@ A data table for admin screens: sortable columns and pages, on the client or the
 **Client or server.** `mode="client"` (default) sorts and pages `data` itself. `mode="server"` shows `data` as the current page and `totalCount` as the total; every change is reported so your server does the work:
 
 ```tsx
-const [query, setQuery] = useState<DataTableQuery>({ sort: [], page: 1, pageSize: 25 });
+const [query, setQuery] = useState<DataTableQuery>({
+  sort: [],
+  filters: {},
+  search: '',
+  page: 1,
+  pageSize: 25,
+});
 const { rows, total, isLoading } = useUsers(query); // your fetch
 
 <DataTable
@@ -42,21 +48,38 @@ const { rows, total, isLoading } = useUsers(query); // your fetch
   data={rows}
   totalCount={total}
   loading={isLoading}
+  globalSearch
   sort={query.sort}
+  filters={query.filters}
+  search={query.search}
   page={query.page}
   pageSize={query.pageSize}
   onQueryChange={setQuery}
 />;
 ```
 
-`onQueryChange` receives `{ sort, page, pageSize }` after every change — one place to fetch from. The separate `onSortChange`, `onPageChange` and `onPageSizeChange` also fire.
+`onQueryChange` receives `{ sort, filters, search, page, pageSize }` after every change — one place to fetch from. The separate callbacks (`onSortChange`, `onFiltersChange`, `onSearchChange`, `onPageChange`, `onPageSizeChange`) also fire.
 
-**State.** Sort, page and page size each work controlled (`sort` + `onSortChange`) or uncontrolled (`defaultSort`). A new sort or page size goes back to page 1. Keep the query in the URL or a store (`createStore`) to restore a view.
+**Search and filters.** `globalSearch` adds a search field that looks in every column with a `value` (unless `searchable={false}`), ignoring case and accents (“cagla” finds “Çağla”); it applies `searchDebounce` ms (300) after the last keystroke. A column with `filter` gets a filter button in its header; the type decides the editor:
+
+| `filter.type` | Editor                                     | Matches                                               |
+| ------------- | ------------------------------------------ | ----------------------------------------------------- |
+| `text`        | contains / is / starts with + a value      | the value as text, ignoring case and accents          |
+| `number`      | min and max                                | numbers within the bounds (inclusive)                 |
+| `select`      | a select, or checkboxes with `multiple`    | any of the chosen `options`; also inside array values |
+| `date`        | a `DateRangePicker`                        | whole days from–to (Dates or date strings)            |
+| `boolean`     | Any / yes / no (`trueLabel`, `falseLabel`) | the value as true or false                            |
+
+A filter applies on _Apply_ or Enter — a server is asked once, not per keystroke. Active filters are listed above the table; each can be removed, or all at once. `filterValue` filters on something other than `value`, `label` names a column whose header is not plain text, and `dateLocale` (from `react-day-picker/locale`) translates the date filter's calendar. Filters are `{ [columnId]: { type, … } }` — the same shape your server receives.
+
+**State.** Sort, filters, search, page and page size each work controlled (`sort` + `onSortChange`, `filters` + `onFiltersChange`, `search` + `onSearchChange`) or uncontrolled (`defaultSort`, `defaultFilters`, `defaultSearch`). A new sort, filter, search or page size goes back to page 1. Keep the query in the URL or a store (`createStore`) to restore a view.
 
 **Labels.** `labels` translates every text, including the range (“1–10 of 245”) and the sort description; `locale` sets text sorting and number formatting.
 
 ## Variants
 
+<Canvas of={DataTableStories.SearchAndFilters} />
+<Canvas of={DataTableStories.PresetFilters} />
 <Canvas of={DataTableStories.MultiSort} />
 <Canvas of={DataTableStories.Compact} />
 <Canvas of={DataTableStories.StickyHeader} />
@@ -68,6 +91,7 @@ const { rows, total, isLoading } = useUsers(query); // your fetch
 <Canvas of={DataTableStories.Loading} />
 <Canvas of={DataTableStories.Empty} />
 <Canvas of={DataTableStories.ErrorState} />
+<Canvas of={DataTableStories.NoMatches} />
 
 While `loading`, the table is marked busy and the footer says “Loading…”. Without rows yet, skeleton rows keep the layout; with rows, they stay visible until the new data arrives.
 
@@ -87,6 +111,8 @@ While `loading`, the table is marked busy and the footer says “Loading…”. 
 - Sortable headers are buttons: Enter or Space sorts, Shift+click adds a secondary sort. The primary sorted column has `aria-sort`; every sorted header's button is described as “sorted ascending/descending” (with its priority when several columns sort).
 - The range (“11–20 of 245”) and “Loading…” are in a status region, so page changes and loading are announced politely. Errors are announced with `role="alert"`.
 - The rows-per-page select and the pagination are labelled; translate them with `labels`.
+- The search field is a labelled `searchbox`. Each filter button is named “Filter Name”, and “Filter Name (active)” while the column is filtered; it opens a dialog named like it, with labelled fields, that returns focus to the button on close. Active filters are a named list; each remove button names the filter it removes.
+- When filters or search leave no rows, the empty message says so and offers a button that clears them.
 - Shift+click has no keyboard equivalent beyond Shift+Enter in most browsers — offer a preset view (as in the controlled example) when a multi-column order matters.
 
 ## Do / Don't
@@ -97,6 +123,7 @@ While `loading`, the table is marked busy and the footer says “Loading…”. 
 | Use `mode="server"` for large or remote data.                | Load 10,000 rows into the browser to sort them.          |
 | Give actions columns a visible label and real buttons/links. | Make the whole row clickable as the only way to open it. |
 | Keep the query in the URL for shareable views.               | Reset the user's sort on every data refresh.             |
+| Add filters to the columns users actually narrow by.         | Put a filter on every column.                            |
 
 ## Related components
 
