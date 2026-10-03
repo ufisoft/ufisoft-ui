@@ -1,0 +1,14 @@
+.timeRangePicker {
+  display: flex;
+  gap: var(--ufi-space-xs);
+  align-items: center;
+  min-inline-size: 0;
+}
+
+.field {
+  flex: 1;
+}
+
+.separator {
+  color: var(--ufi-color-text-muted);
+}

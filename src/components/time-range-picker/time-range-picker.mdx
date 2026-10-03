@@ -1,0 +1,73 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as TimeRangePickerStories from './time-range-picker.stories';
+
+<Meta of={TimeRangePickerStories} />
+
+# TimeRangePicker
+
+Two time fields for a start and an end time within one day, each typed or picked from a list.
+
+<Canvas of={TimeRangePickerStories.Default} />
+
+## When to use
+
+- A period within one day: opening hours, a shift, a meeting slot, quiet hours.
+
+## When not to use
+
+- One time — use `TimePicker`.
+- A period that crosses midnight (22:00–06:00) or spans days — use `DatePicker` + `TimePicker` pairs, or `DateRangePicker` for whole days.
+- A duration (“1 h 30 min”) — use `Input` with a clear unit, or `Select` for fixed durations.
+
+## Props
+
+<ArgTypes of={TimeRangePickerStories} />
+
+The value is `{ from, to }`: each a `HH:mm` string in 24-hour time, or `null` while not chosen. Use `value` + `onValueChange` (controlled) or `defaultValue` (uncontrolled). Remaining props and `ref` go to the wrapper, which has `role="group"`.
+
+`startLabel` and `endLabel` name the two fields; the group is named by `aria-label` or by a surrounding `FormField`'s `FormLabel`. With `startName` / `endName`, hidden inputs submit the times as `HH:mm`.
+
+`locale`, `timeFormat`, `min`, `max` and `step` work as in `TimePicker` and apply to both fields. Inside a `FormField`, the description, message, `required`, `disabled` and `invalid` apply to both fields.
+
+Built from two `TimePicker`s.
+
+## Sizes
+
+<Canvas of={TimeRangePickerStories.Sizes} />
+
+## States
+
+<Canvas of={TimeRangePickerStories.WithValue} />
+<Canvas of={TimeRangePickerStories.BusinessHours} />
+<Canvas of={TimeRangePickerStories.Invalid} />
+<Canvas of={TimeRangePickerStories.Disabled} />
+
+Each end bounds the other: the start's latest time is the end, and the end's list starts at the start. Typed text becomes the value on blur or Enter; text that is not a time, falls outside `min`/`max`, or would put the start after the end is replaced by the current value again. An empty field clears that end. Start and end may be equal. To move a whole range later by typing, change the end first.
+
+## Examples
+
+<Canvas of={TimeRangePickerStories.InFormField} />
+<Canvas of={TimeRangePickerStories.Turkish} />
+<Canvas of={TimeRangePickerStories.Controlled} />
+<Canvas of={TimeRangePickerStories.InModal} />
+
+## Accessibility
+
+- The wrapper is a `group` named by its label; each field is a `combobox` named by `startLabel` / `endLabel`, so screen readers announce “Opening hours, group — Start time”.
+- Clicking the `FormLabel` focuses the start field.
+- Keyboard use in each field is as in `TimePicker`: arrow keys move through the list, Enter picks, Escape closes the list and keeps the value.
+- Every TimeRangePicker needs a group label: a `FormField` + `FormLabel`, or `aria-label`.
+
+## Do / Don't
+
+| Do                                                            | Don't                                                        |
+| ------------------------------------------------------------- | ------------------------------------------------------------ |
+| Name the ends for the task: “Opens” / “Closes”.               | Leave the default “Start time” / “End time” in a Turkish UI. |
+| Use `min`/`max` for the bookable hours.                       | Accept a range and reject it only after submit.              |
+| Handle `to: null` — the user may stop after choosing a start. | Assume both ends are set whenever `onValueChange` is called. |
+
+## Related components
+
+- `TimePicker` — a single time; each field of this one.
+- `DateRangePicker` — a range of days.
+- `FormField` — label, description and validation wiring.

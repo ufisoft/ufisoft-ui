@@ -15,6 +15,7 @@ A time field: type any time or pick one from a list of suggested times.
 
 ## When not to use
 
+- A start and an end time — use `TimeRangePicker`.
 - A duration (“1 h 30 min”) — use `Input` with a clear unit, or `Select` for fixed durations.
 - A handful of fixed slots that must not be changed (“Morning / Afternoon”) — use `Radio` or `Select`.
 - A full timestamp from another system — show it as text, don't make it editable.
@@ -68,6 +69,7 @@ Typed text becomes the value on blur or Enter. Common spellings work: `9:05`, `2
 
 ## Related components
 
+- `TimeRangePicker` — a start and an end time.
 - `DatePicker` — the date part of a date and time.
 - `Combobox` — choose one of many listed values.
 - `FormField` — label, description and validation wiring.

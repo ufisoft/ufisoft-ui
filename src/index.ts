@@ -68,6 +68,12 @@ export {
   type DateRange,
 } from './components/date-range-picker';
 export { TimePicker, type TimePickerProps, type TimePickerSize } from './components/time-picker';
+export {
+  TimeRangePicker,
+  type TimeRangePickerProps,
+  type TimeRangePickerSize,
+  type TimeRange,
+} from './components/time-range-picker';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 export {
   Radio,
