@@ -6,7 +6,7 @@ import { ComponentEvents } from '../../docs/blocks/event-docs';
 
 # DataTable
 
-A data table for admin screens: sorting, search, column filters, pages, row selection and actions, and column management, on the client or the server.
+A data table for admin screens: sorting, search, column filters, pages, row selection and actions, column management, row reordering and virtualization, on the client or the server.
 
 <Canvas of={DataTableStories.Default} />
 
@@ -86,6 +86,24 @@ Resizable or pinned columns switch the table to a fixed layout: set widths hold,
 
 The column state is `{ order, hidden, widths, pinned }` — controlled with `columnState` + `onColumnStateChange`, or `defaultColumnState`. With `storageKey` (uncontrolled), it is kept in `localStorage` and restored on the next visit, after the first render so server and client agree. Hidden columns keep their filters and sort.
 
+**Reordering rows.** `reorderableRows` adds a drag handle at each row's start. Drag it (mouse, pen or touch; the region scrolls near its edges), or focus it and press Space or Enter to pick the row up, the up and down arrows to move it and Space or Enter to drop it — Escape cancels. The table does not change `data`: `onRowReorder` receives `{ row, rowId, targetRowId, position, fromIndex, toIndex }` with indexes in `data` (in server mode, the page), so you apply the move and save it:
+
+```tsx
+onRowReorder={({ fromIndex, toIndex }) =>
+  setRows((rows) => {
+    const next = [...rows];
+    next.splice(toIndex, 0, ...next.splice(fromIndex, 1));
+    return next;
+  })
+}
+```
+
+Rows move among the rows shown (this page, these filter results). The handles are off while the table is sorted — the order shown is then not the order of `data`.
+
+**Many rows.** `virtualized` renders only the rows in view (plus `overscan`, 8) inside the `maxHeight` box (`lg` when not set); spacer rows keep the scroll bar honest. Use it with `paginated={false}` for thousands of rows. Row heights start at `estimatedRowHeight` (41, or 33 when compact) and are measured as rows render, so wrapped text and open details work. The columns use the fixed layout, so their widths do not change while scrolling. A focused or dragged row stays rendered when it scrolls away.
+
+**Loading more.** Without paging, `hasMore` with `onLoadMore` adds a “Load more” button, and with `maxHeight` or `virtualized` asks again by itself when the view comes within one screen of the end (once per batch). Set `loading` while fetching and append the rows to `data`.
+
 **State.** Sort, filters, search, page and page size each work controlled (`sort` + `onSortChange`, `filters` + `onFiltersChange`, `search` + `onSearchChange`) or uncontrolled (`defaultSort`, `defaultFilters`, `defaultSearch`). A new sort, filter, search or page size goes back to page 1. Keep the query in the URL or a store (`createStore`) to restore a view.
 
 **Labels.** `labels` translates every text, including the range (“1–10 of 245”) and the sort description; `locale` sets text sorting and number formatting.
@@ -97,6 +115,9 @@ The column state is `{ order, hidden, widths, pinned }` — controlled with `col
 <Canvas of={DataTableStories.SelectionAndActions} />
 <Canvas of={DataTableStories.RowDetail} />
 <Canvas of={DataTableStories.ColumnManagement} />
+<Canvas of={DataTableStories.RowReorder} />
+<Canvas of={DataTableStories.Virtualized} />
+<Canvas of={DataTableStories.InfiniteLoading} />
 <Canvas of={DataTableStories.MultiSort} />
 <Canvas of={DataTableStories.Compact} />
 <Canvas of={DataTableStories.StickyHeader} />
@@ -137,6 +158,9 @@ While `loading`, the table is marked busy and the footer says “Loading…”. 
 - Each resize handle is a focusable separator named “Resize Name”, with its width in pixels as `aria-valuenow` and the limits as `aria-valuemin` / `aria-valuemax`.
 - Dragging headers is pointer-only; the column chooser moves columns with buttons (“Move Name up”), keeps focus on the button and announces the new position. Its checkboxes are named after the columns; a column that cannot be hidden, and the last shown one, are disabled. Each pin select is named “Pin Name”.
 - The default pin labels say “Left” and “Right”: translate them in right-to-left apps, where the start side is on the right.
+- Each row's drag handle is a button named “Reorder Ayşe Kaya” and described by the keyboard instructions. Picking up, each move (“Ayşe Kaya: position 3 of 10.”), the drop and a cancel are announced in a status region; leaving the handle cancels.
+- Virtualized, the table has `aria-rowcount` (all rows plus the header) and each rendered row its `aria-rowindex`, so screen readers report positions in the whole table. Spacer rows are hidden from them. Rows that are not rendered cannot be reached with Tab — use search and filters to find a row, and paging when every row must be reachable by keyboard.
+- “Load more” is a real button, so loading never depends on scrolling.
 - `onRowClick` is a pointer shortcut only: rows are not focusable, so keep a link or a row action that does the same.
 - When filters or search leave no rows, the empty message says so and offers a button that clears them.
 - Shift+click has no keyboard equivalent beyond Shift+Enter in most browsers — offer a preset view (as in the controlled example) when a multi-column order matters.
@@ -154,6 +178,8 @@ While `loading`, the table is marked busy and the footer says “Loading…”. 
 | Pair `onRowClick` with a link or a row action.               | Hide the only way to open a record behind a row click.   |
 | Pin the column that identifies a row (name, number).         | Pin so many columns that nothing is left to scroll.      |
 | Give `storageKey` a name unique to the screen.               | Share one key between tables with different columns.     |
+| Save the new order in `onRowReorder`, then update `data`.    | Offer reordering on a sorted view.                       |
+| Virtualize long lists without paging; keep search at hand.   | Virtualize a 20-row page.                                |
 
 ## Related components
 

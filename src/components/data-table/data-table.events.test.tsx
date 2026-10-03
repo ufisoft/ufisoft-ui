@@ -272,4 +272,42 @@ describe('DataTable events', () => {
       { name: 'datatable.state.onColumnsReset', payload: { source: {} } },
     ]);
   });
+  it('emits datatable.interaction.onRowReorder and datatable.interaction.onLoadMore', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    render(
+      <DataTable
+        caption="Items"
+        reorderableRows
+        paginated={false}
+        hasMore
+        onLoadMore={() => {}}
+        getRowId={(row) => String(row.id)}
+        columns={[{ id: 'name', header: 'Name', value: (row: { name: string }) => row.name }]}
+        data={data.slice(0, 3)}
+      />,
+    );
+
+    screen.getByRole('button', { name: 'Reorder Item 1' }).focus();
+    await user.keyboard(' {ArrowDown} ');
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+
+    expect(events).toEqual([
+      {
+        name: 'datatable.interaction.onRowReorder',
+        payload: {
+          rowId: '1',
+          targetRowId: '2',
+          position: 'after',
+          fromIndex: 0,
+          toIndex: 1,
+          source: {},
+        },
+      },
+      {
+        name: 'datatable.interaction.onLoadMore',
+        payload: { loaded: 3, trigger: 'button', source: {} },
+      },
+    ]);
+  });
 });

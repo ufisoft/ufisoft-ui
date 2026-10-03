@@ -3,6 +3,7 @@ import type { DataTableColumnPin } from './columns';
 import type { DataTableFilters } from './filtering';
 import type { DataTableSelection } from './selection';
 import type { DataTableSort } from './sorting';
+import type { DataTableDropPosition } from './virtual';
 
 export const dataTableEvents = defineEvents(
   { component: 'DataTable', prefix: 'datatable' },
@@ -218,6 +219,45 @@ export const dataTableEvents = defineEvents(
       payload: payload<{ source: EventSource }>(),
       fields: { source: sourceField },
       example: { source: { id: 'users' } },
+    },
+    'interaction.onRowReorder': {
+      description:
+        'The user dropped a row in a new place: by dragging its handle, or with Space, the arrow keys and Space.',
+      payload: payload<{
+        rowId: string;
+        targetRowId: string;
+        position: DataTableDropPosition;
+        fromIndex: number;
+        toIndex: number;
+        source: EventSource;
+      }>(),
+      fields: {
+        rowId: 'string — the moved row',
+        targetRowId: 'string — the row it was dropped on',
+        position: "'before' | 'after' — the side of the target row",
+        fromIndex: 'number — its index in data (server mode: in the page) before the move',
+        toIndex: 'number — its index after the move',
+        source: sourceField,
+      },
+      example: {
+        rowId: '42',
+        targetRowId: '7',
+        position: 'before',
+        fromIndex: 9,
+        toIndex: 2,
+        source: { id: 'users' },
+      },
+    },
+    'interaction.onLoadMore': {
+      description:
+        'More rows were asked for: the view neared the end of the rows, or the user pressed "Load more".',
+      payload: payload<{ loaded: number; trigger: 'scroll' | 'button'; source: EventSource }>(),
+      fields: {
+        loaded: 'number — rows loaded so far',
+        trigger: "'scroll' | 'button' — what asked for them",
+        source: sourceField,
+      },
+      example: { loaded: 50, trigger: 'scroll', source: { id: 'users' } },
     },
   },
 );

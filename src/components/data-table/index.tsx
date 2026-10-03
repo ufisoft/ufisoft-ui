@@ -34,7 +34,7 @@ import {
   TableRow,
   type TableCellAlign,
 } from '../table';
-import { BulkBar, ExpandIcon, RowActionsButton, rowContextItems } from './actions';
+import { BulkBar, ExpandIcon, GripIcon, RowActionsButton, rowContextItems } from './actions';
 import { ColumnChooser, ResizeHandle } from './column-tools';
 import {
   clampWidth,
@@ -80,10 +80,14 @@ import {
   type DataTableSort,
   type DataTableSortDirection,
 } from './sorting';
+import { useRowDrag, type RowDropTarget } from './use-row-drag';
+import { useRowHeights, useVirtualRows } from './use-virtual-rows';
+import { dropIndex, renderedRows, type DataTableDropPosition } from './virtual';
 
 export type { DataTableSort, DataTableSortDirection } from './sorting';
 export type { DataTableSelection } from './selection';
 export type { DataTableColumnPin, DataTableColumnState } from './columns';
+export type { DataTableDropPosition } from './virtual';
 export type {
   DataTableColumnFilter,
   DataTableFilter,
@@ -179,6 +183,18 @@ export interface DataTableBulkAction<T> {
   onSelect: (context: DataTableBulkContext<T>) => void;
 }
 
+/** What `onRowReorder` receives: move `data[fromIndex]` to `toIndex`. */
+export interface DataTableRowReorder<T> {
+  row: T;
+  rowId: string;
+  /** The row it was dropped on, and on which side of it. */
+  targetRowId: string;
+  position: DataTableDropPosition;
+  /** Indexes in `data` (in server mode, the current page). */
+  fromIndex: number;
+  toIndex: number;
+}
+
 export interface DataTableLabels {
   /** Announced while `loading`. */
   loading: string;
@@ -248,6 +264,16 @@ export interface DataTableLabels {
   pinStart: string;
   pinEnd: string;
   resetColumns: string;
+  /** Row reordering. `row` is the row's name; positions count from 1 among the shown rows. */
+  reorderRow: (row: string) => string;
+  reorderColumn: string;
+  reorderInstructions: string;
+  rowPickedUp: (row: string, position: number, count: number) => string;
+  rowMoved: (row: string, position: number, count: number) => string;
+  rowDropped: (row: string, position: number, count: number) => string;
+  rowDragCancelled: (row: string) => string;
+  /** Infinite loading. */
+  loadMore: string;
 }
 
 export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children'>, EventDataProps {
@@ -332,6 +358,28 @@ export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children
   expandedRowIds?: string[];
   defaultExpandedRowIds?: string[];
   onExpandedChange?: (expandedRowIds: string[]) => void;
+
+  /**
+   * Adds a drag handle to each row: drag it, or focus it and use Space, the arrow keys and Space.
+   * Apply the move to `data` in `onRowReorder`. Off while the table is sorted.
+   */
+  reorderableRows?: boolean;
+  onRowReorder?: (change: DataTableRowReorder<T>) => void;
+  /**
+   * Renders only the rows in view, for thousands of rows without paging. Scrolls inside the
+   * `maxHeight` box (default `lg`) and lays columns out by width (fixed layout).
+   */
+  virtualized?: boolean;
+  /** Row height used until rows are measured. Defaults to 41 (normal) or 33 (compact) pixels. */
+  estimatedRowHeight?: number;
+  /** Rows rendered beyond each edge of the view. Defaults to 8. */
+  overscan?: number;
+  /**
+   * Without paging: more rows can be loaded. Shows “Load more”, and with `maxHeight` or
+   * `virtualized` asks for them when the view nears the end.
+   */
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 
   /** Adds a handle to each header's edge: drag it, or focus it and use the arrow keys. */
   resizableColumns?: boolean;
@@ -419,6 +467,15 @@ function defaultLabels(locale: string | undefined): DataTableLabels {
     pinStart: 'Left',
     pinEnd: 'Right',
     resetColumns: 'Reset columns',
+    reorderRow: (row) => `Reorder ${row}`,
+    reorderColumn: 'Reorder',
+    reorderInstructions:
+      'Press Space or Enter to pick up the row, the up and down arrows to move it, Space or Enter to drop it, Escape to cancel.',
+    rowPickedUp: (row, position, count) => `Picked up ${row}, position ${position} of ${count}.`,
+    rowMoved: (row, position, count) => `${row}: position ${position} of ${count}.`,
+    rowDropped: (row, position, count) => `Dropped ${row} at position ${position} of ${count}.`,
+    rowDragCancelled: (row) => `Reordering cancelled. ${row} is back in its place.`,
+    loadMore: 'Load more',
   };
 }
 
@@ -473,6 +530,13 @@ export function DataTable<T>({
   expandedRowIds: expandedProp,
   defaultExpandedRowIds = [],
   onExpandedChange,
+  reorderableRows = false,
+  onRowReorder,
+  virtualized = false,
+  estimatedRowHeight,
+  overscan = 8,
+  hasMore = false,
+  onLoadMore,
   resizableColumns = false,
   reorderableColumns = false,
   columnChooser = false,
@@ -601,7 +665,8 @@ export function DataTable<T>({
 
   const pinsStart = Object.values(columnState.pinned).includes('start');
   const pinsEnd = Object.values(columnState.pinned).includes('end');
-  const controlsStart = Number(selectable) + Number(renderDetail !== undefined);
+  const controlsStart =
+    Number(reorderableRows) + Number(selectable) + Number(renderDetail !== undefined);
   const controlsEnd = Number(rowActions.length > 0);
   const slots = layoutColumns(
     columnState,
@@ -614,7 +679,111 @@ export function DataTable<T>({
     return column ? [{ column, slot }] : [];
   });
   // Set widths only hold when the table lays columns out by them, not by their content.
-  const fixedLayout = resizableColumns || pinsStart || pinsEnd;
+  // Virtualized rows too: widths must not change as other rows scroll into view.
+  const fixedLayout = resizableColumns || pinsStart || pinsEnd || virtualized;
+  // Virtualization scrolls inside the maxHeight box.
+  const scrollBox = maxHeight ?? (virtualized ? 'lg' : undefined);
+
+  // Virtualization: only the rows in view are rendered; spacer rows keep the scroll height.
+  const bodyRef = useRef<HTMLTableSectionElement>(null);
+  const { heights: measured, measure: measureRow } = useRowHeights(virtualized);
+  const estimate = estimatedRowHeight ?? (density === 'compact' ? 33 : 41);
+  const expandedIds = new Set(expanded);
+  const visibleIds = visible.map((row, index) => rowId(row, offset + index));
+  const rowHeights = virtualized
+    ? visibleIds.map((id) => {
+        const main = measured.get(`row:${id}`) ?? estimate;
+        return expandedIds.has(id) ? main + (measured.get(`detail:${id}`) ?? estimate * 3) : main;
+      })
+    : [];
+  const infinite = !paginated && hasMore && onLoadMore !== undefined;
+  // The row count a scroll-triggered load was asked at: one request per batch.
+  const requested = useRef(-1);
+
+  function loadMore(trigger: 'scroll' | 'button') {
+    if (!onLoadMore) return;
+    if (trigger === 'scroll') {
+      if (loading || requested.current === rows.length) return;
+      requested.current = rows.length;
+    }
+    onLoadMore();
+    emit('datatable.interaction.onLoadMore', { loaded: rows.length, trigger, source: source() });
+  }
+
+  const virtual = useVirtualRows({
+    enabled: virtualized,
+    listen: virtualized || (infinite && scrollBox !== undefined),
+    heights: rowHeights,
+    overscan,
+    initialCount: 30,
+    tableRef,
+    bodyRef,
+    onNearEnd: infinite ? () => loadMore('scroll') : undefined,
+  });
+
+  // Row reordering, in the order shown; the move is applied to `data` by the consumer.
+  const dragEnabled = reorderableRows && sort.length === 0;
+  function reorderRow(id: string, target: RowDropTarget) {
+    const from = data.findIndex((row, index) => getRowId(row, index) === id);
+    const over = data.findIndex((row, index) => getRowId(row, index) === target.id);
+    if (from < 0 || over < 0) return;
+    const toIndex = dropIndex(from, over, target.position);
+    if (toIndex === from) return;
+    onRowReorder?.({
+      row: data[from] as T,
+      rowId: id,
+      targetRowId: target.id,
+      position: target.position,
+      fromIndex: from,
+      toIndex,
+    });
+    emit('datatable.interaction.onRowReorder', {
+      rowId: id,
+      targetRowId: target.id,
+      position: target.position,
+      fromIndex: from,
+      toIndex,
+      source: source(),
+    });
+  }
+  const rowDrag = useRowDrag({
+    ids: visibleIds,
+    labelOf: (id) => {
+      const index = visibleIds.indexOf(id);
+      return index >= 0 ? rowLabel(visible[index] as T, offset + index) : id;
+    },
+    tableRef,
+    scrollToIndex: (index) => {
+      if (virtualized) return virtual.scrollToIndex(index);
+      const id = visibleIds[index];
+      tableRef.current
+        ?.querySelector(`tr[data-row-id="${CSS.escape(id ?? '')}"]`)
+        ?.scrollIntoView?.({ block: 'nearest' });
+    },
+    onDrop: reorderRow,
+    labels,
+  });
+
+  // A focused or dragged row stays rendered when it scrolls out of view.
+  const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
+  const keep = [focusedRowId, rowDrag.drag?.id, rowDrag.drag?.target?.id].flatMap((id) =>
+    id ? [visibleIds.indexOf(id)] : [],
+  );
+  const renderIndexes = virtualized
+    ? renderedRows(visible.length, virtual.range, keep)
+    : visible.map((_, index) => index);
+  // Rows before each row that hold an open detail, for aria-rowindex (header row is 1).
+  const detailsBefore: number[] = [];
+  let openDetails = 0;
+  if (virtualized) {
+    for (const id of visibleIds) {
+      detailsBefore.push(openDetails);
+      if (expandedIds.has(id)) openDetails++;
+    }
+  }
+  const rowCount = visible.length + openDetails + 1;
+  const spacer = (from: number, to: number) =>
+    (virtual.offsets[to] ?? 0) - (virtual.offsets[from] ?? 0);
 
   function changeColumns(next: DataTableColumnState, emitChange: () => void) {
     if (sameColumnState(next, columnState)) return;
@@ -733,7 +902,8 @@ export function DataTable<T>({
   const controlOffset = (side: DataTableColumnPin) =>
     (side === 'start' ? pinsStart : pinsEnd) ? '0px' : undefined;
   // The detail column sits after the selection column.
-  const detailControls = pinsStart ? Number(selectable) : undefined;
+  const selectControls = pinsStart ? Number(reorderableRows) : undefined;
+  const detailControls = pinsStart ? Number(reorderableRows) + Number(selectable) : undefined;
   const pinnedControls = (side: DataTableColumnPin) =>
     (side === 'start' ? pinsStart : pinsEnd) ? 0 : undefined;
 
@@ -919,7 +1089,12 @@ export function DataTable<T>({
 
   const hasDetail = renderDetail !== undefined;
   const hasRowActions = rowActions.length > 0;
-  const columnCount = shown.length + Number(selectable) + Number(hasDetail) + Number(hasRowActions);
+  const columnCount =
+    shown.length +
+    Number(reorderableRows) +
+    Number(selectable) +
+    Number(hasDetail) +
+    Number(hasRowActions);
   const selectedCount = selection.allMatching && isServer ? total : selection.ids.length;
   const matchingCount = isServer ? total : rows.filter(canSelect).length;
   const offerAllMatching =
@@ -947,13 +1122,24 @@ export function DataTable<T>({
   const sections = (
     <>
       <TableHeader>
-        <TableRow>
-          {selectable && (
+        <TableRow aria-rowindex={virtualized ? 1 : undefined}>
+          {reorderableRows && (
             <TableHead
               className={controlClass('start')}
               style={{
                 '--_pin-offset': controlOffset('start'),
                 '--_pin-controls': pinnedControls('start'),
+              }}
+            >
+              <span className={styles.visuallyHidden}>{labels.reorderColumn}</span>
+            </TableHead>
+          )}
+          {selectable && (
+            <TableHead
+              className={controlClass('start')}
+              style={{
+                '--_pin-offset': controlOffset('start'),
+                '--_pin-controls': selectControls,
               }}
             >
               <EventScope silent>
@@ -1097,7 +1283,19 @@ export function DataTable<T>({
           )}
         </TableRow>
       </TableHeader>
-      <TableBody>
+      <TableBody
+        ref={bodyRef}
+        onFocus={
+          virtualized
+            ? (event) =>
+                setFocusedRowId(
+                  (event.target as Element)
+                    .closest('tr[data-row-id]')
+                    ?.getAttribute('data-row-id') ?? null,
+                )
+            : undefined
+        }
+      >
         {error != null ? (
           <TableRow>
             <TableCell colSpan={columnCount} className={clsx(styles.message, styles.error)}>
@@ -1107,6 +1305,7 @@ export function DataTable<T>({
         ) : showSkeleton ? (
           Array.from({ length: Math.min(paginated ? pageSize : 5, 5) }, (_, i) => (
             <TableRow key={`skeleton-${i}`}>
+              {reorderableRows && <TableCell />}
               {selectable && <TableCell />}
               {hasDetail && <TableCell />}
               {shown.map(({ column }) => (
@@ -1135,8 +1334,15 @@ export function DataTable<T>({
             </TableCell>
           </TableRow>
         ) : (
-          visible.map((row, index) => {
+          renderIndexes.map((index, position) => {
+            const row = visible[index] as T;
             const id = rowId(row, offset + index);
+            // Rows between this one and the one rendered before it are not rendered.
+            const gap = virtualized
+              ? spacer(position === 0 ? 0 : (renderIndexes[position - 1] as number) + 1, index)
+              : 0;
+            const rowIndex = virtualized ? index + 2 + (detailsBefore[index] ?? 0) : undefined;
+            const dropTarget = rowDrag.drag?.target?.id === id ? rowDrag.drag.target : null;
             const label = rowLabel(row, offset + index);
             const checked = selectable && isSelected(selection, id);
             const detail = renderDetail?.(row);
@@ -1144,21 +1350,52 @@ export function DataTable<T>({
             const detailId = `${descriptionId}-detail-${id}`;
             return (
               <Fragment key={id}>
+                {gap > 0 && <SpacerRow height={gap} columns={columnCount} />}
                 <TableRow
+                  ref={virtualized ? measureRow : undefined}
                   data-row-id={id}
+                  data-measure-key={virtualized ? `row:${id}` : undefined}
+                  aria-rowindex={rowIndex}
                   className={clsx(
                     checked && styles.selectedRow,
                     onRowClick && styles.clickableRow,
                     open && styles.expandedRow,
+                    rowDrag.drag?.id === id && styles.draggingRow,
+                    dropTarget &&
+                      (dropTarget.position === 'before'
+                        ? styles.rowDropBefore
+                        : styles.rowDropAfter),
                   )}
                   onClick={onRowClick ? (event) => clickRow(row, id, event) : undefined}
                 >
-                  {selectable && (
+                  {reorderableRows && (
                     <TableCell
                       className={controlClass('start')}
                       style={{
                         '--_pin-offset': controlOffset('start'),
                         '--_pin-controls': pinnedControls('start'),
+                      }}
+                    >
+                      <EventScope silent>
+                        <IconButton
+                          variant="ghost"
+                          size="sm"
+                          aria-label={labels.reorderRow(label)}
+                          aria-describedby={`${descriptionId}-reorder-help`}
+                          disabled={!dragEnabled}
+                          className={styles.dragHandle}
+                          icon={<GripIcon />}
+                          {...rowDrag.handleProps(id)}
+                        />
+                      </EventScope>
+                    </TableCell>
+                  )}
+                  {selectable && (
+                    <TableCell
+                      className={controlClass('start')}
+                      style={{
+                        '--_pin-offset': controlOffset('start'),
+                        '--_pin-controls': selectControls,
                       }}
                     >
                       <EventScope silent>
@@ -1230,7 +1467,13 @@ export function DataTable<T>({
                   )}
                 </TableRow>
                 {open && (
-                  <TableRow id={detailId} className={styles.detailRow}>
+                  <TableRow
+                    ref={virtualized ? measureRow : undefined}
+                    id={detailId}
+                    data-measure-key={virtualized ? `detail:${id}` : undefined}
+                    aria-rowindex={rowIndex === undefined ? undefined : rowIndex + 1}
+                    className={styles.detailRow}
+                  >
                     <TableCell colSpan={columnCount} className={styles.detail}>
                       {detail}
                     </TableCell>
@@ -1240,6 +1483,15 @@ export function DataTable<T>({
             );
           })
         )}
+        {virtualized &&
+          visible.length > 0 &&
+          error == null &&
+          spacer((renderIndexes[renderIndexes.length - 1] ?? -1) + 1, visible.length) > 0 && (
+            <SpacerRow
+              height={spacer((renderIndexes[renderIndexes.length - 1] ?? -1) + 1, visible.length)}
+              columns={columnCount}
+            />
+          )}
       </TableBody>
     </>
   );
@@ -1249,6 +1501,8 @@ export function DataTable<T>({
     <Table
       ref={tableRef}
       caption={caption}
+      // Virtualized: the rows in the DOM are a part; say how many there are.
+      aria-rowcount={virtualized ? rowCount : undefined}
       aria-busy={loading || undefined}
       className={clsx(styles.table, fixedLayout && styles.fixedLayout)}
       // Fixed layout: the table is at least as wide as the set widths, plus a minimum for each
@@ -1277,7 +1531,7 @@ export function DataTable<T>({
       className={clsx(
         styles.dataTable,
         styles[density],
-        maxHeight && styles[`maxHeight-${maxHeight}`],
+        scrollBox && styles[`maxHeight-${scrollBox}`],
         className,
       )}
       {...props}
@@ -1357,10 +1611,34 @@ export function DataTable<T>({
         table
       )}
 
+      {reorderableRows && (
+        <>
+          <span id={`${descriptionId}-reorder-help`} hidden>
+            {labels.reorderInstructions}
+          </span>
+          <p role="status" className={styles.visuallyHidden}>
+            {rowDrag.announcement}
+          </p>
+        </>
+      )}
+
       <div className={styles.footer}>
         <span role="status" className={styles.range}>
           {loading ? labels.loading : labels.range(from, to, total)}
         </span>
+        {infinite && (
+          // DataTable's own button: only datatable.interaction.onLoadMore is emitted.
+          <EventScope silent>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={loading}
+              onClick={() => loadMore('button')}
+            >
+              {labels.loadMore}
+            </Button>
+          </EventScope>
+        )}
         {paginated && (
           // The select and page buttons are DataTable's own parts: only datatable events are emitted.
           <EventScope silent>
@@ -1396,6 +1674,15 @@ export function DataTable<T>({
         )}
       </div>
     </div>
+  );
+}
+
+/** Stands in for rows that are not rendered, so the scroll height stays right. */
+function SpacerRow({ height, columns }: { height: number; columns: number }) {
+  return (
+    <tr aria-hidden="true">
+      <td colSpan={columns} className={styles.spacer} style={{ '--_spacer': `${height}px` }} />
+    </tr>
   );
 }
 

@@ -421,13 +421,13 @@
   outline-offset: calc(var(--ufi-focus-ring-width) * -1);
 }
 
-/* Header drag and drop: the dragged header fades; a line marks where it lands. */
+/* Header drag and drop: the dragged header is shaded; a line marks where it lands. */
 .table th[draggable='true'] {
   cursor: grab;
 }
 
-.dragging {
-  opacity: var(--ufi-opacity-disabled);
+.table th.dragging {
+  background-color: var(--ufi-color-bg-muted);
 }
 
 .dropBefore::before,
@@ -495,4 +495,34 @@
 
 .arrowDown {
   transform: rotate(180deg);
+}
+
+/* Virtualization: a spacer row stands in for the rows that are not rendered. */
+.table td.spacer {
+  block-size: var(--_spacer);
+  padding: 0;
+  border: 0;
+}
+
+/* Row reordering: the handle takes touch drags; the dragged row is shaded (not faded, which would
+   lower its text contrast); a line marks the drop. */
+.dragHandle {
+  cursor: grab;
+  touch-action: none;
+}
+
+.draggingRow {
+  --_row-bg: var(--ufi-color-bg-muted);
+}
+
+.draggingRow > * {
+  background-color: var(--_row-bg);
+}
+
+.rowDropBefore > * {
+  box-shadow: inset 0 calc(var(--ufi-border-width) * 2) 0 var(--ufi-color-border-focus);
+}
+
+.rowDropAfter > * {
+  box-shadow: inset 0 calc(var(--ufi-border-width) * -2) 0 var(--ufi-color-border-focus);
 }

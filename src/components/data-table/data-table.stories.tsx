@@ -15,6 +15,7 @@ import { Stack } from '../stack';
 import { Text } from '../text';
 import { filterRows } from './filtering';
 import { sortRows } from './sorting';
+import { moveItem } from './virtual';
 
 interface User {
   id: number;
@@ -282,6 +283,64 @@ export const ColumnManagement: Story = {
     rowActions: userActions(() => {}) as DataTableRowAction<unknown>[],
     // Changes survive a reload of this story.
     storageKey: 'storybook-users',
+  },
+};
+
+export const Virtualized: Story = {
+  name: '10,000 rows, virtualized',
+  args: {
+    caption: 'Users (10,000, only the rows in view are rendered)',
+    data: makeUsers(10_000),
+    virtualized: true,
+    paginated: false,
+    selectable: true,
+    maxHeight: 'md',
+  },
+};
+
+export const RowReorder: Story = {
+  name: 'Reorder rows by drag or keyboard',
+  render: function Render(args) {
+    const [rows, setRows] = useState(() => users.slice(0, 8));
+    return (
+      <DataTable
+        {...args}
+        caption="Priority queue"
+        data={rows}
+        paginated={false}
+        reorderableRows
+        onRowReorder={({ fromIndex, toIndex }) =>
+          setRows((current) => moveItem(current, fromIndex, toIndex))
+        }
+      />
+    );
+  },
+};
+
+export const InfiniteLoading: Story = {
+  name: 'Load more on scroll',
+  render: function Render(args) {
+    const all = useState(() => makeUsers(300))[0];
+    const [count, setCount] = useState(40);
+    const [loading, setLoading] = useState(false);
+    return (
+      <DataTable
+        {...args}
+        caption="Users (40 at a time, up to 300)"
+        data={all.slice(0, count)}
+        paginated={false}
+        maxHeight="md"
+        loading={loading}
+        hasMore={count < all.length}
+        onLoadMore={() => {
+          setLoading(true);
+          setTimeout(() => {
+            setCount((current) => current + 40);
+            setLoading(false);
+          }, 600);
+        }}
+      />
+    );
   },
 };
 

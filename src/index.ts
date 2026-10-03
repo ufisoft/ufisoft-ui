@@ -241,6 +241,8 @@ export {
   type DataTableActionTone,
   type DataTableColumnState,
   type DataTableColumnPin,
+  type DataTableRowReorder,
+  type DataTableDropPosition,
   type DataTableFilters,
   type DataTableFilter,
   type DataTableColumnFilter,
