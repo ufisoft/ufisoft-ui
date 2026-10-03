@@ -209,3 +209,72 @@
   gap: var(--ufi-space-sm);
   align-items: center;
 }
+
+/* Selection, detail and row action cells hug their control. */
+.controlCell {
+  inline-size: 1%;
+  white-space: nowrap;
+}
+
+/* Hidden header names: clipped away but kept in the accessibility tree; absolute so they take no space. */
+.visuallyHidden {
+  position: absolute;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/* A selected row is marked by colour and by its checked checkbox. */
+.selectedRow > * {
+  background-color: var(--ufi-color-bg-subtle);
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover > * {
+  background-color: var(--ufi-color-bg-muted);
+}
+
+/* The open row and its detail read as one block: no line between them. */
+.expandedRow > * {
+  border-block-end-color: transparent;
+}
+
+.detail {
+  padding: var(--ufi-space-md);
+  background-color: var(--ufi-color-bg-subtle);
+}
+
+.expandButton svg {
+  transition: transform var(--ufi-duration-fast) var(--ufi-easing-default);
+}
+
+.expanded svg {
+  transform: rotate(90deg);
+}
+
+/* The bar shown while rows are selected. */
+.bulkBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-xs) var(--ufi-space-sm);
+  align-items: center;
+  padding: var(--ufi-space-xs) var(--ufi-space-sm);
+  font-size: var(--ufi-text-sm);
+  background-color: var(--ufi-color-bg-subtle);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-default);
+  border-radius: var(--ufi-radius-md);
+}
+
+.bulkStatus {
+  font-weight: var(--ufi-weight-semibold);
+}
+
+.bulkActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ufi-space-xs);
+  margin-inline-start: auto;
+}

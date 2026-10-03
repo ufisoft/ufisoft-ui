@@ -1,5 +1,6 @@
 import { defineEvents, payload, sourceField, type EventSource } from '../../events/define-events';
 import type { DataTableFilters } from './filtering';
+import type { DataTableSelection } from './selection';
 import type { DataTableSort } from './sorting';
 
 export const dataTableEvents = defineEvents(
@@ -72,6 +73,79 @@ export const dataTableEvents = defineEvents(
         source: sourceField,
       },
       example: { pageSize: 50, previousPageSize: 10, source: { id: 'users' } },
+    },
+    'state.onSelect': {
+      description:
+        'The selection changed: a row or page checkbox, “select all results”, clear selection, or a new filter or search ending “all results”.',
+      payload: payload<{
+        selection: DataTableSelection;
+        previousSelection: DataTableSelection;
+        source: EventSource;
+      }>(),
+      fields: {
+        selection:
+          '{ ids, allMatching } — the selected row ids; allMatching when every result of the query is selected',
+        previousSelection: '{ ids, allMatching } — the selection before the change',
+        source: sourceField,
+      },
+      example: {
+        selection: { ids: ['17', '42'], allMatching: false },
+        previousSelection: { ids: ['17'], allMatching: false },
+        source: { id: 'users' },
+      },
+    },
+    'state.onExpand': {
+      description: "The user opened or closed a row's detail.",
+      payload: payload<{
+        rowId: string;
+        expanded: boolean;
+        expandedRowIds: string[];
+        source: EventSource;
+      }>(),
+      fields: {
+        rowId: 'string — the row whose detail opened or closed',
+        expanded: 'boolean — true when it opened',
+        expandedRowIds: 'string[] — every row whose detail is open now',
+        source: sourceField,
+      },
+      example: { rowId: '42', expanded: true, expandedRowIds: ['42'], source: { id: 'users' } },
+    },
+    'interaction.onRowClick': {
+      description: 'The user clicked a row outside its buttons, links and fields.',
+      payload: payload<{ rowId: string; source: EventSource }>(),
+      fields: { rowId: 'string — the clicked row', source: sourceField },
+      example: { rowId: '42', source: { id: 'users' } },
+    },
+    'interaction.onRowAction': {
+      description: "The user chose an action from a row's menu or context menu.",
+      payload: payload<{ action: string; rowId: string; source: EventSource }>(),
+      fields: {
+        action: 'string — the action id',
+        rowId: 'string — the row it applies to',
+        source: sourceField,
+      },
+      example: { action: 'edit', rowId: '42', source: { id: 'users' } },
+    },
+    'interaction.onBulkAction': {
+      description: 'The user chose an action from the bar shown while rows are selected.',
+      payload: payload<{
+        action: string;
+        rowIds: string[];
+        allMatching: boolean;
+        source: EventSource;
+      }>(),
+      fields: {
+        action: 'string — the action id',
+        rowIds: 'string[] — the selected row ids',
+        allMatching: 'boolean — true when every result of the current query is selected',
+        source: sourceField,
+      },
+      example: {
+        action: 'delete',
+        rowIds: ['17', '42'],
+        allMatching: false,
+        source: { id: 'users' },
+      },
     },
   },
 );

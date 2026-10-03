@@ -1,0 +1,5 @@
+---
+'@ufisoft/ui': minor
+---
+
+`DataTable` phase 3: row selection (`selectable`, `selection` / `defaultSelection` / `onSelectionChange`, `isRowSelectable`) with a header checkbox for the page and “Select all N results” across pages (`allMatching`, also in server mode); a bulk bar with the count, `bulkActions` and “Clear selection”; a row menu (`rowActions`) from a “⋯” button and from the row's context menu; `onRowClick`; expandable detail rows (`renderDetail`, `expandedRowIds` / `defaultExpandedRowIds` / `onExpandedChange`); `getRowLabel` names rows for their controls. The default row id is now the row's index in `data`, so it no longer changes when rows sort or filter. Emits `datatable.state.onSelect`, `datatable.state.onExpand`, `datatable.interaction.onRowClick`, `datatable.interaction.onRowAction` and `datatable.interaction.onBulkAction`. The filter types (`DataTableFilters`, `DataTableFilter`, …) and the new `DataTableSelection`, `DataTableRowAction`, `DataTableBulkAction`, `DataTableBulkContext` and `DataTableActionTone` are exported from the package.

@@ -234,6 +234,16 @@ export {
   type DataTableMaxHeight,
   type DataTableSort,
   type DataTableSortDirection,
+  type DataTableSelection,
+  type DataTableRowAction,
+  type DataTableBulkAction,
+  type DataTableBulkContext,
+  type DataTableActionTone,
+  type DataTableFilters,
+  type DataTableFilter,
+  type DataTableColumnFilter,
+  type DataTableFilterOption,
+  type DataTableTextOperator,
 } from './components/data-table';
 export { FilePreview, type FilePreviewProps, type FileInfo } from './components/file-preview';
 

@@ -1,11 +1,24 @@
 'use client';
 
 import { clsx } from 'clsx';
-import { useEffect, useId, useRef, useState, type ComponentProps, type ReactNode } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ComponentProps,
+  type MouseEvent,
+  type ReactNode,
+  type SyntheticEvent,
+} from 'react';
 import type { DayPickerLocale } from 'react-day-picker';
 import { eventSource, type EventDataProps } from '../../events/define-events';
 import { EventScope, useEmit } from '../../events/react';
 import { Button } from '../button';
+import { Checkbox } from '../checkbox';
+import { ContextMenu } from '../context-menu';
+import { IconButton } from '../icon-button';
 import { Input } from '../input';
 import { Pagination } from '../pagination';
 import { Select } from '../select';
@@ -19,6 +32,7 @@ import {
   TableRow,
   type TableCellAlign,
 } from '../table';
+import { BulkBar, ExpandIcon, RowActionsButton, rowContextItems } from './actions';
 import styles from './data-table.module.css';
 import {
   filterRows,
@@ -31,6 +45,15 @@ import {
 } from './filtering';
 import { ActiveFilters, FilterButton, type FilterColumn } from './filters';
 import {
+  emptySelection,
+  isSelected,
+  pageSelection,
+  sameSelection,
+  togglePage,
+  toggleRow,
+  type DataTableSelection,
+} from './selection';
+import {
   nextSort,
   sameSort,
   sortRows,
@@ -39,6 +62,7 @@ import {
 } from './sorting';
 
 export type { DataTableSort, DataTableSortDirection } from './sorting';
+export type { DataTableSelection } from './selection';
 export type {
   DataTableColumnFilter,
   DataTableFilter,
@@ -85,6 +109,42 @@ export interface DataTableQuery {
   pageSize: number;
 }
 
+export type DataTableActionTone = 'default' | 'danger';
+
+/** An action in a row's menu (the “⋯” button and the row's context menu). */
+export interface DataTableRowAction<T> {
+  /** Unique id; reported in `datatable.interaction.onRowAction`. */
+  id: string;
+  label: string;
+  tone?: DataTableActionTone;
+  /** Disables the action for some rows. */
+  disabled?: (row: T) => boolean;
+  onSelect: (row: T) => void;
+}
+
+/** What a bulk action receives. */
+export interface DataTableBulkContext<T> {
+  selection: DataTableSelection;
+  /**
+   * The selected rows the table has: every one in client mode; in server mode only those on the
+   * current page — with `selection.allMatching`, act on `query` instead.
+   */
+  rows: T[];
+  /** The current sort, filters and search: what “all results” means. */
+  query: DataTableQuery;
+  /** Clears the selection, e.g. after deleting the rows. */
+  clearSelection: () => void;
+}
+
+/** A button in the bar shown while rows are selected. */
+export interface DataTableBulkAction<T> {
+  /** Unique id; reported in `datatable.interaction.onBulkAction`. */
+  id: string;
+  label: string;
+  tone?: DataTableActionTone;
+  onSelect: (context: DataTableBulkContext<T>) => void;
+}
+
 export interface DataTableLabels {
   /** Announced while `loading`. */
   loading: string;
@@ -126,6 +186,22 @@ export interface DataTableLabels {
   activeFilters: string;
   removeFilter: (summary: string) => string;
   clearAll: string;
+  /** Selection. `row` is the row's name from `getRowLabel`. */
+  selectAll: string;
+  selectRow: (row: string) => string;
+  /** The count in the bulk bar. */
+  selected: (count: number) => string;
+  /** Offered when the whole page is selected and more results exist; then shown as the count. */
+  selectAllMatching: (total: number) => string;
+  allSelected: (total: number) => string;
+  clearSelection: string;
+  bulkActions: string;
+  /** Row menu button, and the hidden header of its column. */
+  rowActions: (row: string) => string;
+  actionsColumn: string;
+  /** Detail button (with `aria-expanded`), and the hidden header of its column. */
+  details: (row: string) => string;
+  detailsColumn: string;
 }
 
 export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children'>, EventDataProps {
@@ -134,8 +210,13 @@ export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children
   columns: DataTableColumn<T>[];
   /** Client mode: every row. Server mode: the rows of the current page. */
   data: T[];
-  /** A stable id per row. Defaults to the row's index — give one whenever rows can move. */
+  /**
+   * A stable id per row. Defaults to the row's index in `data` — give one whenever rows can be
+   * selected, expanded or removed.
+   */
   getRowId?: (row: T, index: number) => string;
+  /** A row's plain-text name for its checkbox and buttons (“Select Ayşe”). Defaults to its first value. */
+  getRowLabel?: (row: T) => string;
   /**
    * `client` sorts and pages `data` itself. `server` shows `data` as the current page and reports
    * every change through the callbacks and `onQueryChange`, so the server sorts and pages.
@@ -181,6 +262,30 @@ export interface DataTableProps<T> extends Omit<ComponentProps<'div'>, 'children
 
   /** Called with the whole query after every sort, filter, search, page or page size change. */
   onQueryChange?: (query: DataTableQuery) => void;
+
+  /** Adds a checkbox to every row and a “select all on this page” checkbox to the header. */
+  selectable?: boolean;
+  /** Selected rows (controlled). */
+  selection?: DataTableSelection;
+  defaultSelection?: DataTableSelection;
+  onSelectionChange?: (selection: DataTableSelection) => void;
+  /** Rows it returns false for get a disabled checkbox. */
+  isRowSelectable?: (row: T) => boolean;
+  /** Buttons in the bar shown above the table while rows are selected. */
+  bulkActions?: DataTableBulkAction<T>[];
+  /** A menu per row, from a “⋯” button at the row's end and from the row's context menu. */
+  rowActions?: DataTableRowAction<T>[];
+  /**
+   * Called when a row is clicked outside its buttons, links and fields. A pointer shortcut only:
+   * keep a link or a row action that does the same for keyboard users.
+   */
+  onRowClick?: (row: T, event: MouseEvent<HTMLTableRowElement>) => void;
+  /** A row's detail panel, opened by a button at the row's start. Return null for rows without one. */
+  renderDetail?: (row: T) => ReactNode;
+  /** Ids of rows whose detail is open (controlled). */
+  expandedRowIds?: string[];
+  defaultExpandedRowIds?: string[];
+  onExpandedChange?: (expandedRowIds: string[]) => void;
 
   /** Shows skeleton rows when there are none yet, and marks the table busy. */
   loading?: boolean;
@@ -234,6 +339,17 @@ function defaultLabels(locale: string | undefined): DataTableLabels {
     activeFilters: 'Active filters',
     removeFilter: (summary) => `Remove filter: ${summary}`,
     clearAll: 'Clear all filters',
+    selectAll: 'Select all rows on this page',
+    selectRow: (row) => `Select ${row}`,
+    selected: (count) => `${number.format(count)} selected`,
+    selectAllMatching: (total) => `Select all ${number.format(total)} results`,
+    allSelected: (total) => `All ${number.format(total)} results selected`,
+    clearSelection: 'Clear selection',
+    bulkActions: 'Bulk actions',
+    rowActions: (row) => `Actions for ${row}`,
+    actionsColumn: 'Actions',
+    details: (row) => `Details for ${row}`,
+    detailsColumn: 'Details',
   };
 }
 
@@ -252,6 +368,7 @@ export function DataTable<T>({
   columns,
   data,
   getRowId = (_row, index) => String(index),
+  getRowLabel,
   mode = 'client',
   totalCount,
   sort: sortProp,
@@ -275,6 +392,18 @@ export function DataTable<T>({
   onFiltersChange,
   dateLocale,
   onQueryChange,
+  selectable = false,
+  selection: selectionProp,
+  defaultSelection = emptySelection,
+  onSelectionChange,
+  isRowSelectable,
+  bulkActions = [],
+  rowActions = [],
+  onRowClick,
+  renderDetail,
+  expandedRowIds: expandedProp,
+  defaultExpandedRowIds = [],
+  onExpandedChange,
   loading = false,
   error,
   emptyMessage,
@@ -296,9 +425,18 @@ export function DataTable<T>({
   const [innerPageSize, setInnerPageSize] = useState(defaultPageSize);
   const [innerSearch, setInnerSearch] = useState(defaultSearch);
   const [innerFilters, setInnerFilters] = useState(defaultFilters);
+  const [innerSelection, setInnerSelection] = useState(defaultSelection);
+  const [innerExpanded, setInnerExpanded] = useState(defaultExpandedRowIds);
   const sort = sortProp ?? innerSort;
   const search = searchProp ?? innerSearch;
   const filters = filtersProp ?? innerFilters;
+  const selection = selectionProp ?? innerSelection;
+  const expanded = expandedProp ?? innerExpanded;
+  const bulkBarRef = useRef<HTMLDivElement>(null);
+  const clearSelectionRef = useRef<HTMLButtonElement>(null);
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  // The row the context menu is for: the row under the pointer or holding focus.
+  const [menuRowId, setMenuRowId] = useState<string | null>(null);
 
   // The search field updates at once; the search applies after a pause in typing.
   const [searchInput, setSearchInput] = useState(search);
@@ -328,6 +466,23 @@ export function DataTable<T>({
   // Index of the first visible row among all rows (0 when the server sends one page, or no paging).
   const offset = isServer || !paginated ? 0 : (page - 1) * pageSize;
   const visible = isServer || !paginated ? rows : rows.slice(offset, offset + pageSize);
+
+  // Ids use the row's index in `data`, so the default id stays the same when rows sort or filter.
+  const dataIndex = new Map(data.map((row, index) => [row, index]));
+  const rowId = (row: T, fallback: number) => getRowId(row, dataIndex.get(row) ?? fallback);
+  const valueColumn = columns.find((column) => column.value);
+  const rowLabel = (row: T, fallback: number) => {
+    if (getRowLabel) return getRowLabel(row);
+    const value = valueColumn?.value?.(row);
+    return value === null || value === undefined
+      ? String(fallback + 1)
+      : String(formatValue(value, locale));
+  };
+  const canSelect = (row: T) => isRowSelectable?.(row) ?? true;
+  const pageIds = visible.flatMap((row, index) =>
+    canSelect(row) ? [rowId(row, offset + index)] : [],
+  );
+  const pageState = pageSelection(selection, pageIds);
 
   function applyPage(next: number) {
     if (next === page) return;
@@ -385,7 +540,89 @@ export function DataTable<T>({
     }
     // Fewer or other rows: start at the first page.
     applyPage(1);
+    // “All results” meant the results of the old query.
+    if (selection.allMatching) changeSelection({ ids: selection.ids, allMatching: false });
     onQueryChange?.(query({ filters: next, search: nextSearch, page: 1 }));
+  }
+
+  function changeSelection(next: DataTableSelection) {
+    if (sameSelection(next, selection)) return;
+    if (selectionProp === undefined) setInnerSelection(next);
+    onSelectionChange?.(next);
+    emit('datatable.state.onSelect', {
+      selection: next,
+      previousSelection: selection,
+      source: source(),
+    });
+  }
+
+  function selectAllMatching() {
+    // Client mode knows every matching row; a server is told through `allMatching`.
+    const ids = isServer
+      ? pageIds
+      : rows.flatMap((row, index) => (canSelect(row) ? [rowId(row, index)] : []));
+    changeSelection({ ids, allMatching: true });
+    // The clicked button goes away: keep focus in the bar.
+    clearSelectionRef.current?.focus();
+  }
+
+  function clearSelection() {
+    // The bar goes away with the selection: move focus out of it first.
+    if (bulkBarRef.current?.contains(document.activeElement)) selectAllRef.current?.focus();
+    changeSelection(emptySelection);
+  }
+
+  function toggleExpanded(id: string) {
+    const open = !expanded.includes(id);
+    const next = open ? [...expanded, id] : expanded.filter((candidate) => candidate !== id);
+    if (expandedProp === undefined) setInnerExpanded(next);
+    onExpandedChange?.(next);
+    emit('datatable.state.onExpand', {
+      rowId: id,
+      expanded: open,
+      expandedRowIds: next,
+      source: source(),
+    });
+  }
+
+  function runRowAction(action: DataTableRowAction<T>, row: T, id: string) {
+    action.onSelect(row);
+    emit('datatable.interaction.onRowAction', { action: action.id, rowId: id, source: source() });
+  }
+
+  function runBulkAction(action: DataTableBulkAction<T>) {
+    const ids = new Set(selection.ids);
+    // Client mode: every selected row in `data`. Server mode: the selected rows on this page.
+    const selected = (row: T, index: number) =>
+      isServer
+        ? canSelect(row) && isSelected(selection, getRowId(row, index))
+        : ids.has(getRowId(row, index));
+    action.onSelect({
+      selection,
+      rows: data.filter(selected),
+      query: query({}),
+      clearSelection,
+    });
+    emit('datatable.interaction.onBulkAction', {
+      action: action.id,
+      rowIds: selection.ids,
+      allMatching: selection.allMatching,
+      source: source(),
+    });
+  }
+
+  function clickRow(row: T, id: string, event: MouseEvent<HTMLTableRowElement>) {
+    const target = event.target as Element;
+    // Clicks on the row's own controls, and text selection, are not row clicks.
+    if (target.closest('a, button, input, select, textarea, label, [role="menuitem"]')) return;
+    if (window.getSelection()?.toString()) return;
+    onRowClick?.(row, event);
+    emit('datatable.interaction.onRowClick', { rowId: id, source: source() });
+  }
+
+  function trackMenuRow(event: SyntheticEvent) {
+    const tr = (event.target as Element).closest('tr[data-row-id]');
+    setMenuRowId(tr?.getAttribute('data-row-id') ?? null);
   }
 
   function changeColumnFilter(columnId: string, filter: DataTableFilter | null) {
@@ -427,6 +664,243 @@ export function DataTable<T>({
     column.filter ? [{ id: column.id, label: columnLabel(column), filter: column.filter }] : [],
   );
 
+  const hasDetail = renderDetail !== undefined;
+  const hasRowActions = rowActions.length > 0;
+  const columnCount =
+    columns.length + Number(selectable) + Number(hasDetail) + Number(hasRowActions);
+  const selectedCount = selection.allMatching && isServer ? total : selection.ids.length;
+  const matchingCount = isServer ? total : rows.filter(canSelect).length;
+  const offerAllMatching =
+    paginated && !selection.allMatching && pageState === 'all' && pageIds.length < matchingCount;
+  const menuIndex = visible.findIndex((row, index) => rowId(row, offset + index) === menuRowId);
+  const menuRow =
+    menuIndex >= 0 && menuRowId !== null
+      ? { row: visible[menuIndex] as T, id: menuRowId }
+      : undefined;
+
+  const sections = (
+    <>
+      <TableHeader>
+        <TableRow>
+          {selectable && (
+            <TableHead className={styles.controlCell}>
+              <EventScope silent>
+                <Checkbox
+                  ref={selectAllRef}
+                  aria-label={labels.selectAll}
+                  checked={pageState === 'all'}
+                  indeterminate={pageState === 'some'}
+                  disabled={pageIds.length === 0}
+                  onChange={(event) =>
+                    changeSelection(togglePage(selection, pageIds, event.target.checked))
+                  }
+                />
+              </EventScope>
+            </TableHead>
+          )}
+          {hasDetail && (
+            <TableHead className={styles.controlCell}>
+              <span className={styles.visuallyHidden}>{labels.detailsColumn}</span>
+            </TableHead>
+          )}
+          {columns.map((column) => {
+            const sortable = column.sortable ?? Boolean(column.value || column.compare);
+            const index = sort.findIndex((entry) => entry.columnId === column.id);
+            const entry = index >= 0 ? sort[index] : undefined;
+            const filterColumn = filterColumns.find((candidate) => candidate.id === column.id);
+            return (
+              <TableHead
+                key={column.id}
+                align={column.align}
+                // Only the primary sort is announced on the header (one aria-sort at a time).
+                aria-sort={entry && index === 0 ? ariaSort[entry.direction] : undefined}
+                className={column.headerClassName}
+              >
+                <div className={styles.headerContent}>
+                  {sortable ? (
+                    <button
+                      type="button"
+                      className={clsx(styles.sortButton, entry && styles.sorted)}
+                      aria-describedby={entry ? `${descriptionId}-${column.id}` : undefined}
+                      onClick={(event) => changeSort(column.id, event.shiftKey)}
+                    >
+                      <span>{column.header}</span>
+                      <SortIcon direction={entry?.direction} />
+                      {entry && multiSort && (
+                        <span className={styles.priority} aria-hidden="true">
+                          {index + 1}
+                        </span>
+                      )}
+                      {entry && (
+                        <span id={`${descriptionId}-${column.id}`} hidden>
+                          {labels.sorted(entry.direction, multiSort ? index + 1 : null)}
+                        </span>
+                      )}
+                    </button>
+                  ) : (
+                    column.header
+                  )}
+                  {filterColumn && (
+                    <FilterButton
+                      column={filterColumn}
+                      value={filters[column.id]}
+                      onChange={(filter) => changeColumnFilter(column.id, filter)}
+                      labels={labels}
+                      dateLocale={dateLocale}
+                    />
+                  )}
+                </div>
+              </TableHead>
+            );
+          })}
+          {hasRowActions && (
+            <TableHead align="end" className={styles.controlCell}>
+              <span className={styles.visuallyHidden}>{labels.actionsColumn}</span>
+            </TableHead>
+          )}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {error != null ? (
+          <TableRow>
+            <TableCell colSpan={columnCount} className={clsx(styles.message, styles.error)}>
+              <div role="alert">{error}</div>
+            </TableCell>
+          </TableRow>
+        ) : showSkeleton ? (
+          Array.from({ length: Math.min(paginated ? pageSize : 5, 5) }, (_, i) => (
+            <TableRow key={`skeleton-${i}`}>
+              {selectable && <TableCell />}
+              {hasDetail && <TableCell />}
+              {columns.map((column) => (
+                <TableCell key={column.id} align={column.align}>
+                  <Skeleton />
+                </TableCell>
+              ))}
+              {hasRowActions && <TableCell />}
+            </TableRow>
+          ))
+        ) : visible.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={columnCount} className={styles.message}>
+              {filtering ? (
+                <div className={styles.noMatches}>
+                  <span>{labels.noMatches}</span>
+                  <EventScope silent>
+                    <Button size="sm" variant="secondary" onClick={clearAll}>
+                      {labels.clearFilters}
+                    </Button>
+                  </EventScope>
+                </div>
+              ) : (
+                (emptyMessage ?? labels.empty)
+              )}
+            </TableCell>
+          </TableRow>
+        ) : (
+          visible.map((row, index) => {
+            const id = rowId(row, offset + index);
+            const label = rowLabel(row, offset + index);
+            const checked = selectable && isSelected(selection, id);
+            const detail = renderDetail?.(row);
+            const open = detail != null && expanded.includes(id);
+            const detailId = `${descriptionId}-detail-${id}`;
+            return (
+              <Fragment key={id}>
+                <TableRow
+                  data-row-id={id}
+                  className={clsx(
+                    checked && styles.selectedRow,
+                    onRowClick && styles.clickableRow,
+                    open && styles.expandedRow,
+                  )}
+                  onClick={onRowClick ? (event) => clickRow(row, id, event) : undefined}
+                >
+                  {selectable && (
+                    <TableCell className={styles.controlCell}>
+                      <EventScope silent>
+                        <Checkbox
+                          aria-label={labels.selectRow(label)}
+                          checked={checked}
+                          disabled={!canSelect(row)}
+                          onChange={(event) =>
+                            changeSelection(toggleRow(selection, id, event.target.checked, pageIds))
+                          }
+                        />
+                      </EventScope>
+                    </TableCell>
+                  )}
+                  {hasDetail && (
+                    <TableCell className={styles.controlCell}>
+                      {detail != null && (
+                        <EventScope silent>
+                          <IconButton
+                            variant="ghost"
+                            size="sm"
+                            aria-label={labels.details(label)}
+                            aria-expanded={open}
+                            aria-controls={open ? detailId : undefined}
+                            className={clsx(styles.expandButton, open && styles.expanded)}
+                            icon={<ExpandIcon />}
+                            onClick={() => toggleExpanded(id)}
+                          />
+                        </EventScope>
+                      )}
+                    </TableCell>
+                  )}
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      align={column.align}
+                      className={column.cellClassName}
+                    >
+                      {column.cell ? column.cell(row) : formatValue(column.value?.(row), locale)}
+                    </TableCell>
+                  ))}
+                  {hasRowActions && (
+                    <TableCell align="end" className={styles.controlCell}>
+                      <RowActionsButton
+                        row={row}
+                        rowLabel={label}
+                        actions={rowActions}
+                        onAction={(action) => runRowAction(action, row, id)}
+                        labels={labels}
+                      />
+                    </TableCell>
+                  )}
+                </TableRow>
+                {open && (
+                  <TableRow id={detailId} className={styles.detailRow}>
+                    <TableCell colSpan={columnCount} className={styles.detail}>
+                      {detail}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </Fragment>
+            );
+          })
+        )}
+      </TableBody>
+    </>
+  );
+
+  const table = (
+    <Table
+      caption={caption}
+      aria-busy={loading || undefined}
+      className={styles.table}
+      onPointerOver={hasRowActions ? trackMenuRow : undefined}
+      onFocus={hasRowActions ? trackMenuRow : undefined}
+    >
+      {hasRowActions ? (
+        // The context menu around the table is silenced; the table's own content is not.
+        <EventScope silent={false}>{sections}</EventScope>
+      ) : (
+        sections
+      )}
+    </Table>
+  );
+
   return (
     <div
       className={clsx(
@@ -461,108 +935,42 @@ export function DataTable<T>({
         </div>
       )}
 
-      <Table caption={caption} aria-busy={loading || undefined} className={styles.table}>
-        <TableHeader>
-          <TableRow>
-            {columns.map((column) => {
-              const sortable = column.sortable ?? Boolean(column.value || column.compare);
-              const index = sort.findIndex((entry) => entry.columnId === column.id);
-              const entry = index >= 0 ? sort[index] : undefined;
-              const filterColumn = filterColumns.find((candidate) => candidate.id === column.id);
-              return (
-                <TableHead
-                  key={column.id}
-                  align={column.align}
-                  // Only the primary sort is announced on the header (one aria-sort at a time).
-                  aria-sort={entry && index === 0 ? ariaSort[entry.direction] : undefined}
-                  className={column.headerClassName}
-                >
-                  <div className={styles.headerContent}>
-                    {sortable ? (
-                      <button
-                        type="button"
-                        className={clsx(styles.sortButton, entry && styles.sorted)}
-                        aria-describedby={entry ? `${descriptionId}-${column.id}` : undefined}
-                        onClick={(event) => changeSort(column.id, event.shiftKey)}
-                      >
-                        <span>{column.header}</span>
-                        <SortIcon direction={entry?.direction} />
-                        {entry && multiSort && (
-                          <span className={styles.priority} aria-hidden="true">
-                            {index + 1}
-                          </span>
-                        )}
-                        {entry && (
-                          <span id={`${descriptionId}-${column.id}`} hidden>
-                            {labels.sorted(entry.direction, multiSort ? index + 1 : null)}
-                          </span>
-                        )}
-                      </button>
-                    ) : (
-                      column.header
-                    )}
-                    {filterColumn && (
-                      <FilterButton
-                        column={filterColumn}
-                        value={filters[column.id]}
-                        onChange={(filter) => changeColumnFilter(column.id, filter)}
-                        labels={labels}
-                        dateLocale={dateLocale}
-                      />
-                    )}
-                  </div>
-                </TableHead>
-              );
-            })}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {error != null ? (
-            <TableRow>
-              <TableCell colSpan={columns.length} className={clsx(styles.message, styles.error)}>
-                <div role="alert">{error}</div>
-              </TableCell>
-            </TableRow>
-          ) : showSkeleton ? (
-            Array.from({ length: Math.min(paginated ? pageSize : 5, 5) }, (_, i) => (
-              <TableRow key={`skeleton-${i}`}>
-                {columns.map((column) => (
-                  <TableCell key={column.id} align={column.align}>
-                    <Skeleton />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : visible.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={columns.length} className={styles.message}>
-                {filtering ? (
-                  <div className={styles.noMatches}>
-                    <span>{labels.noMatches}</span>
-                    <EventScope silent>
-                      <Button size="sm" variant="secondary" onClick={clearAll}>
-                        {labels.clearFilters}
-                      </Button>
-                    </EventScope>
-                  </div>
-                ) : (
-                  (emptyMessage ?? labels.empty)
-                )}
-              </TableCell>
-            </TableRow>
-          ) : (
-            visible.map((row, index) => (
-              <TableRow key={getRowId(row, offset + index)}>
-                {columns.map((column) => (
-                  <TableCell key={column.id} align={column.align} className={column.cellClassName}>
-                    {column.cell ? column.cell(row) : formatValue(column.value?.(row), locale)}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+      {selectable && selectedCount > 0 && (
+        <BulkBar
+          ref={bulkBarRef}
+          clearRef={clearSelectionRef}
+          status={
+            selection.allMatching
+              ? labels.allSelected(selectedCount)
+              : labels.selected(selectedCount)
+          }
+          actions={bulkActions}
+          onAction={runBulkAction}
+          selectAllMatching={offerAllMatching ? labels.selectAllMatching(matchingCount) : undefined}
+          onSelectAllMatching={selectAllMatching}
+          onClear={clearSelection}
+          labels={labels}
+        />
+      )}
+
+      {hasRowActions ? (
+        // The row menu's own open, close and select events are silenced: onRowAction is emitted.
+        <EventScope silent>
+          <ContextMenu
+            disabled={!menuRow}
+            content={
+              menuRow &&
+              rowContextItems(menuRow.row, rowActions, (action) =>
+                runRowAction(action, menuRow.row, menuRow.id),
+              )
+            }
+          >
+            {table}
+          </ContextMenu>
+        </EventScope>
+      ) : (
+        table
+      )}
 
       <div className={styles.footer}>
         <span role="status" className={styles.range}>

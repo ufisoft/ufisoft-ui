@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { DataTable } from '.';
@@ -126,5 +126,99 @@ describe('DataTable events', () => {
       { search: '12', previousSearch: '1', source: {} },
     ]);
     expect(names(events).every((name) => name.startsWith('datatable.'))).toBe(true);
+  });
+
+  it('emits datatable.state.onSelect and datatable.interaction.onBulkAction, and nothing from the parts', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    render(
+      <DataTable
+        id="items"
+        caption="Items"
+        selectable
+        bulkActions={[{ id: 'export', label: 'Export', onSelect: () => {} }]}
+        getRowId={(row) => String(row.id)}
+        columns={[{ id: 'name', header: 'Name', value: (row: { name: string }) => row.name }]}
+        data={data}
+      />,
+    );
+
+    await user.click(screen.getByRole('checkbox', { name: 'Select Item 1' }));
+    await user.click(screen.getByRole('button', { name: 'Export' }));
+    await user.click(screen.getByRole('button', { name: 'Clear selection' }));
+
+    const selected = { ids: ['1'], allMatching: false };
+    const none = { ids: [], allMatching: false };
+    expect(events).toEqual([
+      {
+        name: 'datatable.state.onSelect',
+        payload: { selection: selected, previousSelection: none, source: { id: 'items' } },
+      },
+      {
+        name: 'datatable.interaction.onBulkAction',
+        payload: { action: 'export', rowIds: ['1'], allMatching: false, source: { id: 'items' } },
+      },
+      {
+        name: 'datatable.state.onSelect',
+        payload: { selection: none, previousSelection: selected, source: { id: 'items' } },
+      },
+    ]);
+  });
+
+  it('emits datatable.interaction.onRowAction from the menu and the context menu', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    render(
+      <DataTable
+        caption="Items"
+        rowActions={[{ id: 'edit', label: 'Edit', onSelect: () => {} }]}
+        getRowId={(row) => String(row.id)}
+        columns={[{ id: 'name', header: 'Name', value: (row: { name: string }) => row.name }]}
+        data={data}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Actions for Item 1' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+    fireEvent.pointerOver(screen.getByRole('cell', { name: 'Item 2' }));
+    fireEvent.contextMenu(screen.getByRole('cell', { name: 'Item 2' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Edit' }));
+
+    expect(events).toEqual([
+      {
+        name: 'datatable.interaction.onRowAction',
+        payload: { action: 'edit', rowId: '1', source: {} },
+      },
+      {
+        name: 'datatable.interaction.onRowAction',
+        payload: { action: 'edit', rowId: '2', source: {} },
+      },
+    ]);
+  });
+
+  it('emits datatable.interaction.onRowClick and datatable.state.onExpand', async () => {
+    const user = userEvent.setup();
+    const events = recordEvents();
+    render(
+      <DataTable
+        caption="Items"
+        onRowClick={() => {}}
+        renderDetail={(row: { name: string }) => <p>About {row.name}</p>}
+        getRowId={(row) => String(row.id)}
+        columns={[{ id: 'name', header: 'Name', value: (row: { name: string }) => row.name }]}
+        data={data}
+      />,
+    );
+
+    await user.click(screen.getByRole('cell', { name: 'Item 3' }));
+    await user.click(screen.getByRole('button', { name: 'Details for Item 3' }));
+
+    expect(events).toEqual([
+      { name: 'datatable.interaction.onRowClick', payload: { rowId: '3', source: {} } },
+      {
+        name: 'datatable.state.onExpand',
+        payload: { rowId: '3', expanded: true, expandedRowIds: ['3'], source: {} },
+      },
+    ]);
   });
 });

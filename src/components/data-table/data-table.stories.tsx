@@ -2,7 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useState } from 'react';
 import { tr } from 'react-day-picker/locale';
 import { fn } from 'storybook/test';
-import { DataTable, type DataTableColumn, type DataTableQuery } from '.';
+import {
+  DataTable,
+  type DataTableColumn,
+  type DataTableQuery,
+  type DataTableRowAction,
+  type DataTableSelection,
+} from '.';
 import { Badge } from '../badge';
 import { Button } from '../button';
 import { Stack } from '../stack';
@@ -175,6 +181,89 @@ export const StickyHeader: Story = {
   args: { maxHeight: 'md', paginated: false },
 };
 
+/** Row actions shared by the selection stories: the "⋯" button and right-click open the same menu. */
+function userActions(log: (message: string) => void): DataTableRowAction<User>[] {
+  return [
+    { id: 'edit', label: 'Edit', onSelect: (u) => log(`Edit ${u.name}`) },
+    { id: 'invite', label: 'Resend invite', onSelect: (u) => log(`Invite sent to ${u.email}`) },
+    {
+      id: 'suspend',
+      label: 'Suspend',
+      tone: 'danger',
+      disabled: (u) => u.status === 'Suspended',
+      onSelect: (u) => log(`Suspend ${u.name}`),
+    },
+  ];
+}
+
+export const SelectionAndActions: Story = {
+  name: 'Selection, bulk and row actions',
+  render: function Render(args) {
+    const [message, setMessage] = useState('Select rows, or open a row’s menu.');
+    return (
+      <Stack gap="sm">
+        <DataTable
+          {...args}
+          selectable
+          globalSearch
+          isRowSelectable={(row) => (row as User).role !== 'Admin'}
+          bulkActions={[
+            {
+              id: 'export',
+              label: 'Export',
+              onSelect: ({ rows }) => setMessage(`Export ${rows.length} users`),
+            },
+            {
+              id: 'delete',
+              label: 'Delete',
+              tone: 'danger',
+              onSelect: ({ rows, clearSelection }) => {
+                setMessage(`Delete ${rows.length} users`);
+                clearSelection();
+              },
+            },
+          ]}
+          rowActions={userActions(setMessage) as DataTableRowAction<unknown>[]}
+        />
+        <Text size="sm" tone="muted" role="log">
+          {message}
+        </Text>
+      </Stack>
+    );
+  },
+};
+
+export const RowDetail: Story = {
+  name: 'Expandable rows and row click',
+  render: function Render(args) {
+    const [message, setMessage] = useState('Click a row, or open its details.');
+    return (
+      <Stack gap="sm">
+        <DataTable
+          {...args}
+          defaultExpandedRowIds={['2']}
+          onRowClick={(row) => setMessage(`Open ${(row as User).name}`)}
+          renderDetail={(row) => {
+            const u = row as User;
+            return (
+              <Stack gap="xs">
+                <Text weight="semibold">{u.name}</Text>
+                <Text size="sm">
+                  {u.email} · {u.role} · {u.orders} orders ·{' '}
+                  {u.verified ? 'Verified' : 'Not verified'}
+                </Text>
+              </Stack>
+            );
+          }}
+        />
+        <Text size="sm" tone="muted" role="log">
+          {message}
+        </Text>
+      </Stack>
+    );
+  },
+};
+
 export const Loading: Story = {
   args: { data: [], loading: true },
 };
@@ -244,6 +333,10 @@ export const ServerMode: Story = {
     });
     const [result, setResult] = useState<{ rows: User[]; total: number }>({ rows: [], total: 0 });
     const [loading, setLoading] = useState(true);
+    const [selection, setSelection] = useState<DataTableSelection>({ ids: [], allMatching: false });
+    const [message, setMessage] = useState(
+      'Select a page, then “Select all” to choose every result.',
+    );
 
     useEffect(() => {
       let current = true;
@@ -275,9 +368,27 @@ export const ServerMode: Story = {
           page={query.page}
           pageSize={query.pageSize}
           onQueryChange={setQuery}
+          selectable
+          selection={selection}
+          onSelectionChange={setSelection}
+          bulkActions={[
+            {
+              id: 'export',
+              label: 'Export',
+              onSelect: ({ selection: chosen, query: current }) =>
+                setMessage(
+                  chosen.allMatching
+                    ? `Export every user matching ${JSON.stringify(current.filters)}`
+                    : `Export users ${chosen.ids.join(', ')}`,
+                ),
+            },
+          ]}
         />
         <Text size="sm" tone="muted">
           Query sent to the server: {JSON.stringify(query)}
+        </Text>
+        <Text size="sm" tone="muted" role="log">
+          {message}
         </Text>
       </Stack>
     );
