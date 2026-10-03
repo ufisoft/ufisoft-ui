@@ -60,6 +60,7 @@ export {
   type ComboboxItem,
   type ComboboxSize,
 } from './components/combobox';
+export { DatePicker, type DatePickerProps, type DatePickerSize } from './components/date-picker';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 export {
   Radio,

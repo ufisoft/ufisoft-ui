@@ -1,0 +1,77 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as DatePickerStories from './date-picker.stories';
+
+<Meta of={DatePickerStories} />
+
+# DatePicker
+
+A date field: type the date or pick it from a calendar.
+
+<Canvas of={DatePickerStories.Default} />
+
+## When to use
+
+- Choosing one calendar date: due dates, birth dates, appointment days, report filters.
+
+## When not to use
+
+- A date range — use two DatePickers (start and end) until a range picker exists.
+- Date and time together — pair a DatePicker with an `Input type="time"`.
+- A few fixed choices such as “Today / Tomorrow / Next week” — use `Radio` or `Select`.
+
+## Props
+
+<ArgTypes of={DatePickerStories} />
+
+Use `value` + `onValueChange` (controlled) or `defaultValue` (uncontrolled). The value is a `Date` at local midnight, or `null` when the field is empty. Native input props (`placeholder`, `aria-label`, `onBlur`…) and `ref` go to the text field; `className` goes to the wrapper.
+
+With `name`, a hidden input submits the date as `yyyy-MM-dd`, independent of the shown format.
+
+`locale` sets month and day names, the first day of the week and the calendar's labels; pass one from `react-day-picker/locale` (e.g. `tr`). The shown and typed format is the locale's short date (`MM/dd/yyyy` by default, `dd.MM.yyyy` for `tr`); `dateFormat` takes any [date-fns pattern](https://date-fns.org/docs/format). Translate `calendarLabel` too.
+
+Inside a `FormField`, the label, description, message, `required`, `disabled` and `invalid` come from the field.
+
+The calendar comes from [react-day-picker](https://daypicker.dev), parsing and formatting from [date-fns](https://date-fns.org); the calendar opens in a `Popover`.
+
+## Sizes
+
+<Canvas of={DatePickerStories.Sizes} />
+
+## States
+
+<Canvas of={DatePickerStories.WithValue} />
+<Canvas of={DatePickerStories.MinMax} />
+<Canvas of={DatePickerStories.Invalid} />
+<Canvas of={DatePickerStories.Disabled} />
+<Canvas of={DatePickerStories.ReadOnly} />
+
+Typed text becomes the value on blur or Enter. Text that is not a valid date, or falls outside `min`/`max`, is replaced by the current value again; an empty field clears it. Days outside `min`/`max` are disabled in the calendar.
+
+## Examples
+
+<Canvas of={DatePickerStories.InFormField} />
+<Canvas of={DatePickerStories.Turkish} />
+<Canvas of={DatePickerStories.Controlled} />
+<Canvas of={DatePickerStories.InModal} />
+
+## Accessibility
+
+- The text field is a plain text input, so typing works with every assistive technology; the placeholder shows the expected format.
+- The calendar button is named by `calendarLabel` and opens a dialog with the same name. Focus moves to the selected day (or today) and returns to the button on close.
+- In the calendar, arrow keys move by day and week, PageUp/PageDown by month, Home/End to the week's start and end; Enter or Space picks the day; Escape closes without changing the value.
+- Each day button is named with the full date (“Thursday, October 15th, 2026, selected”), translated by `locale`.
+- Every DatePicker needs a label: a `FormField` + `FormLabel`, or `aria-label`.
+
+## Do / Don't
+
+| Do                                                     | Don't                                                 |
+| ------------------------------------------------------ | ----------------------------------------------------- |
+| Set `locale` so names and the date format match users. | Mix a Turkish label with the default US format.       |
+| Use `min`/`max` for dates the user must not pick.      | Validate the range only after submit.                 |
+| Let users type a known date such as a birth date.      | Force month-by-month clicks to reach a far-away year. |
+
+## Related components
+
+- `Input` — the text field it builds on.
+- `Popover` — the calendar's container.
+- `FormField` — label, description and validation wiring.

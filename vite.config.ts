@@ -29,6 +29,8 @@ export default defineConfig({
         /^@floating-ui\//,
         'clsx',
         'downshift',
+        /^react-day-picker($|\/)/,
+        /^date-fns($|\/)/,
       ],
       output: {
         // One output module per source module so consumers can tree-shake per component.
