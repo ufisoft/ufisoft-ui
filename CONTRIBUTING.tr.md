@@ -57,7 +57,7 @@ UfiSoft UI Kit'e katkı verdiğiniz için teşekkürler. Bu rehber bir component
 - Her interaktif elementin görünür bir `:focus-visible` stili olmalıdır.
 - Animasyonlar `prefers-reduced-motion`'a uyar. Transition'lar global olarak kapatılır; anlam taşıyan animasyonlar (ör. Spinner) durmak yerine yavaşlar.
 - Component'lerde global CSS yok. `:global()` yalnızca scope'lanamayan bir etki için (ör. scroll kilidi).
-- Component'lerde inline stil yok.
+- Component'lerde inline stil yok. Çalışma anında belli olan bir değer (ör. sürüklenen sütun genişliği) yerel bir custom property olarak verilir, `style={{ '--_width': … }}`, ve CSS Module onu okur — bkz. [no-inline-style](./docs/contracts/component-styling.md).
 
 ## Test kuralları
 

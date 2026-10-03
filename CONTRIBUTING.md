@@ -60,7 +60,7 @@ Thanks for helping build the UfiSoft UI Kit. This guide covers how to add or cha
 - Every interactive element has a visible `:focus-visible` style.
 - Animations respect `prefers-reduced-motion`. Transitions are disabled globally; meaningful animations (e.g. Spinner) slow down instead of stopping.
 - No global CSS in components. `:global()` only for an effect that cannot be scoped (e.g. scroll lock).
-- No inline styles in components.
+- No inline styles in components. A runtime value (e.g. a dragged column width) is passed as a local custom property, `style={{ '--_width': … }}`, and read by the CSS Module — see [no-inline-style](./docs/contracts/component-styling.md).
 
 ## Testing rules
 

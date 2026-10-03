@@ -44,9 +44,21 @@ export default tseslint.config(
       'no-restricted-syntax': [
         'error',
         {
-          selector: 'JSXAttribute[name.name="style"]',
+          selector: 'JSXAttribute[name.name="style"] > :not(JSXIdentifier, JSXExpressionContainer)',
           message:
-            'No inline styles in components — see docs/contracts/component-styling.md#no-inline-style',
+            'No inline styles in components, except local --_* custom properties in an object literal — see docs/contracts/component-styling.md#no-inline-style',
+        },
+        {
+          selector:
+            'JSXAttribute[name.name="style"] > JSXExpressionContainer > :not(ObjectExpression)',
+          message:
+            'No inline styles in components, except local --_* custom properties in an object literal — see docs/contracts/component-styling.md#no-inline-style',
+        },
+        {
+          selector:
+            'JSXAttribute[name.name="style"] > JSXExpressionContainer > ObjectExpression > :not(Property[key.value=/^--_/])',
+          message:
+            'No inline styles in components, except local --_* custom properties in an object literal — see docs/contracts/component-styling.md#no-inline-style',
         },
         {
           selector:

@@ -78,11 +78,27 @@ rules:
       exclude_globs: []
   - id: no-inline-style
     section: "Don't"
-    text: 'No style prop on elements rendered by a component.'
+    text: 'No style prop on elements rendered by a component, except an object literal of local --_* custom properties.'
     severity: error
     detectors:
       - kind: eslint
-        params: { rule: no-restricted-syntax, selector: 'JSXAttribute[name.name="style"]' }
+        params:
+          {
+            rule: no-restricted-syntax,
+            selector: 'JSXAttribute[name.name="style"] > :not(JSXIdentifier, JSXExpressionContainer)',
+          }
+      - kind: eslint
+        params:
+          {
+            rule: no-restricted-syntax,
+            selector: 'JSXAttribute[name.name="style"] > JSXExpressionContainer > :not(ObjectExpression)',
+          }
+      - kind: eslint
+        params:
+          {
+            rule: no-restricted-syntax,
+            selector: 'JSXAttribute[name.name="style"] > JSXExpressionContainer > ObjectExpression > :not(Property[key.value=/^--_/])',
+          }
     applies_to:
       include_globs: ['src/components/**/*.tsx']
       exclude_globs: ['src/components/**/*.stories.tsx', 'src/components/**/*.test.tsx']
@@ -101,6 +117,7 @@ Codified from [CONTRIBUTING.md › Styling rules](../../CONTRIBUTING.md#styling-
 - Read the token list in `src/tokens/semantic.css` before writing CSS; if no token fits, add a semantic token first — see [CONTRIBUTING › Styling rules](../../CONTRIBUTING.md#styling-rules).
 - Variants and sizes set local `--_*` properties; that pattern is described in the same section.
 - Stories (`*.stories.tsx`) are not components and may use inline styles for demo layout.
+- A value only known at runtime (a column width the user dragged, a pinned column's offset, a virtual list's height) goes to the CSS Module as a local custom property: `style={{ '--_width': `${width}px` }}`, read by `inline-size: var(--_width)`. Only `--_*` keys in an object literal pass the rule: they set no CSS property themselves, so the consumer's `className` still wins, and the markup is complete on the server. `src/css-custom-properties.d.ts` types them.
 
 ## Exceptions
 
@@ -117,4 +134,4 @@ Each exception is listed in the rule's `allow` with the exact declaration, scope
 - Write a hex color in component CSS. {#no-hex-color}
 - Write a raw `px` value in component CSS — including `1px` hairlines, which use `--ufi-border-width`. {#no-raw-px}
 - Add a `:global()` selector without adding it to this rule's `allow` list with a reason. {#no-global-selector}
-- Pass `style` to an element a component renders. {#no-inline-style}
+- Pass `style` to an element a component renders — other than an object literal of local `--_*` custom properties. {#no-inline-style}
