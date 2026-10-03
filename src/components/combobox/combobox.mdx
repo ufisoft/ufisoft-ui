@@ -1,0 +1,75 @@
+import { ArgTypes, Canvas, Meta } from '@storybook/addon-docs/blocks';
+import * as ComboboxStories from './combobox.stories';
+
+<Meta of={ComboboxStories} />
+
+# Combobox
+
+A text field with a filtered list of options: choose one value from a long list by typing.
+
+<Canvas of={ComboboxStories.Default} />
+
+## When to use
+
+- Choosing one value from a long list (roughly 15 or more): cities, countries, users, categories.
+
+## When not to use
+
+- Short lists — use `Select`; it needs no typing and works with the native picker on phones.
+- 2–5 options that should all be visible — use `Radio`.
+- Free text with suggestions the user may ignore — use `Input`; a Combobox only accepts listed values.
+- Actions — use `DropdownMenu`.
+
+## Props
+
+<ArgTypes of={ComboboxStories} />
+
+`items` is a list of `{ value, label, disabled? }`. Use `value` + `onValueChange` (controlled) or `defaultValue` (uncontrolled); the value is `null` when nothing is selected. Native input props (`placeholder`, `name`, `aria-label`…) and `ref` go to the input.
+
+Inside a `FormField`, the label, description, message, `required`, `disabled` and `invalid` come from the field.
+
+Filtering is case- and accent-insensitive by default: “canakkale” finds “Çanakkale”, “istanbul” finds “İstanbul”. Pass `filter` to change it. Translate `emptyMessage` and `getResultsMessage`.
+
+Behaviour and ARIA come from [Downshift](https://www.downshift-js.com/use-combobox); the list is positioned with [Floating UI](https://floating-ui.com) using fixed coordinates, so a scrolling container such as a `Modal` body does not clip it.
+
+## Sizes
+
+<Canvas of={ComboboxStories.Sizes} />
+
+## States
+
+<Canvas of={ComboboxStories.WithValue} />
+<Canvas of={ComboboxStories.DisabledOptions} />
+<Canvas of={ComboboxStories.Invalid} />
+<Canvas of={ComboboxStories.Disabled} />
+
+Leaving the field with half-typed text shows the current selection again. To clear the selection, press Escape on the closed list or set `value` to `null`.
+
+## Examples
+
+<Canvas of={ComboboxStories.InFormField} />
+<Canvas of={ComboboxStories.Controlled} />
+<Canvas of={ComboboxStories.Translated} />
+<Canvas of={ComboboxStories.InModal} />
+
+## Accessibility
+
+- The input has `role="combobox"` with `aria-expanded`, `aria-controls` and `aria-activedescendant`; the list is a `listbox` of `option`s.
+- Typing filters and opens the list; ArrowDown/ArrowUp move through options, Home/End jump, Enter selects, Escape closes the list; on a closed list it clears the value. A clearing Escape does not also close a surrounding `Modal`; with nothing to clear, Escape closes the modal as usual.
+- Focus stays in the input; the highlighted option is outlined and announced through `aria-activedescendant`.
+- The number of results is announced while the list is open (`getResultsMessage`).
+- Every combobox needs a label: a `FormField` + `FormLabel`, or `aria-label`.
+
+## Do / Don't
+
+| Do                                               | Don't                                              |
+| ------------------------------------------------ | -------------------------------------------------- |
+| Use it for long lists users search by name.      | Use it for five options — use `Select` or `Radio`. |
+| Use a placeholder that says what to type.        | Use the placeholder as the label.                  |
+| Keep labels unique so typed text finds one item. | Accept values that are not in the list.            |
+
+## Related components
+
+- `Select` — short lists.
+- `Input` — free text.
+- `FormField` — label, description and validation wiring.

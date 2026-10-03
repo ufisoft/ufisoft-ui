@@ -1,0 +1,110 @@
+.combobox {
+  position: relative;
+  min-inline-size: 0;
+}
+
+/* Chevron hint, drawn like Select's: two token-coloured gradient triangles. */
+.combobox::after {
+  --_chevron: var(--ufi-space-2xs);
+
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: var(--ufi-space-sm);
+  inline-size: calc(var(--_chevron) * 2);
+  pointer-events: none;
+  content: '';
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ufi-color-text-muted) 50%),
+    linear-gradient(135deg, var(--ufi-color-text-muted) 50%, transparent 50%);
+  background-repeat: no-repeat;
+  background-position:
+    0 55%,
+    var(--_chevron) 55%;
+  background-size: var(--_chevron) var(--_chevron);
+}
+
+.input {
+  padding-inline-end: calc(var(--ufi-space-sm) + var(--ufi-space-lg));
+}
+
+/* Forced colors drop background images: no chevron, the text field still works. */
+@media (forced-colors: active) {
+  .combobox::after {
+    display: none;
+  }
+}
+
+/* Fixed coordinates are set by Floating UI, so scrolling containers do not clip the list. */
+.popup {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: var(--ufi-z-dropdown);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: var(--ufi-space-2xs);
+  overflow: hidden;
+  font-family: var(--ufi-font-body);
+  font-size: var(--ufi-text-sm);
+  line-height: var(--ufi-leading-snug);
+  color: var(--ufi-color-text-default);
+  background-color: var(--ufi-color-bg-surface);
+  border: var(--ufi-border-width) solid var(--ufi-color-border-default);
+  border-radius: var(--ufi-radius-md);
+  box-shadow: var(--ufi-shadow-overlay);
+}
+
+.popup[hidden],
+.list[hidden] {
+  display: none;
+}
+
+/*
+ * The listbox scrolls, not the popup, so the scroll container is the element with the listbox
+ * role. Keyboard users never scroll it directly: arrow keys move the highlight and Downshift
+ * scrolls the highlighted option into view.
+ */
+.list {
+  flex: 1;
+  min-block-size: 0;
+  padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.item {
+  padding: var(--ufi-space-xs) var(--ufi-space-sm);
+  cursor: pointer;
+  border-radius: var(--ufi-radius-sm);
+}
+
+/* The highlighted option has DOM focus semantics via aria-activedescendant, so it carries the focus style. */
+.highlighted {
+  background-color: var(--ufi-color-bg-muted);
+  outline: var(--ufi-focus-ring-width) solid var(--ufi-focus-ring-color);
+  outline-offset: calc(var(--ufi-focus-ring-width) * -1);
+}
+
+/* The current value. (aria-selected marks the highlighted option in this pattern, not the value.) */
+.selected {
+  font-weight: var(--ufi-weight-semibold);
+}
+
+.item[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: var(--ufi-opacity-disabled);
+}
+
+.empty {
+  padding: var(--ufi-space-xs) var(--ufi-space-sm);
+  color: var(--ufi-color-text-muted);
+}
+
+@media (forced-colors: active) {
+  .highlighted {
+    color: HighlightText;
+    background-color: Highlight;
+  }
+}

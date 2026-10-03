@@ -21,7 +21,15 @@ export default defineConfig({
     cssCodeSplit: false,
     sourcemap: true,
     rolldownOptions: {
-      external: [/^react($|\/)/, /^react-dom($|\/)/, /^@radix-ui\//, 'clsx'],
+      // Keep every runtime dependency external so consumers get one copy of each.
+      external: [
+        /^react($|\/)/,
+        /^react-dom($|\/)/,
+        /^@radix-ui\//,
+        /^@floating-ui\//,
+        'clsx',
+        'downshift',
+      ],
       output: {
         // One output module per source module so consumers can tree-shake per component.
         preserveModules: true,

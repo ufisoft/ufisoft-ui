@@ -54,6 +54,12 @@ export {
 export { Input, type InputProps, type InputSize } from './components/input';
 export { Textarea, type TextareaProps, type TextareaSize } from './components/textarea';
 export { Select, type SelectProps, type SelectSize } from './components/select';
+export {
+  Combobox,
+  type ComboboxProps,
+  type ComboboxItem,
+  type ComboboxSize,
+} from './components/combobox';
 export { Checkbox, type CheckboxProps } from './components/checkbox';
 export {
   Radio,
